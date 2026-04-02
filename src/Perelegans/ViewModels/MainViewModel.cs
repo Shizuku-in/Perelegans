@@ -26,6 +26,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private Game? _selectedGame;
 
+    [ObservableProperty]
+    private bool _isAboutOverlayVisible;
+
     public string TotalPlaytimeText
     {
         get

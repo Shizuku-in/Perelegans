@@ -6,5 +6,8 @@ src/Perelegans/obj/
 .userprofile/
 .vscode/
 .vs/
+.localappdata/
+.claude/
 
+CLAUDE.md
 DEVELOPMENT_STEPS.md

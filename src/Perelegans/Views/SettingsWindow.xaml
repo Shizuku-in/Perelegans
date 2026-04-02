@@ -6,7 +6,7 @@
         xmlns:models="clr-namespace:Perelegans.Models"
         Title="Settings"
         TitleCharacterCasing="Normal"
-        Height="340" Width="420"
+        Height="400" Width="420"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowTitleBar="True"

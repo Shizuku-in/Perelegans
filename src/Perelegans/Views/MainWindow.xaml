@@ -17,12 +17,16 @@
         BorderThickness="1"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         ShowTitleBar="False"
+        ShowCloseButton="False"
+        ShowMinButton="False"
+        ShowMaxRestoreButton="False"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource Perelegans.WindowBackground}">
 
     <mah:MetroWindow.Resources>
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
         <converters:StatusIconConverter x:Key="StatusIconConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </mah:MetroWindow.Resources>
 
     <DockPanel LastChildFill="True">
@@ -81,7 +85,7 @@
         </Grid>
 
         <!-- ==================== 2. MENU BAR ==================== -->
-        <Menu DockPanel.Dock="Top" Height="24"
+        <Menu DockPanel.Dock="Top" Height="28"
               Background="{DynamicResource Perelegans.PanelBackground}"
               Foreground="{DynamicResource Perelegans.ForegroundBrush}"
               FontSize="12" Padding="4,0">
