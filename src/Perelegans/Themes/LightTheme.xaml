@@ -1,0 +1,35 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+
+    <!-- Perelegans Light Theme: Off-white (米白) + Pink -->
+
+    <!-- Window & Panel Backgrounds -->
+    <SolidColorBrush x:Key="Perelegans.WindowBackground" Color="#FDFCF8"/>
+    <SolidColorBrush x:Key="Perelegans.PanelBackground" Color="#F5F3EE"/>
+    
+    <!-- Accent -->
+    <Color x:Key="Perelegans.AccentColor">#E91E78</Color>
+    <SolidColorBrush x:Key="Perelegans.AccentBrush" Color="#E91E78"/>
+    <SolidColorBrush x:Key="Perelegans.AccentHoverBrush" Color="#FF4081"/>
+    
+    <!-- Typography -->
+    <SolidColorBrush x:Key="Perelegans.ForegroundBrush" Color="#1E1E1E"/>
+    <SolidColorBrush x:Key="Perelegans.SubtleForegroundBrush" Color="#757575"/>
+    
+    <!-- Borders -->
+    <SolidColorBrush x:Key="Perelegans.BorderBrush" Color="#E0DDD5"/>
+    
+    <!-- DataGrid -->
+    <SolidColorBrush x:Key="Perelegans.DataGridAltRowBrush" Color="#F8F6F1"/>
+    <SolidColorBrush x:Key="Perelegans.DataGridHeaderBackground" Color="#EFECE5"/>
+    <SolidColorBrush x:Key="Perelegans.DataGridSelectedRowBrush" Color="#FCE4EC"/>
+    
+    <!-- StatusBar -->
+    <SolidColorBrush x:Key="Perelegans.StatusBarBackground" Color="#EFECE5"/>
+    
+    <!-- Menu -->
+    <SolidColorBrush x:Key="Perelegans.MenuBackground" Color="#FDFCF8"/>
+    <SolidColorBrush x:Key="Perelegans.MenuHoverBrush" Color="#FCE4EC"/>
+
+</ResourceDictionary>
