@@ -1,0 +1,37 @@
+<mah:MetroWindow x:Class="Perelegans.Views.GamePlayLogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        Title="{Binding GameTitle, StringFormat='Play Log - {0}'}"
+        TitleCharacterCasing="Normal"
+        Height="400" Width="480"
+        WindowStartupLocation="CenterOwner"
+        ShowTitleBar="True"
+        TitleBarHeight="28"
+        BorderThickness="1"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}">
+
+    <Grid Margin="10,8">
+        <DataGrid ItemsSource="{Binding Entries}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  RowHeight="22"
+                  ColumnHeaderHeight="24"
+                  FontSize="11"
+                  BorderThickness="1"
+                  BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                  Background="Transparent"
+                  RowBackground="{DynamicResource Perelegans.WindowBackground}"
+                  AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
+                  HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="100"/>
+                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="*"/>
+                <DataGridTextColumn Header="Duration" Binding="{Binding Duration}" Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</mah:MetroWindow>

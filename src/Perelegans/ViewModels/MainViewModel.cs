@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,6 +18,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SettingsService _settingsService;
     private readonly ThemeService _themeService;
     private readonly ProcessMonitorService _processMonitor;
+    private readonly HttpClient _httpClient;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
@@ -43,12 +45,14 @@ public partial class MainViewModel : ObservableObject
         DatabaseService dbService,
         SettingsService settingsService,
         ThemeService themeService,
-        ProcessMonitorService processMonitor)
+        ProcessMonitorService processMonitor,
+        HttpClient httpClient)
     {
         _dbService = dbService;
         _settingsService = settingsService;
         _themeService = themeService;
         _processMonitor = processMonitor;
+        _httpClient = httpClient;
 
         // Subscribe to process monitor events
         _processMonitor.PlaytimeUpdated += OnPlaytimeUpdated;
@@ -218,7 +222,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void PlaytimeStatistics()
     {
-        MessageBox.Show("游玩时间统计 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        var vm = new PlaytimeStatsViewModel(_dbService);
+        var win = new PlaytimeStatsWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+        _ = vm.InitializeAsync();
+        win.ShowDialog();
     }
 
     // ---- Menu Commands (Help) ----
@@ -268,14 +279,52 @@ public partial class MainViewModel : ObservableObject
     private void FetchMetadata()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show($"获取元数据: {SelectedGame.Title} - 功能待实现", "Perelegans");
+        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService);
+        var win = new MetadataWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        if (win.ShowDialog() == true)
+        {
+            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
+            if (updated != null)
+            {
+                var index = Games.IndexOf(SelectedGame);
+                if (index >= 0)
+                {
+                    Games[index] = updated;
+                    SelectedGame = updated;
+                }
+            }
+        }
     }
 
     [RelayCommand]
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show($"编辑元数据: {SelectedGame.Title} - 功能待实现", "Perelegans");
+        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, false);
+        var win = new MetadataWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        if (win.ShowDialog() == true)
+        {
+            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
+            if (updated != null)
+            {
+                var index = Games.IndexOf(SelectedGame);
+                if (index >= 0)
+                {
+                    Games[index] = updated;
+                    SelectedGame = updated;
+                }
+            }
+        }
     }
 
     [RelayCommand]
@@ -285,39 +334,62 @@ public partial class MainViewModel : ObservableObject
         MessageBox.Show($"打开游戏文件夹: {SelectedGame.Title} - 功能待实现", "Perelegans");
     }
 
+    private void OpenUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch { }
+    }
+
     [RelayCommand]
     private void OpenVndb()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show("打开 VNDB - 功能待实现", "Perelegans");
+        var url = SelectedGame.VndbId != null ? $"https://vndb.org/v{SelectedGame.VndbId.Replace("v", "")}" : null;
+        if (url != null) OpenUrl(url); else MessageBox.Show("No VNDB ID found.", "Perelegans");
     }
 
     [RelayCommand]
     private void OpenErogameSpace()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show("打开 ErogameSpace - 功能待实现", "Perelegans");
+        var url = SelectedGame.ErogameSpaceId != null ? $"https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game={SelectedGame.ErogameSpaceId}" : null;
+        if (url != null) OpenUrl(url); else MessageBox.Show("No ErogameSpace ID found.", "Perelegans");
     }
 
     [RelayCommand]
     private void OpenBangumi()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show("打开 Bangumi - 功能待实现", "Perelegans");
+        var url = SelectedGame.BangumiId != null ? $"https://bgm.tv/subject/{SelectedGame.BangumiId}" : null;
+        if (url != null) OpenUrl(url); else MessageBox.Show("No Bangumi ID found.", "Perelegans");
     }
 
     [RelayCommand]
     private void OpenOfficialSite()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show("打开官网 - 功能待实现", "Perelegans");
+        OpenUrl(SelectedGame.OfficialWebsite);
     }
 
     [RelayCommand]
     private void OpenGamePlaytimeStats()
     {
         if (SelectedGame == null) return;
-        MessageBox.Show($"游戏时间统计: {SelectedGame.Title} - 功能待实现", "Perelegans");
+        var vm = new GamePlayLogViewModel(_dbService, SelectedGame);
+        var win = new GamePlayLogWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+        win.ShowDialog();
     }
 
     [RelayCommand]

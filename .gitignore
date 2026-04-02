@@ -1,4 +1,10 @@
 src/Perelegans/bin/
 src/Perelegans/obj/
+.appdata/
+.dotnet/
+.nuget/
+.userprofile/
+.vscode/
+.vs/
 
-
+DEVELOPMENT_STEPS.md

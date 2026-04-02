@@ -1,0 +1,73 @@
+<mah:MetroWindow x:Class="Perelegans.Views.PlaytimeStatsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+        Title="Playtime Statistics"
+        TitleCharacterCasing="Normal"
+        Height="520" Width="720"
+        WindowStartupLocation="CenterOwner"
+        ShowTitleBar="True"
+        TitleBarHeight="28"
+        BorderThickness="1"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}">
+
+    <Grid Margin="10,8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Tab Selector -->
+        <TabControl Grid.Row="0" Height="30"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
+                    FontSize="12" Padding="0">
+            <TabItem Header="過去7日"/>
+            <TabItem Header="以週計"/>
+            <TabItem Header="以月計"/>
+            <TabItem Header="以年計"/>
+        </TabControl>
+
+        <!-- Content: Table + Chart -->
+        <Grid Grid.Row="1" Margin="0,6,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="280"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Period Data Table -->
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding PeriodData}"
+                      SelectedItem="{Binding SelectedPeriod, Mode=TwoWay}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      SelectionMode="Single"
+                      RowHeight="22"
+                      ColumnHeaderHeight="24"
+                      FontSize="11"
+                      BorderThickness="1"
+                      Margin="0,0,6,0"
+                      BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                      Background="Transparent"
+                      RowBackground="{DynamicResource Perelegans.WindowBackground}"
+                      AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
+                      HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Period" Binding="{Binding Label}" Width="*"/>
+                    <DataGridTextColumn Header="Playtime" Binding="{Binding PlaytimeText}" Width="70"/>
+                    <DataGridTextColumn Header="Sessions" Binding="{Binding SessionCount}" Width="60"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Pink Pie Chart -->
+            <lvc:PieChart Grid.Column="1"
+                          Series="{Binding PieSeries}"
+                          LegendPosition="Bottom"
+                          LegendTextSize="11"
+                          InitialRotation="-90"/>
+        </Grid>
+    </Grid>
+</mah:MetroWindow>

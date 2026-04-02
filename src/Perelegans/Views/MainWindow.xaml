@@ -206,6 +206,7 @@
                       CanUserReorderColumns="True"
                       CanUserResizeColumns="True"
                       CanUserSortColumns="True"
+                      IsReadOnly="True"
                       SelectionMode="Single"
                       SelectionUnit="FullRow"
                       GridLinesVisibility="Horizontal"

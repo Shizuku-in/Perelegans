@@ -22,9 +22,10 @@ public partial class App : Application
 
         var dbService = new DatabaseService();
         _processMonitor = new ProcessMonitorService(dbService);
+        var httpClient = new System.Net.Http.HttpClient();
 
         // Create MainViewModel with all services
-        var mainVm = new MainViewModel(dbService, settingsService, _themeService, _processMonitor);
+        var mainVm = new MainViewModel(dbService, settingsService, _themeService, _processMonitor, httpClient);
 
         // Create and show MainWindow
         var mainWindow = new MainWindow
