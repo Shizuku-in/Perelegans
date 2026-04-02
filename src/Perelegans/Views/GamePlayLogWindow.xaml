@@ -16,8 +16,21 @@
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
 
+    <mah:MetroWindow.Resources>
+        <Style x:Key="GamePlayLogSelectedTextCellStyle"
+               TargetType="DataGridCell"
+               BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </mah:MetroWindow.Resources>
+
     <Grid Margin="10,8">
         <DataGrid ItemsSource="{Binding Entries}"
+                  CellStyle="{StaticResource GamePlayLogSelectedTextCellStyle}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="True"

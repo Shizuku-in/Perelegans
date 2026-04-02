@@ -106,7 +106,7 @@
   <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
 Game Playtime Tracker &amp; Manager
 
-© 2026</value></data>
+Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Msg_NoExecPath" xml:space="preserve"><value>実行ファイルのパスが設定されていません。
 メタデータエディターで設定するとゲームを直接起動できます。</value></data>
   <data name="Msg_GameStartFailed" xml:space="preserve"><value>ゲームの起動に失敗しました: {0}</value></data>

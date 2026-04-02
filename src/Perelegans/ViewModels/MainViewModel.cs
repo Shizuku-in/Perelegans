@@ -70,19 +70,13 @@ public partial class MainViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Loads games from the database. If empty, inserts sample data.
+    /// Loads games from the database.
     /// </summary>
     public async Task InitializeAsync()
     {
         await _dbService.EnsureDatabaseCreatedAsync();
 
         var games = await _dbService.GetAllGamesAsync();
-        if (games.Count == 0)
-        {
-            // Insert sample data on first run
-            await InsertSampleDataAsync();
-            games = await _dbService.GetAllGamesAsync();
-        }
 
         Games = new ObservableCollection<Game>(games);
         Games.CollectionChanged += (_, _) => RefreshStats();
@@ -113,78 +107,6 @@ public partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(TotalPlaytimeText));
         OnPropertyChanged(nameof(CompletedCount));
-    }
-
-    private async Task InsertSampleDataAsync()
-    {
-        var sampleGames = new[]
-        {
-            new Game
-            {
-                Title = "Summer Pockets",
-                Brand = "Key",
-                ReleaseDate = new DateTime(2018, 6, 29),
-                Status = GameStatus.Completed,
-                Playtime = new TimeSpan(32, 15, 0),
-                CreatedDate = new DateTime(2024, 1, 15),
-                AccessedDate = new DateTime(2024, 2, 20)
-            },
-            new Game
-            {
-                Title = "WHITE ALBUM2 〜closing chapter〜",
-                Brand = "Leaf",
-                ReleaseDate = new DateTime(2012, 12, 20),
-                Status = GameStatus.Playing,
-                Playtime = new TimeSpan(18, 30, 0),
-                CreatedDate = new DateTime(2024, 3, 1),
-                AccessedDate = new DateTime(2024, 3, 25)
-            },
-            new Game
-            {
-                Title = "Fate/stay night",
-                Brand = "TYPE-MOON",
-                ReleaseDate = new DateTime(2004, 1, 30),
-                Status = GameStatus.Completed,
-                Playtime = new TimeSpan(65, 0, 0),
-                CreatedDate = new DateTime(2023, 6, 10),
-                AccessedDate = new DateTime(2023, 9, 5)
-            },
-            new Game
-            {
-                Title = "Steins;Gate",
-                Brand = "MAGES.",
-                ReleaseDate = new DateTime(2009, 10, 15),
-                Status = GameStatus.Completed,
-                Playtime = new TimeSpan(28, 45, 0),
-                CreatedDate = new DateTime(2023, 11, 1),
-                AccessedDate = new DateTime(2023, 12, 15)
-            },
-            new Game
-            {
-                Title = "CLANNAD",
-                Brand = "Key",
-                ReleaseDate = new DateTime(2004, 4, 28),
-                Status = GameStatus.Dropped,
-                Playtime = new TimeSpan(12, 10, 0),
-                CreatedDate = new DateTime(2024, 4, 1),
-                AccessedDate = new DateTime(2024, 4, 10)
-            },
-            new Game
-            {
-                Title = "Muv-Luv Alternative",
-                Brand = "âge",
-                ReleaseDate = new DateTime(2006, 2, 24),
-                Status = GameStatus.Playing,
-                Playtime = new TimeSpan(45, 20, 0),
-                CreatedDate = new DateTime(2024, 2, 10),
-                AccessedDate = new DateTime(2024, 5, 1)
-            }
-        };
-
-        foreach (var game in sampleGames)
-        {
-            await _dbService.AddGameAsync(game);
-        }
     }
 
     // ---- Menu Commands (File) ----

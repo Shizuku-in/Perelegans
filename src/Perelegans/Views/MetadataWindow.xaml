@@ -20,6 +20,15 @@
 
     <mah:MetroWindow.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style x:Key="MetadataSelectedTextCellStyle"
+               TargetType="DataGridCell"
+               BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </mah:MetroWindow.Resources>
 
     <Grid Margin="10,8">
@@ -61,6 +70,7 @@
                   Visibility="{Binding IsSearchEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"
                   ItemsSource="{Binding SearchResults}"
                   SelectedItem="{Binding SelectedResult, Mode=TwoWay}"
+                  CellStyle="{StaticResource MetadataSelectedTextCellStyle}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="True"

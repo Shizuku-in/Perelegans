@@ -15,6 +15,18 @@
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
 
+    <mah:MetroWindow.Resources>
+        <Style x:Key="AddFromProcessSelectedTextCellStyle"
+               TargetType="DataGridCell"
+               BasedOn="{StaticResource {x:Type DataGridCell}}">
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </mah:MetroWindow.Resources>
+
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -34,6 +46,7 @@
         <DataGrid Grid.Row="1"
                   ItemsSource="{Binding Processes}"
                   SelectedItem="{Binding SelectedProcess, Mode=TwoWay}"
+                  CellStyle="{StaticResource AddFromProcessSelectedTextCellStyle}"
                   AutoGenerateColumns="False"
                   CanUserAddRows="False"
                   IsReadOnly="True"
