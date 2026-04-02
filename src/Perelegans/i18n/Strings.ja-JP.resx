@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Menu_File" xml:space="preserve"><value>ファイル (_F)</value></data>
+  <data name="Menu_AddFromProcess" xml:space="preserve"><value>プロセスから追加 (_P)</value></data>
+  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>ウェブサイトから追加 (_W)</value></data>
+  <data name="Menu_SaveBackup" xml:space="preserve"><value>バックアップを保存 (_S)</value></data>
+  <data name="Menu_RestoreBackup" xml:space="preserve"><value>バックアップを復元 (_R)</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>終了 (_X)</value></data>
+
+  <data name="Menu_Tool" xml:space="preserve"><value>ツール (_T)</value></data>
+  <data name="Menu_MonitorProcess" xml:space="preserve"><value>プロセス監視の設定 (_M)</value></data>
+  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>プレイ時間統計 (_T)</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>言語 (_L)</value></data>
+  
+  <data name="Menu_Help" xml:space="preserve"><value>ヘルプ (_H)</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>について (_A)</value></data>
+
+  <data name="Column_Title" xml:space="preserve"><value>タイトル</value></data>
+  <data name="Column_Brand" xml:space="preserve"><value>ブランド</value></data>
+  <data name="Column_ReleaseDate" xml:space="preserve"><value>発売日</value></data>
+  <data name="Column_Playtime" xml:space="preserve"><value>プレイ時間</value></data>
+  <data name="Column_Created" xml:space="preserve"><value>作成日</value></data>
+  <data name="Column_LastPlayed" xml:space="preserve"><value>最終プレイ</value></data>
+
+  <data name="Status_TotalPlaytime" xml:space="preserve"><value>総プレイ時間: </value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>完了: </value></data>
+
+  <data name="Context_StartGame" xml:space="preserve"><value>プレイ</value></data>
+  <data name="Context_Metadata" xml:space="preserve"><value>メタデータ</value></data>
+  <data name="Context_FetchMetadata" xml:space="preserve"><value>メタデータの取得</value></data>
+  <data name="Context_EditMetadata" xml:space="preserve"><value>メタデータの編集</value></data>
+  <data name="Context_Open" xml:space="preserve"><value>開く</value></data>
+  <data name="Context_OpenFolder" xml:space="preserve"><value>ゲームフォルダを開く</value></data>
+  <data name="Context_OpenWebsite" xml:space="preserve"><value>ウェブサイトを開く</value></data>
+  <data name="Context_OpenGameStats" xml:space="preserve"><value>プレイ履歴を開く</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>コピー</value></data>
+  <data name="Context_CopyTitle" xml:space="preserve"><value>タイトルをコピー</value></data>
+  <data name="Context_CopyBrand" xml:space="preserve"><value>ブランドをコピー</value></data>
+  <data name="Context_Delete" xml:space="preserve"><value>削除</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>外観設定</value></data>
+  <data name="Settings_ThemeMode" xml:space="preserve"><value>テーマモード:</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>言語:</value></data>
+  <data name="Settings_Monitor" xml:space="preserve"><value>プロセス監視機能</value></data>
+  <data name="Settings_Enabled" xml:space="preserve"><value>監視を有効化:</value></data>
+  <data name="Settings_Interval" xml:space="preserve"><value>同期周期 (秒):</value></data>
+  <data name="Settings_Network" xml:space="preserve"><value>ネットワーク設定</value></data>
+  <data name="Settings_Proxy" xml:space="preserve"><value>プロキシ:</value></data>
+
+  <data name="Btn_Save" xml:space="preserve"><value>保存</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Btn_Ok" xml:space="preserve"><value>OK</value></data>
+
+  <data name="Meta_Title" xml:space="preserve"><value>メタデータの管理</value></data>
+  <data name="Meta_SearchWatermark" xml:space="preserve"><value>タイトルで検索...</value></data>
+  <data name="Meta_SearchBtn" xml:space="preserve"><value>検索</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ 適用</value></data>
+  <data name="Meta_ApplyHint" xml:space="preserve"><value>選択したデータは以下の欄に入力されます。</value></data>
+  <data name="Meta_FieldTitle" xml:space="preserve"><value>タイトル:</value></data>
+  <data name="Meta_FieldBrand" xml:space="preserve"><value>ブランド:</value></data>
+  <data name="Meta_FieldDate" xml:space="preserve"><value>発売日:</value></data>
+  <data name="Meta_FieldWebsite" xml:space="preserve"><value>公式サイト:</value></data>
+  <data name="Meta_FieldProcess" xml:space="preserve"><value>プロセス:</value></data>
+  <data name="Meta_FieldExec" xml:space="preserve"><value>実行パス:</value></data>
+  <data name="Meta_ColSource" xml:space="preserve"><value>ソース</value></data>
+  <data name="Meta_ColTitle" xml:space="preserve"><value>タイトル</value></data>
+  <data name="Meta_ColBrand" xml:space="preserve"><value>ブランド</value></data>
+  <data name="Meta_ColDate" xml:space="preserve"><value>日付</value></data>
+
+  <data name="AddProc_Title" xml:space="preserve"><value>稼働中のプロセスから追加</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>更 新</value></data>
+  <data name="AddProc_Hint" xml:space="preserve"><value>メインウィンドウを持つプロセスのみを表示します。</value></data>
+  <data name="AddProc_ColWindow" xml:space="preserve"><value>ウィンドウタイトル</value></data>
+  <data name="AddProc_ColProc" xml:space="preserve"><value>プロセス名</value></data>
+  <data name="AddProc_ColPath" xml:space="preserve"><value>実行パス</value></data>
+
+  <data name="Stats_Title" xml:space="preserve"><value>プレイ時間統計</value></data>
+  <data name="Stats_Tab7Days" xml:space="preserve"><value>過去 7 日間</value></data>
+  <data name="Stats_TabWeekly" xml:space="preserve"><value>今週</value></data>
+  <data name="Stats_TabMonthly" xml:space="preserve"><value>今月</value></data>
+  <data name="Stats_TabYearly" xml:space="preserve"><value>今年</value></data>
+  <data name="Stats_ColGame" xml:space="preserve"><value>ゲーム</value></data>
+  <data name="Stats_ColPeriod" xml:space="preserve"><value>期間</value></data>
+  <data name="Stats_ColPlaytime" xml:space="preserve"><value>プレイ時間</value></data>
+  <data name="Stats_ColSessions" xml:space="preserve"><value>セッション数</value></data>
+
+  <data name="Log_Title" xml:space="preserve"><value>プレイ履歴</value></data>
+  <data name="Log_ColSession" xml:space="preserve"><value>セッションID</value></data>
+  <data name="Log_ColStart" xml:space="preserve"><value>開始時刻</value></data>
+  <data name="Log_ColEnd" xml:space="preserve"><value>終了時刻</value></data>
+  <data name="Log_ColDate" xml:space="preserve"><value>日付</value></data>
+  <data name="Log_ColTime" xml:space="preserve"><value>時間</value></data>
+  <data name="Log_ColDuration" xml:space="preserve"><value>継続時間</value></data>
+  <data name="Msg_AppTitle" xml:space="preserve"><value>Perelegans</value></data>
+  <data name="Msg_ErrorTitle" xml:space="preserve"><value>エラー</value></data>
+  <data name="Msg_BackupSuccess" xml:space="preserve"><value>バックアップを保存しました！</value></data>
+  <data name="Msg_BackupFailed" xml:space="preserve"><value>バックアップ失敗: {0}</value></data>
+  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>バックアップを復元しました！</value></data>
+  <data name="Msg_RestoreFailed" xml:space="preserve"><value>復元失敗: {0}</value></data>
+  <data name="Msg_AboutTitle" xml:space="preserve"><value>Perelegans について</value></data>
+  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
+Game Playtime Tracker &amp; Manager
+
+© 2026</value></data>
+  <data name="Msg_NoExecPath" xml:space="preserve"><value>実行ファイルのパスが設定されていません。
+メタデータエディターで設定するとゲームを直接起動できます。</value></data>
+  <data name="Msg_GameStartFailed" xml:space="preserve"><value>ゲームの起動に失敗しました: {0}</value></data>
+  <data name="Msg_NoVndbId" xml:space="preserve"><value>VNDB ID が見つかりません。</value></data>
+  <data name="Msg_NoEgsId" xml:space="preserve"><value>ErogameSpace ID が見つかりません。</value></data>
+  <data name="Msg_NoBangumiId" xml:space="preserve"><value>Bangumi ID が見つかりません。</value></data>
+  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>削除の確認</value></data>
+  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>「{0}」を削除してもよろしいですか？</value></data>
+</root>

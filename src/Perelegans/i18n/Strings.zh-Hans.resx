@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Menu_File" xml:space="preserve"><value>文件 (_F)</value></data>
+  <data name="Menu_AddFromProcess" xml:space="preserve"><value>从进程添加 (_P)</value></data>
+  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>从网站添加 (_W)</value></data>
+  <data name="Menu_SaveBackup" xml:space="preserve"><value>保存备份 (_S)</value></data>
+  <data name="Menu_RestoreBackup" xml:space="preserve"><value>恢复备份 (_R)</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>退出 (_X)</value></data>
+
+  <data name="Menu_Tool" xml:space="preserve"><value>工具 (_T)</value></data>
+  <data name="Menu_MonitorProcess" xml:space="preserve"><value>监视进程设置 (_M)</value></data>
+  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>游玩时间统计 (_T)</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>语言 (_L)</value></data>
+  
+  <data name="Menu_Help" xml:space="preserve"><value>帮助 (_H)</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>关于 (_A)</value></data>
+
+  <data name="Column_Title" xml:space="preserve"><value>标题</value></data>
+  <data name="Column_Brand" xml:space="preserve"><value>品牌</value></data>
+  <data name="Column_ReleaseDate" xml:space="preserve"><value>发售日期</value></data>
+  <data name="Column_Playtime" xml:space="preserve"><value>游玩时长</value></data>
+  <data name="Column_Created" xml:space="preserve"><value>创建日期</value></data>
+  <data name="Column_LastPlayed" xml:space="preserve"><value>最后游玩</value></data>
+
+  <data name="Status_TotalPlaytime" xml:space="preserve"><value>总计游玩时长: </value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>已推完: </value></data>
+
+  <data name="Context_StartGame" xml:space="preserve"><value>启动</value></data>
+  <data name="Context_Metadata" xml:space="preserve"><value>元数据</value></data>
+  <data name="Context_FetchMetadata" xml:space="preserve"><value>获取元数据</value></data>
+  <data name="Context_EditMetadata" xml:space="preserve"><value>编辑元数据</value></data>
+  <data name="Context_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Context_OpenFolder" xml:space="preserve"><value>打开游戏文件夹</value></data>
+  <data name="Context_OpenWebsite" xml:space="preserve"><value>打开网页</value></data>
+  <data name="Context_OpenGameStats" xml:space="preserve"><value>查看运行日志</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="Context_CopyTitle" xml:space="preserve"><value>复制标题</value></data>
+  <data name="Context_CopyBrand" xml:space="preserve"><value>复制品牌</value></data>
+  <data name="Context_Delete" xml:space="preserve"><value>删除游戏</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>外观与语言界面</value></data>
+  <data name="Settings_ThemeMode" xml:space="preserve"><value>应用主题:</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>偏好语言:</value></data>
+  <data name="Settings_Monitor" xml:space="preserve"><value>后台进程时段监视器</value></data>
+  <data name="Settings_Enabled" xml:space="preserve"><value>启用自启监视:</value></data>
+  <data name="Settings_Interval" xml:space="preserve"><value>轮询间隔(秒):</value></data>
+  <data name="Settings_Network" xml:space="preserve"><value>网络代理设置</value></data>
+  <data name="Settings_Proxy" xml:space="preserve"><value>HTTP代理:</value></data>
+
+  <data name="Btn_Save" xml:space="preserve"><value>确定</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Btn_Ok" xml:space="preserve"><value>完成</value></data>
+
+  <data name="Meta_Title" xml:space="preserve"><value>游戏元数据配置</value></data>
+  <data name="Meta_SearchWatermark" xml:space="preserve"><value>输入原名进行跨库搜索...</value></data>
+  <data name="Meta_SearchBtn" xml:space="preserve"><value>搜索</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ 填充</value></data>
+  <data name="Meta_ApplyHint" xml:space="preserve"><value>目标在线数据行将被自动解包填入下方编辑区供校验保存。</value></data>
+  <data name="Meta_FieldTitle" xml:space="preserve"><value>游戏名:</value></data>
+  <data name="Meta_FieldBrand" xml:space="preserve"><value>厂商/品牌:</value></data>
+  <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
+  <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
+  <data name="Meta_FieldProcess" xml:space="preserve"><value>进程特征:</value></data>
+  <data name="Meta_FieldExec" xml:space="preserve"><value>启动路径:</value></data>
+  <data name="Meta_ColSource" xml:space="preserve"><value>来源</value></data>
+  <data name="Meta_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Meta_ColBrand" xml:space="preserve"><value>厂商</value></data>
+  <data name="Meta_ColDate" xml:space="preserve"><value>发售</value></data>
+
+  <data name="AddProc_Title" xml:space="preserve"><value>从活跃进程添加库游戏</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>重新扫描</value></data>
+  <data name="AddProc_Hint" xml:space="preserve"><value>默认仅展示且包含“主窗体”属性的可见运行活跃进程。</value></data>
+  <data name="AddProc_ColWindow" xml:space="preserve"><value>窗口标题名称</value></data>
+  <data name="AddProc_ColProc" xml:space="preserve"><value>进程对象</value></data>
+  <data name="AddProc_ColPath" xml:space="preserve"><value>执行物理绝对路径</value></data>
+
+  <data name="Stats_Title" xml:space="preserve"><value>游戏游玩时间占比与统计报表</value></data>
+  <data name="Stats_Tab7Days" xml:space="preserve"><value>过去 7 天</value></data>
+  <data name="Stats_TabWeekly" xml:space="preserve"><value>本周追踪</value></data>
+  <data name="Stats_TabMonthly" xml:space="preserve"><value>当月总览</value></data>
+  <data name="Stats_TabYearly" xml:space="preserve"><value>年度总结</value></data>
+  <data name="Stats_ColGame" xml:space="preserve"><value>游戏本体</value></data>
+  <data name="Stats_ColPeriod" xml:space="preserve"><value>统计周期</value></data>
+  <data name="Stats_ColPlaytime" xml:space="preserve"><value>游玩时长</value></data>
+  <data name="Stats_ColSessions" xml:space="preserve"><value>会话数</value></data>
+
+  <data name="Log_Title" xml:space="preserve"><value>本地单开历史游玩 Session 追踪志</value></data>
+  <data name="Log_ColSession" xml:space="preserve"><value>Session 号</value></data>
+  <data name="Log_ColStart" xml:space="preserve"><value>打开时间</value></data>
+  <data name="Log_ColEnd" xml:space="preserve"><value>关闭挂起事件</value></data>
+  <data name="Log_ColDate" xml:space="preserve"><value>日期</value></data>
+  <data name="Log_ColTime" xml:space="preserve"><value>时间</value></data>
+  <data name="Log_ColDuration" xml:space="preserve"><value>单次持续</value></data>
+  <data name="Msg_AppTitle" xml:space="preserve"><value>Perelegans</value></data>
+  <data name="Msg_ErrorTitle" xml:space="preserve"><value>出错</value></data>
+  <data name="Msg_BackupSuccess" xml:space="preserve"><value>备份保存成功！</value></data>
+  <data name="Msg_BackupFailed" xml:space="preserve"><value>备份失败: {0}</value></data>
+  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>备份恢复成功！</value></data>
+  <data name="Msg_RestoreFailed" xml:space="preserve"><value>恢复失败: {0}</value></data>
+  <data name="Msg_AboutTitle" xml:space="preserve"><value>关于 Perelegans</value></data>
+  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
+Game Playtime Tracker &amp; Manager
+
+© 2026</value></data>
+  <data name="Msg_NoExecPath" xml:space="preserve"><value>该游戏尚未配置可执行文件路径。
+请在“元数据”编辑窗口中设置即可直接启动游戏。</value></data>
+  <data name="Msg_GameStartFailed" xml:space="preserve"><value>游戏启动失败: {0}</value></data>
+  <data name="Msg_NoVndbId" xml:space="preserve"><value>未找到 VNDB ID。</value></data>
+  <data name="Msg_NoEgsId" xml:space="preserve"><value>未找到 ErogameSpace ID。</value></data>
+  <data name="Msg_NoBangumiId" xml:space="preserve"><value>未找到 Bangumi ID。</value></data>
+  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>删除确认</value></data>
+  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>确定要删除「{0}」吗？</value></data>
+</root>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="Menu_File" xml:space="preserve"><value>_File</value></data>
+  <data name="Menu_AddFromProcess" xml:space="preserve"><value>Add From Process (_P)</value></data>
+  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>Add From Website (_W)</value></data>
+  <data name="Menu_SaveBackup" xml:space="preserve"><value>Save Backup (_S)</value></data>
+  <data name="Menu_RestoreBackup" xml:space="preserve"><value>Restore Backup (_R)</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Exit (_X)</value></data>
+
+  <data name="Menu_Tool" xml:space="preserve"><value>_Tool</value></data>
+  <data name="Menu_MonitorProcess" xml:space="preserve"><value>Process Monitor Settings (_M)</value></data>
+  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>Playtime Statistics (_T)</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>Language (_L)</value></data>
+  
+  <data name="Menu_Help" xml:space="preserve"><value>_Help</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>About (_A)</value></data>
+
+  <data name="Column_Title" xml:space="preserve"><value>Title</value></data>
+  <data name="Column_Brand" xml:space="preserve"><value>Brand</value></data>
+  <data name="Column_ReleaseDate" xml:space="preserve"><value>Release Date</value></data>
+  <data name="Column_Playtime" xml:space="preserve"><value>Playtime</value></data>
+  <data name="Column_Created" xml:space="preserve"><value>Created Date</value></data>
+  <data name="Column_LastPlayed" xml:space="preserve"><value>Last Played</value></data>
+
+  <data name="Status_TotalPlaytime" xml:space="preserve"><value>Total Playtime: </value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>Completed: </value></data>
+
+  <data name="Context_StartGame" xml:space="preserve"><value>Start Game</value></data>
+  <data name="Context_Metadata" xml:space="preserve"><value>Metadata</value></data>
+  <data name="Context_FetchMetadata" xml:space="preserve"><value>Fetch Metadata</value></data>
+  <data name="Context_EditMetadata" xml:space="preserve"><value>Edit Metadata</value></data>
+  <data name="Context_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Context_OpenFolder" xml:space="preserve"><value>Open Game Folder</value></data>
+  <data name="Context_OpenWebsite" xml:space="preserve"><value>Open Website</value></data>
+  <data name="Context_OpenGameStats" xml:space="preserve"><value>Open Game Log</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="Context_CopyTitle" xml:space="preserve"><value>Copy Title</value></data>
+  <data name="Context_CopyBrand" xml:space="preserve"><value>Copy Brand</value></data>
+  <data name="Context_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Settings_ThemeMode" xml:space="preserve"><value>Theme Mode:</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>Language:</value></data>
+  <data name="Settings_Monitor" xml:space="preserve"><value>Process Monitor</value></data>
+  <data name="Settings_Enabled" xml:space="preserve"><value>Enabled:</value></data>
+  <data name="Settings_Interval" xml:space="preserve"><value>Interval (sec):</value></data>
+  <data name="Settings_Network" xml:space="preserve"><value>Network Proxy</value></data>
+  <data name="Settings_Proxy" xml:space="preserve"><value>Proxy URL:</value></data>
+
+  <data name="Btn_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Btn_Ok" xml:space="preserve"><value>OK</value></data>
+
+  <data name="Meta_Title" xml:space="preserve"><value>Metadata Management</value></data>
+  <data name="Meta_SearchWatermark" xml:space="preserve"><value>Search game title...</value></data>
+  <data name="Meta_SearchBtn" xml:space="preserve"><value>Search</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ Apply</value></data>
+  <data name="Meta_ApplyHint" xml:space="preserve"><value>The selected entry will populate fields below.</value></data>
+  <data name="Meta_FieldTitle" xml:space="preserve"><value>Title:</value></data>
+  <data name="Meta_FieldBrand" xml:space="preserve"><value>Brand:</value></data>
+  <data name="Meta_FieldDate" xml:space="preserve"><value>Release Date:</value></data>
+  <data name="Meta_FieldWebsite" xml:space="preserve"><value>Website:</value></data>
+  <data name="Meta_FieldProcess" xml:space="preserve"><value>Process Name:</value></data>
+  <data name="Meta_FieldExec" xml:space="preserve"><value>Exec Path:</value></data>
+  <data name="Meta_ColSource" xml:space="preserve"><value>Source</value></data>
+  <data name="Meta_ColTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="Meta_ColBrand" xml:space="preserve"><value>Brand</value></data>
+  <data name="Meta_ColDate" xml:space="preserve"><value>Date</value></data>
+
+  <data name="AddProc_Title" xml:space="preserve"><value>Add From Running Process</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="AddProc_Hint" xml:space="preserve"><value>Only processes with main windows are shown.</value></data>
+  <data name="AddProc_ColWindow" xml:space="preserve"><value>Window Title</value></data>
+  <data name="AddProc_ColProc" xml:space="preserve"><value>Process</value></data>
+  <data name="AddProc_ColPath" xml:space="preserve"><value>Executable Path</value></data>
+
+  <data name="Stats_Title" xml:space="preserve"><value>Playtime Statistics</value></data>
+  <data name="Stats_Tab7Days" xml:space="preserve"><value>Last 7 Days</value></data>
+  <data name="Stats_TabWeekly" xml:space="preserve"><value>This Week</value></data>
+  <data name="Stats_TabMonthly" xml:space="preserve"><value>This Month</value></data>
+  <data name="Stats_TabYearly" xml:space="preserve"><value>This Year</value></data>
+  <data name="Stats_ColGame" xml:space="preserve"><value>Game Title</value></data>
+  <data name="Stats_ColPeriod" xml:space="preserve"><value>Period</value></data>
+  <data name="Stats_ColPlaytime" xml:space="preserve"><value>Playtime</value></data>
+  <data name="Stats_ColSessions" xml:space="preserve"><value>Sessions</value></data>
+
+  <data name="Log_Title" xml:space="preserve"><value>Play Session Logs</value></data>
+  <data name="Log_ColSession" xml:space="preserve"><value>Session ID</value></data>
+  <data name="Log_ColStart" xml:space="preserve"><value>Start Time</value></data>
+  <data name="Log_ColEnd" xml:space="preserve"><value>End Time</value></data>
+  <data name="Log_ColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="Log_ColTime" xml:space="preserve"><value>Time</value></data>
+  <data name="Log_ColDuration" xml:space="preserve"><value>Duration</value></data>
+  <data name="Msg_AppTitle" xml:space="preserve"><value>Perelegans</value></data>
+  <data name="Msg_ErrorTitle" xml:space="preserve"><value>Error</value></data>
+  <data name="Msg_BackupSuccess" xml:space="preserve"><value>Backup saved successfully!</value></data>
+  <data name="Msg_BackupFailed" xml:space="preserve"><value>Backup failed: {0}</value></data>
+  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>Backup restored successfully!</value></data>
+  <data name="Msg_RestoreFailed" xml:space="preserve"><value>Restore failed: {0}</value></data>
+  <data name="Msg_AboutTitle" xml:space="preserve"><value>About Perelegans</value></data>
+  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
+Game Playtime Tracker &amp; Manager
+
+© 2026</value></data>
+  <data name="Msg_NoExecPath" xml:space="preserve"><value>Executable path not configured.
+Please set it in the Metadata editor to start the game directly.</value></data>
+  <data name="Msg_GameStartFailed" xml:space="preserve"><value>Failed to start game: {0}</value></data>
+  <data name="Msg_NoVndbId" xml:space="preserve"><value>No VNDB ID found.</value></data>
+  <data name="Msg_NoEgsId" xml:space="preserve"><value>No ErogameSpace ID found.</value></data>
+  <data name="Msg_NoBangumiId" xml:space="preserve"><value>No Bangumi ID found.</value></data>
+  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>Confirm Deletion</value></data>
+  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
+</root>

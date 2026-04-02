@@ -14,7 +14,8 @@
         BorderThickness="1"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         Background="{DynamicResource Perelegans.WindowBackground}"
-        Foreground="{DynamicResource Perelegans.ForegroundBrush}">
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+        xmlns:i18n="clr-namespace:Perelegans.i18n">
 
     <mah:MetroWindow.Resources>
         <ObjectDataProvider x:Key="ThemeModes" MethodName="GetValues" ObjectType="{x:Type models:ThemeMode}">
@@ -33,25 +34,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Section 1: 外観 (Appearance) -->
-        <GroupBox Grid.Row="0" Header="外観 (Appearance)" Margin="0,0,0,8"
-                  Padding="8,6" FontSize="12"
-                  BorderBrush="{DynamicResource Perelegans.BorderBrush}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="110"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Text="Theme Mode:" VerticalAlignment="Center" FontSize="12"/>
-                <ComboBox Grid.Column="1" Height="26" FontSize="12"
-                          ItemsSource="{Binding Source={StaticResource ThemeModes}}"
-                          SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"/>
-            </Grid>
-        </GroupBox>
-
-        <!-- Section 2: 監視 (Monitor) -->
-        <GroupBox Grid.Row="1" Header="監視 (Process Monitor)" Margin="0,0,0,8"
+        <!-- Section 1: 外観 (Appearance / Language) -->
+        <GroupBox Grid.Row="0" Header="{i18n:Translate Settings_Appearance}" Margin="0,0,0,8"
                   Padding="8,6" FontSize="12"
                   BorderBrush="{DynamicResource Perelegans.BorderBrush}">
             <Grid>
@@ -65,12 +49,39 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Enabled:" VerticalAlignment="Center" FontSize="12"/>
+                <TextBlock Grid.Row="0" Text="{i18n:Translate Settings_ThemeMode}" VerticalAlignment="Center" FontSize="12"/>
+                <ComboBox Grid.Row="0" Grid.Column="1" Height="26" FontSize="12"
+                          ItemsSource="{Binding Source={StaticResource ThemeModes}}"
+                          SelectedItem="{Binding SelectedTheme, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="2" Text="{i18n:Translate Settings_Language}" VerticalAlignment="Center" FontSize="12"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" Height="26" FontSize="12"
+                          ItemsSource="{Binding LanguageOptions}"
+                          SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Section 2: 監視 (Monitor) -->
+        <GroupBox Grid.Row="1" Header="{i18n:Translate Settings_Monitor}" Margin="0,0,0,8"
+                  Padding="8,6" FontSize="12"
+                  BorderBrush="{DynamicResource Perelegans.BorderBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{i18n:Translate Settings_Enabled}" VerticalAlignment="Center" FontSize="12"/>
                 <CheckBox Grid.Row="0" Grid.Column="1"
                           IsChecked="{Binding MonitorEnabled, Mode=TwoWay}"
                           VerticalAlignment="Center"/>
 
-                <TextBlock Grid.Row="2" Text="Interval (sec):" VerticalAlignment="Center" FontSize="12"/>
+                <TextBlock Grid.Row="2" Text="{i18n:Translate Settings_Interval}" VerticalAlignment="Center" FontSize="12"/>
                 <mah:NumericUpDown Grid.Row="2" Grid.Column="1"
                                    Value="{Binding MonitorIntervalSeconds, Mode=TwoWay}"
                                    Minimum="1" Maximum="60" Interval="1"
@@ -80,7 +91,7 @@
         </GroupBox>
 
         <!-- Section 3: 网络 (Network) -->
-        <GroupBox Grid.Row="2" Header="网络 (Network)" Margin="0,0,0,8"
+        <GroupBox Grid.Row="2" Header="{i18n:Translate Settings_Network}" Margin="0,0,0,8"
                   Padding="8,6" FontSize="12"
                   BorderBrush="{DynamicResource Perelegans.BorderBrush}">
             <Grid>
@@ -89,7 +100,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Proxy:" VerticalAlignment="Center" FontSize="12"/>
+                <TextBlock Text="{i18n:Translate Settings_Proxy}" VerticalAlignment="Center" FontSize="12"/>
                 <TextBox Grid.Column="1" Height="26" FontSize="12"
                          VerticalContentAlignment="Center"
                          Text="{Binding ProxyAddress, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -100,12 +111,12 @@
         <!-- Buttons -->
         <StackPanel Grid.Row="4" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,4,0,0">
-            <Button Content="Save" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                     Margin="0,0,8,0"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Command="{Binding SaveCommand}"
                     Click="BtnSave_Click"/>
-            <Button Content="Cancel" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

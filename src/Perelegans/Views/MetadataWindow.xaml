@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-        Title="Metadata"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate Meta_Title}"
         TitleCharacterCasing="Normal"
         Height="480" Width="540"
         WindowStartupLocation="CenterOwner"
@@ -39,7 +40,7 @@
             <TextBox Grid.Column="0" Height="26" FontSize="12"
                      VerticalContentAlignment="Center" Margin="0,0,4,0"
                      Text="{Binding SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     mah:TextBoxHelper.Watermark="搜索标题..."
+                     mah:TextBoxHelper.Watermark="{i18n:Translate Meta_SearchWatermark}"
                      KeyDown="SearchBox_KeyDown"/>
 
             <ComboBox Grid.Column="1" Height="26" FontSize="12" Margin="0,0,4,0"
@@ -47,7 +48,7 @@
                       SelectedItem="{Binding SelectedSource, Mode=TwoWay}"/>
 
             <Button Grid.Column="2" Width="60" Height="26" FontSize="11"
-                    Content="搜索"
+                    Content="{i18n:Translate Meta_SearchBtn}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Command="{Binding SearchCommand}"/>
         </Grid>
@@ -71,20 +72,20 @@
                   AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
                   HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Source" Binding="{Binding Source}" Width="70"/>
-                <DataGridTextColumn Header="Title" Binding="{Binding Title}" Width="*"/>
-                <DataGridTextColumn Header="Brand" Binding="{Binding Brand}" Width="100"/>
-                <DataGridTextColumn Header="Date" Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}" Width="80"/>
+                <DataGridTextColumn Header="{i18n:Translate Meta_ColSource}" Binding="{Binding Source}" Width="70"/>
+                <DataGridTextColumn Header="{i18n:Translate Meta_ColTitle}" Binding="{Binding Title}" Width="*"/>
+                <DataGridTextColumn Header="{i18n:Translate Meta_ColBrand}" Binding="{Binding Brand}" Width="100"/>
+                <DataGridTextColumn Header="{i18n:Translate Meta_ColDate}" Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}" Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <!-- Apply button -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,4,0,4"
                     Visibility="{Binding IsSearchEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Button Content="↓ 应用选中" Width="80" Height="24" FontSize="11"
+            <Button Content="{i18n:Translate Meta_ApplyBtn}" Width="80" Height="24" FontSize="11"
                     Command="{Binding ApplySelectedCommand}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"/>
-            <TextBlock Text=" 选中结果将填入下方编辑字段" FontSize="10" VerticalAlignment="Center"
+            <TextBlock Text="{i18n:Translate Meta_ApplyHint}" FontSize="10" VerticalAlignment="Center"
                        Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}" Margin="8,0,0,0"/>
         </StackPanel>
 
@@ -107,17 +108,17 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Title:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="0" Text="{i18n:Translate Meta_FieldTitle}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditTitle, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="1" Text="Brand:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="1" Text="{i18n:Translate Meta_FieldBrand}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <TextBox Grid.Row="1" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditBrand, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="2" Text="Release Date:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="2" Text="{i18n:Translate Meta_FieldDate}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <DatePicker Grid.Row="2" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                             SelectedDate="{Binding EditReleaseDate, Mode=TwoWay}"/>
 
@@ -137,19 +138,19 @@
                          VerticalContentAlignment="Center"
                          Text="{Binding EditEgsId, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="6" Text="Website:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="6" Text="{i18n:Translate Meta_FieldWebsite}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <TextBox Grid.Row="6" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditWebsite, Mode=TwoWay}"
                          mah:TextBoxHelper.Watermark="https://..."/>
 
-                <TextBlock Grid.Row="7" Text="Process:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="7" Text="{i18n:Translate Meta_FieldProcess}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <TextBox Grid.Row="7" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditProcessName, Mode=TwoWay}"
                          mah:TextBoxHelper.Watermark="GAME_PROCESS.exe"/>
 
-                <TextBlock Grid.Row="8" Text="Exec Path:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBlock Grid.Row="8" Text="{i18n:Translate Meta_FieldExec}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <Grid Grid.Row="8" Grid.Column="1" Margin="0,2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -168,12 +169,12 @@
         <!-- Save/Cancel buttons -->
         <StackPanel Grid.Row="4" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,4,0,0">
-            <Button Content="Save" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                     Margin="0,0,8,0"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Command="{Binding SaveCommand}"
                     Click="BtnSave_Click"/>
-            <Button Content="Cancel" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

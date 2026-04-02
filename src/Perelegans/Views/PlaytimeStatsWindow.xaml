@@ -3,7 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
-        Title="Playtime Statistics"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate Stats_Title}"
         TitleCharacterCasing="Normal"
         Height="520" Width="720"
         WindowStartupLocation="CenterOwner"
@@ -24,10 +25,10 @@
         <TabControl Grid.Row="0" Height="30"
                     SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
                     FontSize="12" Padding="0">
-            <TabItem Header="過去7日"/>
-            <TabItem Header="以週計"/>
-            <TabItem Header="以月計"/>
-            <TabItem Header="以年計"/>
+            <TabItem Header="{i18n:Translate Stats_Tab7Days}"/>
+            <TabItem Header="{i18n:Translate Stats_TabWeekly}"/>
+            <TabItem Header="{i18n:Translate Stats_TabMonthly}"/>
+            <TabItem Header="{i18n:Translate Stats_TabYearly}"/>
         </TabControl>
 
         <!-- Content: Table + Chart -->
@@ -56,9 +57,9 @@
                       AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
                       HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Period" Binding="{Binding Label}" Width="*"/>
-                    <DataGridTextColumn Header="Playtime" Binding="{Binding PlaytimeText}" Width="70"/>
-                    <DataGridTextColumn Header="Sessions" Binding="{Binding SessionCount}" Width="60"/>
+                    <DataGridTextColumn Header="{i18n:Translate Stats_ColPeriod}" Binding="{Binding Label}" Width="*"/>
+                    <DataGridTextColumn Header="{i18n:Translate Stats_ColPlaytime}" Binding="{Binding PlaytimeText}" Width="70"/>
+                    <DataGridTextColumn Header="{i18n:Translate Stats_ColSessions}" Binding="{Binding SessionCount}" Width="60"/>
                 </DataGrid.Columns>
             </DataGrid>
 

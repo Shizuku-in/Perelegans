@@ -22,6 +22,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _monitorEnabled;
 
+    [ObservableProperty]
+    private string _selectedLanguage = "zh-Hans";
+
+    public string[] LanguageOptions { get; } = { "zh-Hans", "en-US", "ja-JP" };
+
     public SettingsViewModel(ThemeService themeService, SettingsService settingsService)
     {
         _themeService = themeService;
@@ -33,6 +38,7 @@ public partial class SettingsViewModel : ObservableObject
         _monitorIntervalSeconds = s.MonitorIntervalSeconds;
         _proxyAddress = s.ProxyAddress;
         _monitorEnabled = s.MonitorEnabled;
+        _selectedLanguage = s.Language;
     }
 
     /// <summary>
@@ -46,9 +52,11 @@ public partial class SettingsViewModel : ObservableObject
         s.MonitorIntervalSeconds = MonitorIntervalSeconds;
         s.ProxyAddress = ProxyAddress;
         s.MonitorEnabled = MonitorEnabled;
+        s.Language = SelectedLanguage;
 
         _settingsService.Save();
         _themeService.ApplyTheme(SelectedTheme);
+        TranslationService.Instance.ChangeLanguage(SelectedLanguage);
     }
 
     /// <summary>
@@ -62,7 +70,8 @@ public partial class SettingsViewModel : ObservableObject
             return s.Theme != SelectedTheme
                 || s.MonitorIntervalSeconds != MonitorIntervalSeconds
                 || s.ProxyAddress != ProxyAddress
-                || s.MonitorEnabled != MonitorEnabled;
+                || s.MonitorEnabled != MonitorEnabled
+                || s.Language != SelectedLanguage;
         }
     }
 }

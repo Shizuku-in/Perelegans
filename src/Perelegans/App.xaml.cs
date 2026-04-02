@@ -19,6 +19,7 @@ public partial class App : Application
 
         _themeService = new ThemeService();
         _themeService.ApplyTheme(settingsService.Settings.Theme);
+        TranslationService.Instance.ChangeLanguage(settingsService.Settings.Language);
 
         var dbService = new DatabaseService();
         _processMonitor = new ProcessMonitorService(dbService);

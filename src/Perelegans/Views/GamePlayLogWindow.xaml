@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-        Title="{Binding GameTitle, StringFormat='Play Log - {0}'}"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate Log_Title}"
         TitleCharacterCasing="Normal"
         Height="400" Width="480"
         WindowStartupLocation="CenterOwner"
@@ -28,9 +29,9 @@
                   AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
                   HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="100"/>
-                <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="*"/>
-                <DataGridTextColumn Header="Duration" Binding="{Binding Duration}" Width="80"/>
+                <DataGridTextColumn Header="{i18n:Translate Log_ColDate}" Binding="{Binding Date}" Width="100"/>
+                <DataGridTextColumn Header="{i18n:Translate Log_ColTime}" Binding="{Binding Time}" Width="*"/>
+                <DataGridTextColumn Header="{i18n:Translate Log_ColDuration}" Binding="{Binding Duration}" Width="80"/>
             </DataGrid.Columns>
         </DataGrid>
     </Grid>

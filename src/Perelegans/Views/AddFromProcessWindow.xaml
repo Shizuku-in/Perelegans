@@ -2,7 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
-        Title="从进程添加 (Add From Process)"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate AddProc_Title}"
         Height="450" Width="600"
         WindowStartupLocation="CenterOwner"
         ShowTitleBar="True"
@@ -20,9 +21,9 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
-            <Button Content="刷新列表" Width="80" Height="26" FontSize="11"
+            <Button Content="{i18n:Translate AddProc_Refresh}" Width="80" Height="26" FontSize="11"
                     Command="{Binding RefreshProcessesCommand}"/>
-            <TextBlock Text="仅显示具有主窗口标题的进程" Margin="10,0,0,0" VerticalAlignment="Center" 
+            <TextBlock Text="{i18n:Translate AddProc_Hint}" Margin="10,0,0,0" VerticalAlignment="Center" 
                        Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}" FontSize="11"/>
         </StackPanel>
 
@@ -43,17 +44,17 @@
                   AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
                   HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Window Title" Binding="{Binding WindowTitle}" Width="150"/>
-                <DataGridTextColumn Header="Process Name" Binding="{Binding ProcessName}" Width="100"/>
-                <DataGridTextColumn Header="Path" Binding="{Binding ExecutablePath}" Width="*"/>
+                <DataGridTextColumn Header="{i18n:Translate AddProc_ColWindow}" Binding="{Binding WindowTitle}" Width="150"/>
+                <DataGridTextColumn Header="{i18n:Translate AddProc_ColProc}" Binding="{Binding ProcessName}" Width="100"/>
+                <DataGridTextColumn Header="{i18n:Translate AddProc_ColPath}" Binding="{Binding ExecutablePath}" Width="*"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="确定" Width="80" Height="28" FontSize="12" Margin="0,0,8,0"
+            <Button Content="{i18n:Translate Btn_Ok}" Width="80" Height="28" FontSize="12" Margin="0,0,8,0"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Click="BtnOk_Click"/>
-            <Button Content="取消" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

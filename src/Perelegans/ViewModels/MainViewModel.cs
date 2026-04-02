@@ -243,11 +243,11 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 System.IO.File.Copy(GetDatabasePath(), dialog.FileName, true);
-                MessageBox.Show("备份保存成功！", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(TranslationService.Instance["Msg_BackupSuccess"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"备份失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(TranslationService.Instance["Msg_BackupFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
@@ -267,11 +267,11 @@ public partial class MainViewModel : ObservableObject
                 Games.Clear();
                 var games = await _dbService.GetAllGamesAsync();
                 foreach (var g in games) Games.Add(g);
-                MessageBox.Show("备份恢复成功！", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(TranslationService.Instance["Msg_RestoreSuccess"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"恢复失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(string.Format(TranslationService.Instance["Msg_RestoreFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
@@ -309,8 +309,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ShowAbout()
     {
-        MessageBox.Show("Perelegans v0.2\nGame Playtime Tracker & Manager\n\n© 2026",
-            "关于 Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(TranslationService.Instance["Msg_AboutText"], TranslationService.Instance["Msg_AboutTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     // ---- Settings ----
@@ -345,7 +344,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null || string.IsNullOrWhiteSpace(SelectedGame.ExecutablePath))
         {
-            MessageBox.Show("该游戏尚未配置可执行文件路径。\n请在“元数据”编辑窗口中设置即可直接启动游戏。", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(TranslationService.Instance["Msg_NoExecPath"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         
@@ -360,7 +359,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"游戏启动失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(string.Format(TranslationService.Instance["Msg_GameStartFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -452,7 +451,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.VndbId != null ? $"https://vndb.org/v{SelectedGame.VndbId.Replace("v", "")}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show("No VNDB ID found.", "Perelegans");
+        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoVndbId"], TranslationService.Instance["Msg_AppTitle"]);
     }
 
     [RelayCommand]
@@ -460,7 +459,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.ErogameSpaceId != null ? $"https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game={SelectedGame.ErogameSpaceId}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show("No ErogameSpace ID found.", "Perelegans");
+        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoEgsId"], TranslationService.Instance["Msg_AppTitle"]);
     }
 
     [RelayCommand]
@@ -468,7 +467,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.BangumiId != null ? $"https://bgm.tv/subject/{SelectedGame.BangumiId}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show("No Bangumi ID found.", "Perelegans");
+        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoBangumiId"], TranslationService.Instance["Msg_AppTitle"]);
     }
 
     [RelayCommand]
@@ -509,8 +508,8 @@ public partial class MainViewModel : ObservableObject
     private async Task DeleteGame()
     {
         if (SelectedGame == null) return;
-        var result = MessageBox.Show($"确定要删除「{SelectedGame.Title}」吗？",
-            "删除确认", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        var result = MessageBox.Show(string.Format(TranslationService.Instance["Msg_DeleteConfirmText"], SelectedGame.Title),
+            TranslationService.Instance["Msg_DeleteConfirmTitle"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
         if (result == MessageBoxResult.Yes)
         {
             await _dbService.DeleteGameAsync(SelectedGame.Id);

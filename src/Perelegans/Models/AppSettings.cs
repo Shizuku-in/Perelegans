@@ -23,4 +23,9 @@ public class AppSettings
     /// Whether process monitoring is enabled on startup.
     /// </summary>
     public bool MonitorEnabled { get; set; } = true;
+
+    /// <summary>
+    /// UI Language code (e.g. zh-Hans, en-US, ja-JP).
+    /// </summary>
+    public string Language { get; set; } = "zh-Hans";
 }

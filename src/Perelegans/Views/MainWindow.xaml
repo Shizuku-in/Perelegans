@@ -7,6 +7,7 @@
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:converters="clr-namespace:Perelegans.Converters"
         xmlns:models="clr-namespace:Perelegans.Models"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
         mc:Ignorable="d"
         Title="Perelegans"
         TitleCharacterCasing="Normal"
@@ -86,30 +87,30 @@
               FontSize="12" Padding="4,0">
 
             <!-- File -->
-            <MenuItem Header="_File">
-                <MenuItem Header="从进程添加 (_P)" Command="{Binding AddFromProcessCommand}">
+            <MenuItem Header="{i18n:Translate Menu_File}">
+                <MenuItem Header="{i18n:Translate Menu_AddFromProcess}" Command="{Binding AddFromProcessCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="从网站添加 (_W)" Command="{Binding AddFromWebsiteCommand}">
+                <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}" Command="{Binding AddFromWebsiteCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="保存备份 (_S)" Command="{Binding SaveBackupCommand}">
+                <MenuItem Header="{i18n:Translate Menu_SaveBackup}" Command="{Binding SaveBackupCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="恢复备份 (_R)" Command="{Binding RestoreBackupCommand}">
+                <MenuItem Header="{i18n:Translate Menu_RestoreBackup}" Command="{Binding RestoreBackupCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="Restore" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <Separator/>
-                <MenuItem Header="退出 (_X)" Command="{Binding ExitAppCommand}">
+                <MenuItem Header="{i18n:Translate Menu_Exit}" Command="{Binding ExitAppCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ExitToApp" Width="14" Height="14"/>
                     </MenuItem.Icon>
@@ -117,31 +118,22 @@
             </MenuItem>
 
             <!-- Tool -->
-            <MenuItem Header="_Tool">
-                <MenuItem Header="监视进程 (_M)" Command="{Binding MonitorProcessCommand}">
+            <MenuItem Header="{i18n:Translate Menu_Tool}">
+                <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="MonitorEye" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <MenuItem Header="游玩时间统计 (_T)" Command="{Binding PlaytimeStatisticsCommand}">
+                <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
-                <MenuItem Header="语言 (_L)">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Translate" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                    <MenuItem Header="日本語"/>
-                    <MenuItem Header="简体中文"/>
-                    <MenuItem Header="English"/>
-                </MenuItem>
             </MenuItem>
 
             <!-- Help -->
-            <MenuItem Header="_Help">
-                <MenuItem Header="关于 (_A)" Command="{Binding ShowAboutCommand}">
+            <MenuItem Header="{i18n:Translate Menu_Help}">
+                <MenuItem Header="{i18n:Translate Menu_About}" Command="{Binding ShowAboutCommand}">
                     <MenuItem.Icon>
                         <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14"/>
                     </MenuItem.Icon>
@@ -160,7 +152,7 @@
                                                 VerticalAlignment="Center" Margin="0,0,4,0"
                                                 Foreground="{DynamicResource Perelegans.AccentBrush}"/>
                     <TextBlock VerticalAlignment="Center">
-                        <Run Text="Total Playtime: "/>
+                        <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
                         <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
                              Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
                     </TextBlock>
@@ -173,7 +165,7 @@
                                                 VerticalAlignment="Center" Margin="0,0,4,0"
                                                 Foreground="{DynamicResource Perelegans.AccentBrush}"/>
                     <TextBlock VerticalAlignment="Center">
-                        <Run Text="Completed: "/>
+                        <Run Text="{i18n:Translate Status_Completed}"/>
                         <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
                              Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
                     </TextBlock>
@@ -226,40 +218,40 @@
                 <!-- Context Menu -->
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="启动" Command="{Binding StartGameCommand}">
+                        <MenuItem Header="{i18n:Translate Context_StartGame}" Command="{Binding StartGameCommand}">
                             <MenuItem.Icon>
                                 <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="元数据">
+                        <MenuItem Header="{i18n:Translate Context_Metadata}">
                             <MenuItem.Icon>
                                 <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
                             </MenuItem.Icon>
-                            <MenuItem Header="获取元数据" Command="{Binding FetchMetadataCommand}"/>
-                            <MenuItem Header="编辑元数据" Command="{Binding EditMetadataCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_FetchMetadata}" Command="{Binding FetchMetadataCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_EditMetadata}" Command="{Binding EditMetadataCommand}"/>
                         </MenuItem>
-                        <MenuItem Header="打开">
+                        <MenuItem Header="{i18n:Translate Context_Open}">
                             <MenuItem.Icon>
                                 <iconPacks:PackIconMaterial Kind="FolderOpenOutline" Width="14" Height="14"/>
                             </MenuItem.Icon>
-                            <MenuItem Header="打开游戏文件夹" Command="{Binding OpenGameFolderCommand}"/>
-                            <MenuItem Header="打开网页">
+                            <MenuItem Header="{i18n:Translate Context_OpenFolder}" Command="{Binding OpenGameFolderCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
                                 <MenuItem Header="VNDB" Command="{Binding OpenVndbCommand}"/>
                                 <MenuItem Header="ErogameSpace" Command="{Binding OpenErogameSpaceCommand}"/>
                                 <MenuItem Header="Bangumi" Command="{Binding OpenBangumiCommand}"/>
-                                <MenuItem Header="官网" Command="{Binding OpenOfficialSiteCommand}"/>
+                                <MenuItem Header="Official Site" Command="{Binding OpenOfficialSiteCommand}"/>
                             </MenuItem>
-                            <MenuItem Header="打开游戏时间统计" Command="{Binding OpenGamePlaytimeStatsCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_OpenGameStats}" Command="{Binding OpenGamePlaytimeStatsCommand}"/>
                         </MenuItem>
-                        <MenuItem Header="复制">
+                        <MenuItem Header="{i18n:Translate Context_Copy}">
                             <MenuItem.Icon>
                                 <iconPacks:PackIconMaterial Kind="ContentCopy" Width="14" Height="14"/>
                             </MenuItem.Icon>
-                            <MenuItem Header="复制标题" Command="{Binding CopyTitleCommand}"/>
-                            <MenuItem Header="复制品牌" Command="{Binding CopyBrandCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_CopyTitle}" Command="{Binding CopyTitleCommand}"/>
+                            <MenuItem Header="{i18n:Translate Context_CopyBrand}" Command="{Binding CopyBrandCommand}"/>
                         </MenuItem>
                         <Separator/>
-                        <MenuItem Header="删除" Command="{Binding DeleteGameCommand}">
+                        <MenuItem Header="{i18n:Translate Context_Delete}" Command="{Binding DeleteGameCommand}">
                             <MenuItem.Icon>
                                 <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
                                                             Foreground="#E53935"/>
@@ -286,36 +278,36 @@
                     </DataGridTemplateColumn>
 
                     <!-- Title -->
-                    <DataGridTextColumn Header="Title" Binding="{Binding Title}"
+                    <DataGridTextColumn Header="{i18n:Translate Column_Title}" Binding="{Binding Title}"
                                          Width="*" MinWidth="120"
                                          ElementStyle="{StaticResource {x:Type TextBlock}}"
                                          Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
 
                     <!-- Brand -->
-                    <DataGridTextColumn Header="Brand" Binding="{Binding Brand}"
+                    <DataGridTextColumn Header="{i18n:Translate Column_Brand}" Binding="{Binding Brand}"
                                          Width="120"
                                          Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
 
                     <!-- Release Date -->
-                    <DataGridTextColumn Header="Release Date"
+                    <DataGridTextColumn Header="{i18n:Translate Column_ReleaseDate}"
                                          Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}"
                                          Width="95"
                                          Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
 
                     <!-- Playtime -->
-                    <DataGridTextColumn Header="Playtime"
+                    <DataGridTextColumn Header="{i18n:Translate Column_Playtime}"
                                          Binding="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
                                          Width="75"
                                          Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
 
                     <!-- Created Date -->
-                    <DataGridTextColumn Header="Created"
+                    <DataGridTextColumn Header="{i18n:Translate Column_Created}"
                                          Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd}"
                                          Width="85"
                                          Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
 
                     <!-- Accessed Date -->
-                    <DataGridTextColumn Header="Last Played"
+                    <DataGridTextColumn Header="{i18n:Translate Column_LastPlayed}"
                                          Binding="{Binding AccessedDate, StringFormat=yyyy-MM-dd}"
                                          Width="85"
                                          Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
