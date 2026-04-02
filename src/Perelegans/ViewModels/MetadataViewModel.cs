@@ -57,6 +57,12 @@ public partial class MetadataViewModel : ObservableObject
     [ObservableProperty]
     private string _editWebsite = string.Empty;
 
+    [ObservableProperty]
+    private string _editProcessName = string.Empty;
+
+    [ObservableProperty]
+    private string _editExecutablePath = string.Empty;
+
     public Game TargetGame { get; }
 
     public string[] SourceOptions { get; } = { "VNDB", "Bangumi", "ErogameSpace" };
@@ -83,6 +89,8 @@ public partial class MetadataViewModel : ObservableObject
         _editBangumiId = game.BangumiId ?? "";
         _editEgsId = game.ErogameSpaceId ?? "";
         _editWebsite = game.OfficialWebsite ?? "";
+        _editProcessName = game.ProcessName ?? "";
+        _editExecutablePath = game.ExecutablePath ?? "";
     }
 
     [RelayCommand]
@@ -144,6 +152,25 @@ public partial class MetadataViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void BrowseExecutable()
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*",
+            Title = "Select Game Executable"
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            EditExecutablePath = dialog.FileName;
+            if (string.IsNullOrWhiteSpace(EditProcessName))
+            {
+                EditProcessName = System.IO.Path.GetFileNameWithoutExtension(dialog.FileName);
+            }
+        }
+    }
+
+    [RelayCommand]
     private async Task Save()
     {
         TargetGame.Title = EditTitle;
@@ -153,6 +180,8 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.BangumiId = string.IsNullOrWhiteSpace(EditBangumiId) ? null : EditBangumiId;
         TargetGame.ErogameSpaceId = string.IsNullOrWhiteSpace(EditEgsId) ? null : EditEgsId;
         TargetGame.OfficialWebsite = string.IsNullOrWhiteSpace(EditWebsite) ? null : EditWebsite;
+        TargetGame.ProcessName = EditProcessName;
+        TargetGame.ExecutablePath = EditExecutablePath;
 
         await _dbService.UpdateGameAsync(TargetGame);
     }

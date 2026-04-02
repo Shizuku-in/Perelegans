@@ -181,27 +181,99 @@ public partial class MainViewModel : ObservableObject
     // ---- Menu Commands (File) ----
 
     [RelayCommand]
-    private void AddFromProcess()
+    private async Task AddFromProcess()
     {
-        MessageBox.Show("从进程添加 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        var vm = new AddFromProcessViewModel();
+        var win = new AddFromProcessWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        if (win.ShowDialog() == true && vm.SelectedProcess != null)
+        {
+            var newGame = new Game
+            {
+                Title = vm.SelectedProcess.WindowTitle,
+                ProcessName = vm.SelectedProcess.ProcessName,
+                ExecutablePath = vm.SelectedProcess.ExecutablePath
+            };
+            await _dbService.AddGameAsync(newGame);
+            Games.Add(newGame);
+        }
     }
 
     [RelayCommand]
-    private void AddFromWebsite()
+    private async Task AddFromWebsite()
     {
-        MessageBox.Show("从网站添加 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        var newGame = new Game { Title = "New Game" };
+        var vm = new MetadataViewModel(newGame, _httpClient, _dbService, true);
+        var win = new MetadataWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        if (win.ShowDialog() == true)
+        {
+            await _dbService.AddGameAsync(newGame);
+            Games.Insert(0, newGame);
+            SelectedGame = newGame;
+        }
+    }
+
+    private string GetDatabasePath()
+    {
+        var appData = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Perelegans");
+        return System.IO.Path.Combine(appData, "perelegans.db");
     }
 
     [RelayCommand]
     private void SaveBackup()
     {
-        MessageBox.Show("保存备份 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "SQLite Database (*.db)|*.db",
+            FileName = "perelegans_backup.db"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                System.IO.File.Copy(GetDatabasePath(), dialog.FileName, true);
+                MessageBox.Show("备份保存成功！", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"备份失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     [RelayCommand]
-    private void RestoreBackup()
+    private async Task RestoreBackup()
     {
-        MessageBox.Show("恢复备份 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "SQLite Database (*.db)|*.db"
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            try
+            {
+                System.IO.File.Copy(dialog.FileName, GetDatabasePath(), true);
+                Games.Clear();
+                var games = await _dbService.GetAllGamesAsync();
+                foreach (var g in games) Games.Add(g);
+                MessageBox.Show("备份恢复成功！", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"恢复失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 
     [RelayCommand]
@@ -216,7 +288,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void MonitorProcess()
     {
-        MessageBox.Show("监视进程 - 功能待实现", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Information);
+        OpenSettings();
     }
 
     [RelayCommand]
@@ -271,8 +343,25 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void StartGame()
     {
-        if (SelectedGame == null) return;
-        MessageBox.Show($"启动: {SelectedGame.Title} - 功能待实现", "Perelegans");
+        if (SelectedGame == null || string.IsNullOrWhiteSpace(SelectedGame.ExecutablePath))
+        {
+            MessageBox.Show("该游戏尚未配置可执行文件路径。\n请在“元数据”编辑窗口中设置即可直接启动游戏。", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+        
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = SelectedGame.ExecutablePath,
+                WorkingDirectory = System.IO.Path.GetDirectoryName(SelectedGame.ExecutablePath) ?? "",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"游戏启动失败: {ex.Message}", "出错", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     [RelayCommand]
@@ -330,8 +419,18 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenGameFolder()
     {
-        if (SelectedGame == null) return;
-        MessageBox.Show($"打开游戏文件夹: {SelectedGame.Title} - 功能待实现", "Perelegans");
+        if (SelectedGame == null || string.IsNullOrWhiteSpace(SelectedGame.ExecutablePath))
+            return;
+
+        var dir = System.IO.Path.GetDirectoryName(SelectedGame.ExecutablePath);
+        if (!string.IsNullOrWhiteSpace(dir))
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("explorer.exe", dir);
+            }
+            catch { }
+        }
     }
 
     private void OpenUrl(string? url)
