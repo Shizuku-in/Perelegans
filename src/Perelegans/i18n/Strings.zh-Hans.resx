@@ -45,6 +45,11 @@
   <data name="Settings_Interval" xml:space="preserve"><value>轮询间隔(秒):</value></data>
   <data name="Settings_Network" xml:space="preserve"><value>网络代理设置</value></data>
   <data name="Settings_Proxy" xml:space="preserve"><value>HTTP代理:</value></data>
+  <data name="Settings_System" xml:space="preserve"><value>启动与退出</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>开机自启:</value></data>
+  <data name="Settings_CloseBehavior" xml:space="preserve"><value>关闭窗口时:</value></data>
+  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>直接退出</value></data>
+  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>最小化到托盘</value></data>
 
   <data name="Btn_Save" xml:space="preserve"><value>确定</value></data>
   <data name="Btn_Cancel" xml:space="preserve"><value>取消</value></data>
@@ -58,6 +63,7 @@
   <data name="Meta_FieldTitle" xml:space="preserve"><value>游戏名:</value></data>
   <data name="Meta_FieldBrand" xml:space="preserve"><value>厂商/品牌:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
+  <data name="Meta_FieldStatus" xml:space="preserve"><value>游玩进度:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>进程特征:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>启动路径:</value></data>
@@ -109,4 +115,10 @@ Game Playtime Tracker &amp; Manager
   <data name="Msg_NoBangumiId" xml:space="preserve"><value>未找到 Bangumi ID。</value></data>
   <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>删除确认</value></data>
   <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>确定要删除「{0}」吗？</value></data>
+  <data name="Msg_SelectProcess" xml:space="preserve"><value>请先选择一个进程。</value></data>
+  <data name="GameStatus_Playing" xml:space="preserve"><value>游玩中</value></data>
+  <data name="GameStatus_Dropped" xml:space="preserve"><value>已弃坑</value></data>
+  <data name="GameStatus_Completed" xml:space="preserve"><value>已通关</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>显示主窗口</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>退出程序</value></data>
 </root>

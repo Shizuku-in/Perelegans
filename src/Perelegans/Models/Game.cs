@@ -5,9 +5,9 @@ namespace Perelegans.Models;
 
 public enum GameStatus
 {
-    Playing,
-    Abandoned,
-    Completed
+    Playing = 0,
+    Dropped = 1,
+    Completed = 2
 }
 
 public class Game

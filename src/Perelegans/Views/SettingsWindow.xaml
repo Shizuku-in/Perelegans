@@ -6,12 +6,14 @@
         xmlns:models="clr-namespace:Perelegans.Models"
         Title="Settings"
         TitleCharacterCasing="Normal"
-        Height="400" Width="420"
+        Height="500" Width="420"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowTitleBar="True"
         TitleBarHeight="28"
         BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}"
@@ -30,7 +32,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -85,7 +87,9 @@
                 <mah:NumericUpDown Grid.Row="2" Grid.Column="1"
                                    Value="{Binding MonitorIntervalSeconds, Mode=TwoWay}"
                                    Minimum="1" Maximum="60" Interval="1"
+                                   Width="70"
                                    Height="26" FontSize="12"
+                                   HorizontalAlignment="Left"
                                    NumericInputMode="Numbers"/>
             </Grid>
         </GroupBox>
@@ -108,15 +112,45 @@
             </Grid>
         </GroupBox>
 
+        <GroupBox Grid.Row="3" Header="{i18n:Translate Settings_System}" Margin="0,0,0,8"
+                  Padding="8,6" FontSize="12"
+                  BorderBrush="{DynamicResource Perelegans.BorderBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{i18n:Translate Settings_LaunchAtStartup}" VerticalAlignment="Center" FontSize="12"/>
+                <CheckBox Grid.Row="0" Grid.Column="1"
+                          IsChecked="{Binding LaunchAtStartup, Mode=TwoWay}"
+                          VerticalAlignment="Center"/>
+
+                <TextBlock Grid.Row="2" Text="{i18n:Translate Settings_CloseBehavior}" VerticalAlignment="Center" FontSize="12"/>
+                <ComboBox Grid.Row="2" Grid.Column="1" Height="26" FontSize="12"
+                          ItemsSource="{Binding CloseBehaviorOptions}"
+                          DisplayMemberPath="Label"
+                          SelectedValuePath="Value"
+                          SelectedValue="{Binding SelectedCloseBehavior, Mode=TwoWay}"/>
+            </Grid>
+        </GroupBox>
+
         <!-- Buttons -->
         <StackPanel Grid.Row="4" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                     Margin="0,0,8,0"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                    Command="{Binding SaveCommand}"
                     Click="BtnSave_Click"/>
             <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square}"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

@@ -16,6 +16,7 @@ public partial class MetadataViewModel : ObservableObject
     private readonly BangumiService _bangumiService;
     private readonly ErogameSpaceService _egsService;
     private readonly DatabaseService _dbService;
+    private readonly bool _isNewGame;
 
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -46,6 +47,9 @@ public partial class MetadataViewModel : ObservableObject
     private DateTime? _editReleaseDate;
 
     [ObservableProperty]
+    private GameStatus _editStatus;
+
+    [ObservableProperty]
     private string _editVndbId = string.Empty;
 
     [ObservableProperty]
@@ -66,15 +70,23 @@ public partial class MetadataViewModel : ObservableObject
     public Game TargetGame { get; }
 
     public string[] SourceOptions { get; } = { "VNDB", "Bangumi", "ErogameSpace" };
+    public IReadOnlyList<GameStatusOption> StatusOptions { get; } =
+    [
+        new(GameStatus.Completed, TranslationService.Instance["GameStatus_Completed"]),
+        new(GameStatus.Playing, TranslationService.Instance["GameStatus_Playing"]),
+        new(GameStatus.Dropped, TranslationService.Instance["GameStatus_Dropped"])
+    ];
 
     public MetadataViewModel(
         Game game,
         HttpClient httpClient,
         DatabaseService dbService,
+        bool isNewGame = false,
         bool isSearchEnabled = true)
     {
         TargetGame = game;
         _dbService = dbService;
+        _isNewGame = isNewGame;
         _vndbService = new VndbService(httpClient);
         _bangumiService = new BangumiService(httpClient);
         _egsService = new ErogameSpaceService(httpClient);
@@ -85,6 +97,7 @@ public partial class MetadataViewModel : ObservableObject
         _editTitle = game.Title;
         _editBrand = game.Brand;
         _editReleaseDate = game.ReleaseDate;
+        _editStatus = game.Status;
         _editVndbId = game.VndbId ?? "";
         _editBangumiId = game.BangumiId ?? "";
         _editEgsId = game.ErogameSpaceId ?? "";
@@ -176,6 +189,7 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.Title = EditTitle;
         TargetGame.Brand = EditBrand;
         TargetGame.ReleaseDate = EditReleaseDate;
+        TargetGame.Status = EditStatus;
         TargetGame.VndbId = string.IsNullOrWhiteSpace(EditVndbId) ? null : EditVndbId;
         TargetGame.BangumiId = string.IsNullOrWhiteSpace(EditBangumiId) ? null : EditBangumiId;
         TargetGame.ErogameSpaceId = string.IsNullOrWhiteSpace(EditEgsId) ? null : EditEgsId;
@@ -183,6 +197,15 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.ProcessName = EditProcessName;
         TargetGame.ExecutablePath = EditExecutablePath;
 
-        await _dbService.UpdateGameAsync(TargetGame);
+        if (!_isNewGame)
+        {
+            await _dbService.UpdateGameAsync(TargetGame);
+        }
     }
+}
+
+public sealed class GameStatusOption(GameStatus value, string label)
+{
+    public GameStatus Value { get; } = value;
+    public string Label { get; } = label;
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Windows;
+using System.Windows.Media;
 using ControlzEx.Theming;
 using Microsoft.Win32;
 using Perelegans.Models;
+using Application = System.Windows.Application;
 
 namespace Perelegans.Services;
 
@@ -12,6 +14,75 @@ namespace Perelegans.Services;
 /// </summary>
 public class ThemeService
 {
+    private readonly record struct ThemePalette(
+        string ThemeBackground,
+        string ThemeForeground,
+        string WindowBackground,
+        string PanelBackground,
+        string AccentColor,
+        string AccentHoverColor,
+        string MahAppsAccentColor,
+        string ForegroundColor,
+        string SubtleForegroundColor,
+        string PlaytimeForegroundColor,
+        string StatusBarValueForegroundColor,
+        string DataGridSelectedPrimaryForegroundColor,
+        string StatusIconColor,
+        string BorderColor,
+        string ButtonBorderColor,
+        string DataGridAltRowColor,
+        string DataGridHeaderBackgroundColor,
+        string DataGridSelectedRowColor,
+        string StatusBarBackgroundColor,
+        string MenuBackgroundColor,
+        string MenuHoverColor);
+
+    private static readonly ThemePalette LightPalette = new(
+        ThemeBackground: "#FDFCF8",
+        ThemeForeground: "#1E1E1E",
+        WindowBackground: "#FDFCF8",
+        PanelBackground: "#F5F3EE",
+        AccentColor: "#F48FB1",
+        AccentHoverColor: "#F48FB1",
+        MahAppsAccentColor: "#FFC0CB",
+        ForegroundColor: "#1E1E1E",
+        SubtleForegroundColor: "#757575",
+        PlaytimeForegroundColor: "#000000",
+        StatusBarValueForegroundColor: "#1E1E1E",
+        DataGridSelectedPrimaryForegroundColor: "#FFC0CB",
+        StatusIconColor: "#FFD2DB",
+        BorderColor: "#E0DDD5",
+        ButtonBorderColor: "#FFFFFF",
+        DataGridAltRowColor: "#F8F6F1",
+        DataGridHeaderBackgroundColor: "#EFECE5",
+        DataGridSelectedRowColor: "#FFE6ED",
+        StatusBarBackgroundColor: "#EFECE5",
+        MenuBackgroundColor: "#FDFCF8",
+        MenuHoverColor: "#FCE4EC");
+
+    private static readonly ThemePalette DarkPalette = new(
+        ThemeBackground: "#252526",
+        ThemeForeground: "#DCDCDC",
+        WindowBackground: "#252526",
+        PanelBackground: "#2D2D30",
+        AccentColor: "#F48FB1",
+        AccentHoverColor: "#F48FB1",
+        MahAppsAccentColor: "#FFC0CB",
+        ForegroundColor: "#DCDCDC",
+        SubtleForegroundColor: "#9E9E9E",
+        PlaytimeForegroundColor: "#DCDCDC",
+        StatusBarValueForegroundColor: "#C8C8C8",
+        DataGridSelectedPrimaryForegroundColor: "#000000",
+        StatusIconColor: "#FFD2DB",
+        BorderColor: "#3F3F46",
+        ButtonBorderColor: "#3F3F46",
+        DataGridAltRowColor: "#2A2A2E",
+        DataGridHeaderBackgroundColor: "#333337",
+        DataGridSelectedRowColor: "#FFE6ED",
+        StatusBarBackgroundColor: "#1E1E1E",
+        MenuBackgroundColor: "#252526",
+        MenuHoverColor: "#3E3E42");
+
     private ThemeMode _currentMode = ThemeMode.System;
 
     public ThemeService()
@@ -35,7 +106,6 @@ public class ThemeService
             _ => false
         };
 
-        string baseTheme = isDark ? "Dark" : "Light";
         string themeKey = isDark ? "Dark.Pink" : "Light.Pink";
 
         // Apply MahApps base theme with Pink accent
@@ -69,74 +139,48 @@ public class ThemeService
     /// </summary>
     private void ApplyCustomOverrides(bool isDark)
     {
-        var app = Application.Current;
-        var resources = app.Resources;
+        ApplyPalette(Application.Current.Resources, isDark ? DarkPalette : LightPalette);
+    }
 
-        if (isDark)
-        {
-            // Dark theme: gray backgrounds + adjusted pink accent
-            resources["MahApps.Brushes.ThemeBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#252526"));
-            resources["MahApps.Brushes.ThemeForeground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#DCDCDC"));
+    private static void ApplyPalette(ResourceDictionary resources, ThemePalette palette)
+    {
+        var accentColor = ParseColor(palette.AccentColor);
 
-            // Custom accent brushes for dark mode (slightly desaturated pink)
-            var darkPink = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F06292");
-            resources["Perelegans.AccentColor"] = darkPink;
-            resources["Perelegans.AccentBrush"] = new System.Windows.Media.SolidColorBrush(darkPink);
-            resources["Perelegans.WindowBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#252526"));
-            resources["Perelegans.PanelBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2D2D30"));
-            resources["Perelegans.ForegroundBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#DCDCDC"));
-            resources["Perelegans.SubtleForegroundBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#9E9E9E"));
-            resources["Perelegans.BorderBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3F3F46"));
-            resources["Perelegans.DataGridAltRowBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#2A2A2E"));
-        }
-        else
-        {
-            // Light theme: off-white backgrounds + bright pink accent
-            resources["MahApps.Brushes.ThemeBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FDFCF8"));
-            resources["MahApps.Brushes.ThemeForeground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E"));
+        resources["MahApps.Brushes.ThemeBackground"] = CreateBrush(palette.ThemeBackground);
+        resources["MahApps.Brushes.ThemeForeground"] = CreateBrush(palette.ThemeForeground);
+        resources["MahApps.Brushes.Accent"] = CreateBrush(palette.MahAppsAccentColor);
 
-            var lightPink = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#E91E78");
-            resources["Perelegans.AccentColor"] = lightPink;
-            resources["Perelegans.AccentBrush"] = new System.Windows.Media.SolidColorBrush(lightPink);
-            resources["Perelegans.WindowBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FDFCF8"));
-            resources["Perelegans.PanelBackground"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F5F3EE"));
-            resources["Perelegans.ForegroundBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#1E1E1E"));
-            resources["Perelegans.SubtleForegroundBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#757575"));
-            resources["Perelegans.BorderBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#E0DDD5"));
-            resources["Perelegans.DataGridAltRowBrush"] =
-                new System.Windows.Media.SolidColorBrush(
-                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F8F6F1"));
-        }
+        resources["Perelegans.AccentColor"] = accentColor;
+        resources["Perelegans.AccentBrush"] = CreateBrush(palette.AccentColor);
+        resources["Perelegans.AccentHoverBrush"] = CreateBrush(palette.AccentHoverColor);
+        resources["Perelegans.WindowBackground"] = CreateBrush(palette.WindowBackground);
+        resources["Perelegans.PanelBackground"] = CreateBrush(palette.PanelBackground);
+        resources["Perelegans.ForegroundBrush"] = CreateBrush(palette.ForegroundColor);
+        resources["Perelegans.SubtleForegroundBrush"] = CreateBrush(palette.SubtleForegroundColor);
+        resources["Perelegans.PlaytimeForegroundBrush"] = CreateBrush(palette.PlaytimeForegroundColor);
+        resources["Perelegans.StatusBarValueForegroundBrush"] = CreateBrush(palette.StatusBarValueForegroundColor);
+        resources["Perelegans.DataGridSelectedPrimaryForegroundBrush"] = CreateBrush(palette.DataGridSelectedPrimaryForegroundColor);
+        resources["Perelegans.StatusIconBrush"] = CreateBrush(palette.StatusIconColor);
+        resources["Perelegans.BorderBrush"] = CreateBrush(palette.BorderColor);
+        resources["Perelegans.ButtonBorderBrush"] = CreateBrush(palette.ButtonBorderColor);
+        resources["Perelegans.DataGridAltRowBrush"] = CreateBrush(palette.DataGridAltRowColor);
+        resources["Perelegans.DataGridHeaderBackground"] = CreateBrush(palette.DataGridHeaderBackgroundColor);
+        resources["Perelegans.DataGridSelectedRowBrush"] = CreateBrush(palette.DataGridSelectedRowColor);
+        resources["Perelegans.StatusBarBackground"] = CreateBrush(palette.StatusBarBackgroundColor);
+        resources["Perelegans.MenuBackground"] = CreateBrush(palette.MenuBackgroundColor);
+        resources["Perelegans.MenuHoverBrush"] = CreateBrush(palette.MenuHoverColor);
+    }
+
+    private static SolidColorBrush CreateBrush(string hex)
+    {
+        var brush = new SolidColorBrush(ParseColor(hex));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static System.Windows.Media.Color ParseColor(string hex)
+    {
+        return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
     }
 
     private void OnSystemThemeChanged(object sender, UserPreferenceChangedEventArgs e)

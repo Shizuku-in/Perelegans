@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MahApps.Metro.Controls.Dialogs;
 using Perelegans.Models;
 using Perelegans.Services;
 using Perelegans.Views;
+using Application = System.Windows.Application;
+using Clipboard = System.Windows.Clipboard;
 
 namespace Perelegans.ViewModels;
 
@@ -19,6 +22,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ThemeService _themeService;
     private readonly ProcessMonitorService _processMonitor;
     private readonly HttpClient _httpClient;
+    private readonly IDialogCoordinator _dialogCoordinator;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
@@ -49,13 +53,15 @@ public partial class MainViewModel : ObservableObject
         SettingsService settingsService,
         ThemeService themeService,
         ProcessMonitorService processMonitor,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        IDialogCoordinator dialogCoordinator)
     {
         _dbService = dbService;
         _settingsService = settingsService;
         _themeService = themeService;
         _processMonitor = processMonitor;
         _httpClient = httpClient;
+        _dialogCoordinator = dialogCoordinator;
 
         // Subscribe to process monitor events
         _processMonitor.PlaytimeUpdated += OnPlaytimeUpdated;
@@ -158,7 +164,7 @@ public partial class MainViewModel : ObservableObject
                 Title = "CLANNAD",
                 Brand = "Key",
                 ReleaseDate = new DateTime(2004, 4, 28),
-                Status = GameStatus.Abandoned,
+                Status = GameStatus.Dropped,
                 Playtime = new TimeSpan(12, 10, 0),
                 CreatedDate = new DateTime(2024, 4, 1),
                 AccessedDate = new DateTime(2024, 4, 10)
@@ -210,7 +216,7 @@ public partial class MainViewModel : ObservableObject
     private async Task AddFromWebsite()
     {
         var newGame = new Game { Title = "New Game" };
-        var vm = new MetadataViewModel(newGame, _httpClient, _dbService, true);
+        var vm = new MetadataViewModel(newGame, _httpClient, _dbService, isNewGame: true, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -234,7 +240,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SaveBackup()
+    private async Task SaveBackup()
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
@@ -246,11 +252,11 @@ public partial class MainViewModel : ObservableObject
             try
             {
                 System.IO.File.Copy(GetDatabasePath(), dialog.FileName, true);
-                MessageBox.Show(TranslationService.Instance["Msg_BackupSuccess"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
+                await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_BackupSuccess"]);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format(TranslationService.Instance["Msg_BackupFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
+                await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_ErrorTitle"], string.Format(TranslationService.Instance["Msg_BackupFailed"], ex.Message));
             }
         }
     }
@@ -270,11 +276,11 @@ public partial class MainViewModel : ObservableObject
                 Games.Clear();
                 var games = await _dbService.GetAllGamesAsync();
                 foreach (var g in games) Games.Add(g);
-                MessageBox.Show(TranslationService.Instance["Msg_RestoreSuccess"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
+                await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_RestoreSuccess"]);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(string.Format(TranslationService.Instance["Msg_RestoreFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
+                await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_ErrorTitle"], string.Format(TranslationService.Instance["Msg_RestoreFailed"], ex.Message));
             }
         }
     }
@@ -282,16 +288,33 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ExitApp()
     {
-        _processMonitor.Stop();
-        Application.Current.Shutdown();
+        if (Application.Current is Perelegans.App app)
+        {
+            app.RequestShutdown();
+        }
+        else
+        {
+            Application.Current.Shutdown();
+        }
     }
+
+    public bool IsMonitorEnabled => _settingsService.Settings.MonitorEnabled;
 
     // ---- Menu Commands (Tool) ----
 
     [RelayCommand]
     private void MonitorProcess()
     {
-        OpenSettings();
+        var settings = _settingsService.Settings;
+        settings.MonitorEnabled = !settings.MonitorEnabled;
+        _settingsService.Save();
+
+        if (settings.MonitorEnabled && !_processMonitor.IsRunning)
+            _processMonitor.Start();
+        else if (!settings.MonitorEnabled && _processMonitor.IsRunning)
+            _processMonitor.Stop();
+
+        OnPropertyChanged(nameof(IsMonitorEnabled));
     }
 
     [RelayCommand]
@@ -310,9 +333,9 @@ public partial class MainViewModel : ObservableObject
     // ---- Menu Commands (Help) ----
 
     [RelayCommand]
-    private void ShowAbout()
+    private async Task ShowAbout()
     {
-        MessageBox.Show(TranslationService.Instance["Msg_AboutText"], TranslationService.Instance["Msg_AboutTitle"], MessageBoxButton.OK, MessageBoxImage.Information);
+        await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AboutTitle"], TranslationService.Instance["Msg_AboutText"]);
     }
 
     // ---- Settings ----
@@ -320,7 +343,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        var settingsVm = new SettingsViewModel(_themeService, _settingsService);
+        var settingsVm = new SettingsViewModel(_themeService, _settingsService, new StartupRegistrationService());
         var settingsWindow = new SettingsWindow
         {
             DataContext = settingsVm,
@@ -343,11 +366,11 @@ public partial class MainViewModel : ObservableObject
     // ---- Context Menu Commands ----
 
     [RelayCommand]
-    private void StartGame()
+    private async Task StartGame()
     {
         if (SelectedGame == null || string.IsNullOrWhiteSpace(SelectedGame.ExecutablePath))
         {
-            MessageBox.Show(TranslationService.Instance["Msg_NoExecPath"], TranslationService.Instance["Msg_AppTitle"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_NoExecPath"]);
             return;
         }
         
@@ -362,7 +385,7 @@ public partial class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show(string.Format(TranslationService.Instance["Msg_GameStartFailed"], ex.Message), TranslationService.Instance["Msg_ErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
+            await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_ErrorTitle"], string.Format(TranslationService.Instance["Msg_GameStartFailed"], ex.Message));
         }
     }
 
@@ -370,7 +393,7 @@ public partial class MainViewModel : ObservableObject
     private void FetchMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService);
+        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -396,7 +419,7 @@ public partial class MainViewModel : ObservableObject
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, false);
+        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -450,27 +473,27 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenVndb()
+    private async Task OpenVndb()
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.VndbId != null ? $"https://vndb.org/v{SelectedGame.VndbId.Replace("v", "")}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoVndbId"], TranslationService.Instance["Msg_AppTitle"]);
+        if (url != null) OpenUrl(url); else await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_NoVndbId"]);
     }
 
     [RelayCommand]
-    private void OpenErogameSpace()
+    private async Task OpenErogameSpace()
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.ErogameSpaceId != null ? $"https://erogamescape.dyndns.org/~ap2/ero/toukei_kaiseki/game.php?game={SelectedGame.ErogameSpaceId}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoEgsId"], TranslationService.Instance["Msg_AppTitle"]);
+        if (url != null) OpenUrl(url); else await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_NoEgsId"]);
     }
 
     [RelayCommand]
-    private void OpenBangumi()
+    private async Task OpenBangumi()
     {
         if (SelectedGame == null) return;
         var url = SelectedGame.BangumiId != null ? $"https://bgm.tv/subject/{SelectedGame.BangumiId}" : null;
-        if (url != null) OpenUrl(url); else MessageBox.Show(TranslationService.Instance["Msg_NoBangumiId"], TranslationService.Instance["Msg_AppTitle"]);
+        if (url != null) OpenUrl(url); else await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_NoBangumiId"]);
     }
 
     [RelayCommand]
@@ -511,9 +534,11 @@ public partial class MainViewModel : ObservableObject
     private async Task DeleteGame()
     {
         if (SelectedGame == null) return;
-        var result = MessageBox.Show(string.Format(TranslationService.Instance["Msg_DeleteConfirmText"], SelectedGame.Title),
-            TranslationService.Instance["Msg_DeleteConfirmTitle"], MessageBoxButton.YesNo, MessageBoxImage.Warning);
-        if (result == MessageBoxResult.Yes)
+        var result = await _dialogCoordinator.ShowMessageAsync(this,
+            TranslationService.Instance["Msg_DeleteConfirmTitle"],
+            string.Format(TranslationService.Instance["Msg_DeleteConfirmText"], SelectedGame.Title),
+            MessageDialogStyle.AffirmativeAndNegative);
+        if (result == MessageDialogResult.Affirmative)
         {
             await _dbService.DeleteGameAsync(SelectedGame.Id);
             Games.Remove(SelectedGame);

@@ -45,6 +45,11 @@
   <data name="Settings_Interval" xml:space="preserve"><value>Interval (sec):</value></data>
   <data name="Settings_Network" xml:space="preserve"><value>Network Proxy</value></data>
   <data name="Settings_Proxy" xml:space="preserve"><value>Proxy URL:</value></data>
+  <data name="Settings_System" xml:space="preserve"><value>Startup &amp; Exit</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>Launch at startup:</value></data>
+  <data name="Settings_CloseBehavior" xml:space="preserve"><value>When closed:</value></data>
+  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>Exit directly</value></data>
+  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>Minimize to tray</value></data>
 
   <data name="Btn_Save" xml:space="preserve"><value>Save</value></data>
   <data name="Btn_Cancel" xml:space="preserve"><value>Cancel</value></data>
@@ -58,6 +63,7 @@
   <data name="Meta_FieldTitle" xml:space="preserve"><value>Title:</value></data>
   <data name="Meta_FieldBrand" xml:space="preserve"><value>Brand:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>Release Date:</value></data>
+  <data name="Meta_FieldStatus" xml:space="preserve"><value>Progress:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>Website:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>Process Name:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>Exec Path:</value></data>
@@ -109,4 +115,10 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Msg_NoBangumiId" xml:space="preserve"><value>No Bangumi ID found.</value></data>
   <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>Confirm Deletion</value></data>
   <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>Are you sure you want to delete "{0}"?</value></data>
+  <data name="Msg_SelectProcess" xml:space="preserve"><value>Please select a process first.</value></data>
+  <data name="GameStatus_Playing" xml:space="preserve"><value>Playing</value></data>
+  <data name="GameStatus_Dropped" xml:space="preserve"><value>Dropped</value></data>
+  <data name="GameStatus_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>Show</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
 </root>

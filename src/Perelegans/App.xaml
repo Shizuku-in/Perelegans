@@ -1,6 +1,7 @@
-﻿<Application x:Class="Perelegans.App"
+<Application x:Class="Perelegans.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
              Startup="App_OnStartup">
     <Application.Resources>
         <ResourceDictionary>
@@ -16,6 +17,7 @@
                 <!-- Compact global styles -->
                 <ResourceDictionary Source="Themes/CompactStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -45,6 +45,11 @@
   <data name="Settings_Interval" xml:space="preserve"><value>同期周期 (秒):</value></data>
   <data name="Settings_Network" xml:space="preserve"><value>ネットワーク設定</value></data>
   <data name="Settings_Proxy" xml:space="preserve"><value>プロキシ:</value></data>
+  <data name="Settings_System" xml:space="preserve"><value>起動と終了</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>起動時に自動実行:</value></data>
+  <data name="Settings_CloseBehavior" xml:space="preserve"><value>ウィンドウを閉じるとき:</value></data>
+  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>直接終了</value></data>
+  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>トレイへ最小化</value></data>
 
   <data name="Btn_Save" xml:space="preserve"><value>保存</value></data>
   <data name="Btn_Cancel" xml:space="preserve"><value>キャンセル</value></data>
@@ -58,6 +63,7 @@
   <data name="Meta_FieldTitle" xml:space="preserve"><value>タイトル:</value></data>
   <data name="Meta_FieldBrand" xml:space="preserve"><value>ブランド:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>発売日:</value></data>
+  <data name="Meta_FieldStatus" xml:space="preserve"><value>進行状況:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>公式サイト:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>プロセス:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>実行パス:</value></data>
@@ -67,7 +73,7 @@
   <data name="Meta_ColDate" xml:space="preserve"><value>日付</value></data>
 
   <data name="AddProc_Title" xml:space="preserve"><value>稼働中のプロセスから追加</value></data>
-  <data name="AddProc_Refresh" xml:space="preserve"><value>更 新</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>更新</value></data>
   <data name="AddProc_Hint" xml:space="preserve"><value>メインウィンドウを持つプロセスのみを表示します。</value></data>
   <data name="AddProc_ColWindow" xml:space="preserve"><value>ウィンドウタイトル</value></data>
   <data name="AddProc_ColProc" xml:space="preserve"><value>プロセス名</value></data>
@@ -109,4 +115,10 @@ Game Playtime Tracker &amp; Manager
   <data name="Msg_NoBangumiId" xml:space="preserve"><value>Bangumi ID が見つかりません。</value></data>
   <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>削除の確認</value></data>
   <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>「{0}」を削除してもよろしいですか？</value></data>
+  <data name="Msg_SelectProcess" xml:space="preserve"><value>先にプロセスを選択してください。</value></data>
+  <data name="GameStatus_Playing" xml:space="preserve"><value>プレイ中</value></data>
+  <data name="GameStatus_Dropped" xml:space="preserve"><value>中断</value></data>
+  <data name="GameStatus_Completed" xml:space="preserve"><value>完了</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>表示</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>終了</value></data>
 </root>

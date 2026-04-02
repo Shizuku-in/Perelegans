@@ -2,6 +2,7 @@ using System;
 using System.Windows.Data;
 using System.Windows.Markup;
 using Perelegans.Services;
+using Binding = System.Windows.Data.Binding;
 
 namespace Perelegans.i18n;
 

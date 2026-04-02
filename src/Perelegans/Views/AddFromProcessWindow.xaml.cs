@@ -1,5 +1,7 @@
 using System.Windows;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
+using Perelegans.Services;
 using Perelegans.ViewModels;
 
 namespace Perelegans.Views;
@@ -11,7 +13,7 @@ public partial class AddFromProcessWindow : MetroWindow
         InitializeComponent();
     }
 
-    private void BtnOk_Click(object sender, RoutedEventArgs e)
+    private async void BtnOk_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is AddFromProcessViewModel vm && vm.SelectedProcess != null)
         {
@@ -19,7 +21,7 @@ public partial class AddFromProcessWindow : MetroWindow
         }
         else
         {
-            MessageBox.Show("请先选择一个进程。", "Perelegans", MessageBoxButton.OK, MessageBoxImage.Warning);
+            await this.ShowMessageAsync(TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_SelectProcess"]);
         }
     }
 

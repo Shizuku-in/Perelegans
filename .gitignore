@@ -8,6 +8,8 @@ src/Perelegans/obj/
 .vs/
 .localappdata/
 .claude/
+.build-check/
+artifacts/
 
 CLAUDE.md
 DEVELOPMENT_STEPS.md

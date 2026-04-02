@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Web;
 using HtmlAgilityPack;
 using Perelegans.Models;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
 
 namespace Perelegans.Services;
 

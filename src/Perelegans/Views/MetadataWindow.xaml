@@ -12,6 +12,8 @@
         ShowTitleBar="True"
         TitleBarHeight="28"
         BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
@@ -49,6 +51,7 @@
 
             <Button Grid.Column="2" Width="60" Height="26" FontSize="11"
                     Content="{i18n:Translate Meta_SearchBtn}"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Command="{Binding SearchCommand}"/>
         </Grid>
@@ -82,7 +85,10 @@
         <!-- Apply button -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,4,0,4"
                     Visibility="{Binding IsSearchEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Button Content="{i18n:Translate Meta_ApplyBtn}" Width="80" Height="24" FontSize="11"
+            <Button Content="{i18n:Translate Meta_ApplyBtn}" Width="80" Height="26" FontSize="11"
+                    Padding="8,1"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                     Command="{Binding ApplySelectedCommand}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"/>
             <TextBlock Text="{i18n:Translate Meta_ApplyHint}" FontSize="10" VerticalAlignment="Center"
@@ -93,6 +99,7 @@
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,0,0,4">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -122,36 +129,43 @@
                 <DatePicker Grid.Row="2" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                             SelectedDate="{Binding EditReleaseDate, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="3" Text="VNDB ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <TextBox Grid.Row="3" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                <TextBlock Grid.Row="3" Text="{i18n:Translate Meta_FieldStatus}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <ComboBox Grid.Row="3" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                          ItemsSource="{Binding StatusOptions}"
+                          DisplayMemberPath="Label"
+                          SelectedValuePath="Value"
+                          SelectedValue="{Binding EditStatus, Mode=TwoWay}"/>
+
+                <TextBlock Grid.Row="4" Text="VNDB ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditVndbId, Mode=TwoWay}"
                          mah:TextBoxHelper.Watermark="v12345"/>
 
-                <TextBlock Grid.Row="4" Text="Bangumi ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <TextBox Grid.Row="4" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                <TextBlock Grid.Row="5" Text="Bangumi ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBox Grid.Row="5" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditBangumiId, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="5" Text="EGS ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <TextBox Grid.Row="5" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                <TextBlock Grid.Row="6" Text="EGS ID:" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBox Grid.Row="6" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditEgsId, Mode=TwoWay}"/>
 
-                <TextBlock Grid.Row="6" Text="{i18n:Translate Meta_FieldWebsite}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <TextBox Grid.Row="6" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                <TextBlock Grid.Row="7" Text="{i18n:Translate Meta_FieldWebsite}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBox Grid.Row="7" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditWebsite, Mode=TwoWay}"
                          mah:TextBoxHelper.Watermark="https://..."/>
 
-                <TextBlock Grid.Row="7" Text="{i18n:Translate Meta_FieldProcess}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <TextBox Grid.Row="7" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
+                <TextBlock Grid.Row="8" Text="{i18n:Translate Meta_FieldProcess}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <TextBox Grid.Row="8" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"
                          VerticalContentAlignment="Center"
                          Text="{Binding EditProcessName, Mode=TwoWay}"
                          mah:TextBoxHelper.Watermark="GAME_PROCESS.exe"/>
 
-                <TextBlock Grid.Row="8" Text="{i18n:Translate Meta_FieldExec}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
-                <Grid Grid.Row="8" Grid.Column="1" Margin="0,2">
+                <TextBlock Grid.Row="9" Text="{i18n:Translate Meta_FieldExec}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
+                <Grid Grid.Row="9" Grid.Column="1" Margin="0,2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -161,6 +175,7 @@
                              Text="{Binding EditExecutablePath, Mode=TwoWay}"
                              mah:TextBoxHelper.Watermark="C:\Games\Game.exe"/>
                     <Button Grid.Column="1" Content="..." Width="30" Height="24"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                             Command="{Binding BrowseExecutableCommand}"/>
                 </Grid>
             </Grid>
@@ -171,10 +186,12 @@
                     HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                     Margin="0,0,8,0"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                    Command="{Binding SaveCommand}"
                     Click="BtnSave_Click"/>
             <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square}"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

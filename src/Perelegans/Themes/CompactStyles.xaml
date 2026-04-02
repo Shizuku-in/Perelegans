@@ -3,6 +3,10 @@
 
     <!-- ==================== Compact Global Styles ==================== -->
 
+    <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="BorderBrush" Value="{DynamicResource Perelegans.ButtonBorderBrush}"/>
+    </Style>
+
     <!-- Title Bar Button -->
     <Style x:Key="Perelegans.TitleBarButtonStyle" TargetType="Button">
         <Setter Property="Width" Value="40"/>

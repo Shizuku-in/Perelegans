@@ -21,12 +21,29 @@
         ShowMinButton="False"
         ShowMaxRestoreButton="False"
         ResizeMode="CanResizeWithGrip"
-        Background="{DynamicResource Perelegans.WindowBackground}">
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        mah:DialogParticipation.Register="{Binding}">
 
     <mah:MetroWindow.Resources>
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
         <converters:StatusIconConverter x:Key="StatusIconConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <Style x:Key="SelectedPrimaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="PlaytimeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="{DynamicResource Perelegans.PlaytimeForegroundBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </mah:MetroWindow.Resources>
 
     <DockPanel LastChildFill="True">
@@ -58,18 +75,21 @@
                         VerticalAlignment="Stretch">
                 <!-- Settings -->
                 <Button x:Name="BtnSettings" Click="BtnSettings_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
                         ToolTip="Settings">
                     <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
                 </Button>
                 <!-- Minimize -->
                 <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
                         ToolTip="Minimize">
                     <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
                 </Button>
                 <!-- Maximize / Restore -->
                 <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
                         ToolTip="Maximize">
                     <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
@@ -77,6 +97,7 @@
                 </Button>
                 <!-- Close -->
                 <Button x:Name="BtnClose" Click="BtnClose_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.CloseButtonStyle}"
                         ToolTip="Close">
                     <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
@@ -125,7 +146,8 @@
             <MenuItem Header="{i18n:Translate Menu_Tool}">
                 <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
                     <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="MonitorEye" Width="14" Height="14"/>
+                        <iconPacks:PackIconMaterial Kind="Check" Width="14" Height="14"
+                            Visibility="{Binding IsMonitorEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </MenuItem.Icon>
                 </MenuItem>
                 <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
@@ -158,7 +180,7 @@
                     <TextBlock VerticalAlignment="Center">
                         <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
                         <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
                     </TextBlock>
                 </StackPanel>
             </StatusBarItem>
@@ -171,7 +193,7 @@
                     <TextBlock VerticalAlignment="Center">
                         <Run Text="{i18n:Translate Status_Completed}"/>
                         <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
                     </TextBlock>
                 </StackPanel>
             </StatusBarItem>
@@ -181,14 +203,14 @@
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
 
             <!-- Background Tachie Image (lower z-index) -->
-            <Image Source="{x:Null}"
+            <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
                    Opacity="0.12"
                    HorizontalAlignment="Right"
                    VerticalAlignment="Bottom"
                    MaxHeight="500"
                    MaxWidth="350"
-                   Margin="0,0,20,30"
+                   Margin="0,0,10,10"
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
@@ -212,8 +234,8 @@
                       FontSize="12"
                       BorderThickness="0"
                       Background="Transparent"
-                      RowBackground="{DynamicResource Perelegans.WindowBackground}"
-                      AlternatingRowBackground="{DynamicResource Perelegans.DataGridAltRowBrush}"
+                      RowBackground="Transparent"
+                      AlternatingRowBackground="Transparent"
                       Foreground="{DynamicResource Perelegans.ForegroundBrush}"
                       HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}"
                       Panel.ZIndex="1"
@@ -276,7 +298,7 @@
                                     Width="14" Height="14"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                                    Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -284,25 +306,24 @@
                     <!-- Title -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Title}" Binding="{Binding Title}"
                                          Width="*" MinWidth="120"
-                                         ElementStyle="{StaticResource {x:Type TextBlock}}"
-                                         Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
 
                     <!-- Brand -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Brand}" Binding="{Binding Brand}"
                                          Width="120"
-                                         Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
 
                     <!-- Release Date -->
                     <DataGridTextColumn Header="{i18n:Translate Column_ReleaseDate}"
                                          Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}"
                                          Width="95"
-                                         Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
 
                     <!-- Playtime -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Playtime}"
                                          Binding="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
                                          Width="75"
-                                         Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                                         ElementStyle="{StaticResource PlaytimeTextStyle}"/>
 
                     <!-- Created Date -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Created}"

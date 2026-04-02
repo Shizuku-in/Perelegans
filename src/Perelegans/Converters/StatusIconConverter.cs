@@ -19,7 +19,7 @@ public class StatusIconConverter : IValueConverter
             {
                 GameStatus.Playing => PackIconMaterialKind.PlayCircleOutline,
                 GameStatus.Completed => PackIconMaterialKind.CheckCircleOutline,
-                GameStatus.Abandoned => PackIconMaterialKind.CloseCircleOutline,
+                GameStatus.Dropped => PackIconMaterialKind.CloseCircleOutline,
                 _ => PackIconMaterialKind.HelpCircleOutline
             };
         }

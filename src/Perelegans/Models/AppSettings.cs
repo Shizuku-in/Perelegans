@@ -2,6 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace Perelegans.Models;
 
+public enum AppCloseBehavior
+{
+    Exit = 0,
+    MinimizeToTray = 1
+}
+
 /// <summary>
 /// Application settings persisted as JSON.
 /// </summary>
@@ -28,4 +34,14 @@ public class AppSettings
     /// UI Language code (e.g. zh-Hans, en-US, ja-JP).
     /// </summary>
     public string Language { get; set; } = "zh-Hans";
+
+    /// <summary>
+    /// Whether the app should register itself to launch at Windows sign-in.
+    /// </summary>
+    public bool LaunchAtStartup { get; set; }
+
+    /// <summary>
+    /// Behavior to apply when the main window is closed.
+    /// </summary>
+    public AppCloseBehavior CloseBehavior { get; set; } = AppCloseBehavior.Exit;
 }

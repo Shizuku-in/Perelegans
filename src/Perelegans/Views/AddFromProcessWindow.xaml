@@ -9,6 +9,8 @@
         ShowTitleBar="True"
         TitleBarHeight="28"
         BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
@@ -22,6 +24,8 @@
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
             <Button Content="{i18n:Translate AddProc_Refresh}" Width="80" Height="26" FontSize="11"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Command="{Binding RefreshProcessesCommand}"/>
             <TextBlock Text="{i18n:Translate AddProc_Hint}" Margin="10,0,0,0" VerticalAlignment="Center" 
                        Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}" FontSize="11"/>
@@ -52,9 +56,12 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Content="{i18n:Translate Btn_Ok}" Width="80" Height="28" FontSize="12" Margin="0,0,8,0"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                     Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Click="BtnOk_Click"/>
-            <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12"
+            <Button Content="{i18n:Translate Btn_Cancel}" Width="80" Height="28" FontSize="12" Margin="0,0,8,0"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                     Click="BtnCancel_Click"/>
         </StackPanel>
     </Grid>

@@ -11,6 +11,8 @@
         ShowTitleBar="True"
         TitleBarHeight="28"
         BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
