@@ -23,6 +23,8 @@ public class ThemeService
         string StatsChartPanelBorderColor,
         string StatsChartMetricBackgroundColor,
         string StatsChartSliceBorderColor,
+        string StatsChartHighlightBackgroundColor,
+        string StatsChartHighlightBorderColor,
         string AccentColor,
         string AccentHoverColor,
         string MahAppsAccentColor,
@@ -50,6 +52,8 @@ public class ThemeService
         StatsChartPanelBorderColor: "#D8D1C6",
         StatsChartMetricBackgroundColor: "#EFECE5",
         StatsChartSliceBorderColor: "#F3EFE8",
+        StatsChartHighlightBackgroundColor: "#FFF0F0",
+        StatsChartHighlightBorderColor: "#E37F7F",
         AccentColor: "#F48FB1",
         AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
@@ -77,6 +81,8 @@ public class ThemeService
         StatsChartPanelBorderColor: "#3A3A3C",
         StatsChartMetricBackgroundColor: "#303033",
         StatsChartSliceBorderColor: "#252526",
+        StatsChartHighlightBackgroundColor: "#3A2E31",
+        StatsChartHighlightBorderColor: "#E37F7F",
         AccentColor: "#F48FB1",
         AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
@@ -171,6 +177,8 @@ public class ThemeService
         resources["Perelegans.StatsChartPanelBorderBrush"] = CreateBrush(palette.StatsChartPanelBorderColor);
         resources["Perelegans.StatsChartMetricBackground"] = CreateBrush(palette.StatsChartMetricBackgroundColor);
         resources["Perelegans.StatsChartSliceBorderBrush"] = CreateBrush(palette.StatsChartSliceBorderColor);
+        resources["Perelegans.StatsChartHighlightBackground"] = CreateBrush(palette.StatsChartHighlightBackgroundColor);
+        resources["Perelegans.StatsChartHighlightBorderBrush"] = CreateBrush(palette.StatsChartHighlightBorderColor);
         resources["Perelegans.ForegroundBrush"] = CreateBrush(palette.ForegroundColor);
         resources["Perelegans.SubtleForegroundBrush"] = CreateBrush(palette.SubtleForegroundColor);
         resources["Perelegans.PlaytimeForegroundBrush"] = CreateBrush(palette.PlaytimeForegroundColor);

@@ -150,49 +150,72 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Top"
                             Margin="0,0,0,10">
-                        <lvc:PieChart Series="{Binding PieSeries}"
+                        <lvc:PieChart x:Name="PieStatsChart"
+                                      Series="{Binding PieSeries}"
                                       LegendPosition="Hidden"
                                       TooltipPosition="Hidden"
+                                      HoveredPointsChangedCommand="{Binding PieHoverChangedCommand}"
                                       InitialRotation="-90"
-                                      Background="Transparent"/>
+                                      Background="Transparent"
+                                      MouseLeave="PieStatsChart_MouseLeave"/>
                     </Border>
 
-                    <ScrollViewer Grid.Row="3"
+                    <ScrollViewer x:Name="LegendScrollViewer"
+                                  Grid.Row="3"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl ItemsSource="{Binding PieLegendItems}">
+                        <ItemsControl x:Name="LegendItemsControl"
+                                      ItemsSource="{Binding PieLegendItems}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Margin="0,0,0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
+                                    <Border x:Name="LegendItemBorder"
+                                            Margin="0,0,0,8"
+                                            Padding="6,5"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            BorderThickness="1"
+                                            CornerRadius="0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-                                        <Border Width="10"
-                                                Height="10"
-                                                CornerRadius="0"
-                                                Background="{Binding SwatchBrush}"
-                                                VerticalAlignment="Center"/>
+                                            <Border Width="10"
+                                                    Height="10"
+                                                    CornerRadius="0"
+                                                    Background="{Binding SwatchBrush}"
+                                                    VerticalAlignment="Center"/>
 
-                                        <StackPanel Grid.Column="1" Margin="8,0,8,0">
-                                            <TextBlock Text="{Binding Title}"
+                                            <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                                                <TextBlock x:Name="LegendTitleText"
+                                                           Text="{Binding Title}"
+                                                           FontSize="11"
+                                                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding PlaytimeText}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                                            </StackPanel>
+
+                                            <TextBlock x:Name="LegendPercentageText"
+                                                       Grid.Column="2"
+                                                       Text="{Binding PercentageText}"
                                                        FontSize="11"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                                                       TextTrimming="CharacterEllipsis"/>
-                                            <TextBlock Text="{Binding PlaytimeText}"
-                                                       FontSize="10"
-                                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
-                                        </StackPanel>
-
-                                        <TextBlock Grid.Column="2"
-                                                   Text="{Binding PercentageText}"
-                                                   FontSize="11"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                                                   VerticalAlignment="Center"/>
-                                    </Grid>
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsHighlighted}" Value="True">
+                                            <Setter TargetName="LegendItemBorder" Property="Background" Value="{DynamicResource Perelegans.StatsChartHighlightBackground}"/>
+                                            <Setter TargetName="LegendItemBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.StatsChartHighlightBorderBrush}"/>
+                                            <Setter TargetName="LegendTitleText" Property="FontWeight" Value="SemiBold"/>
+                                            <Setter TargetName="LegendPercentageText" Property="Foreground" Value="{DynamicResource Perelegans.StatsChartHighlightBorderBrush}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

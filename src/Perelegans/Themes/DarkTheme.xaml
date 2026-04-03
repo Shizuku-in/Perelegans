@@ -11,6 +11,8 @@
     <SolidColorBrush x:Key="Perelegans.StatsChartPanelBorderBrush" Color="#3A3A3C"/>
     <SolidColorBrush x:Key="Perelegans.StatsChartMetricBackground" Color="#303033"/>
     <SolidColorBrush x:Key="Perelegans.StatsChartSliceBorderBrush" Color="#252526"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartHighlightBackground" Color="#3A2E31"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartHighlightBorderBrush" Color="#E37F7F"/>
     
     <!-- Accent (slightly desaturated pink for dark-mode contrast) -->
     <Color x:Key="Perelegans.AccentColor">#FFC0CB</Color>

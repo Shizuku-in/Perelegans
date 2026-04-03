@@ -1,17 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
+using LiveChartsCore.Kernel.Events;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using Perelegans.Models;
 using Perelegans.Services;
 using SkiaSharp;
-using System.Windows.Media;
 
 namespace Perelegans.ViewModels;
 
@@ -20,6 +23,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
     private readonly DatabaseService _dbService;
     private List<Game> _allGames = new();
     private List<PlaySession> _allSessions = new();
+    private string? _hoveredPieKey;
 
     private static readonly SKColor[] PiePalette = new[]
     {
@@ -60,6 +64,9 @@ public partial class PlaytimeStatsViewModel : ObservableObject
     [ObservableProperty]
     private string _chartSubtitle = string.Empty;
 
+    [ObservableProperty]
+    private PieLegendItem? _highlightedLegendItem;
+
     public PlaytimeStatsViewModel(DatabaseService dbService)
     {
         _dbService = dbService;
@@ -75,6 +82,11 @@ public partial class PlaytimeStatsViewModel : ObservableObject
         }
     }
 
+    public void ClearPieHover()
+    {
+        SetHoveredPieKey(null);
+    }
+
     public async Task InitializeAsync()
     {
         _allGames = await _dbService.GetAllGamesAsync();
@@ -84,11 +96,24 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             var sessions = await _dbService.GetSessionsForGameAsync(g.Id);
             _allSessions.AddRange(sessions);
         }
+
         RefreshData();
     }
 
+    [RelayCommand]
+    private void PieHoverChanged(HoverCommandArgs? args)
+    {
+        var hoveredKey = args?.NewPoints?.FirstOrDefault()?.Context.Series?.Name;
+        SetHoveredPieKey(string.IsNullOrWhiteSpace(hoveredKey) ? null : hoveredKey);
+    }
+
     partial void OnSelectedTabIndexChanged(int value) => RefreshData();
-    partial void OnSelectedPeriodChanged(PeriodRow? value) => RefreshPieChart();
+
+    partial void OnSelectedPeriodChanged(PeriodRow? value)
+    {
+        _hoveredPieKey = null;
+        RefreshPieChart();
+    }
 
     private void RefreshData()
     {
@@ -111,8 +136,10 @@ public partial class PlaytimeStatsViewModel : ObservableObject
                 .ToList();
 
             var totalTime = TimeSpan.Zero;
-            foreach (var s in sessionsInPeriod)
-                totalTime += s.Duration;
+            foreach (var session in sessionsInPeriod)
+            {
+                totalTime += session.Duration;
+            }
 
             PeriodData.Add(new PeriodRow
             {
@@ -124,12 +151,14 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             });
         }
 
-        // Auto-select first row
         if (PeriodData.Count > 0)
+        {
             SelectedPeriod = PeriodData[0];
+        }
         else
         {
             ChartSubtitle = string.Empty;
+            HighlightedLegendItem = null;
             PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
         }
@@ -140,6 +169,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
         if (SelectedPeriod == null)
         {
             ChartSubtitle = string.Empty;
+            HighlightedLegendItem = null;
             PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
             return;
@@ -147,69 +177,112 @@ public partial class PlaytimeStatsViewModel : ObservableObject
 
         ChartSubtitle = SelectedPeriod.Label;
 
-        var sessionsInPeriod = _allSessions
+        var slices = _allSessions
             .Where(s => s.StartTime >= SelectedPeriod.Start && s.StartTime < SelectedPeriod.End)
             .GroupBy(s => s.GameId)
-            .Select(g =>
+            .Select(group =>
             {
                 var total = TimeSpan.Zero;
-                foreach (var s in g)
-                    total += s.Duration;
-                var game = _allGames.FirstOrDefault(ga => ga.Id == g.Key);
-                return new
+                foreach (var session in group)
                 {
-                    Title = game?.Title ?? $"Game #{g.Key}",
-                    TotalTime = total,
-                    Minutes = total.TotalMinutes
-                };
+                    total += session.Duration;
+                }
+
+                var game = _allGames.FirstOrDefault(g => g.Id == group.Key);
+                return new PieSliceData(
+                    group.Key.ToString(CultureInfo.InvariantCulture),
+                    game?.Title ?? $"Game #{group.Key}",
+                    total,
+                    total.TotalMinutes);
             })
-            .Where(x => x.Minutes > 0)
-            .OrderByDescending(x => x.Minutes)
+            .Where(slice => slice.Minutes > 0)
+            .OrderByDescending(slice => slice.Minutes)
             .ToList();
 
-        if (sessionsInPeriod.Count == 0)
+        if (slices.Count == 0)
         {
+            HighlightedLegendItem = null;
             PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
             return;
         }
 
-        var totalMinutes = sessionsInPeriod.Sum(x => x.Minutes);
-        var series = new List<ISeries>();
+        var totalMinutes = slices.Sum(slice => slice.Minutes);
+        var series = new List<ISeries>(slices.Count);
         var legendItems = new ObservableCollection<PieLegendItem>();
 
-        for (int i = 0; i < sessionsInPeriod.Count; i++)
+        for (int i = 0; i < slices.Count; i++)
         {
-            var item = sessionsInPeriod[i];
+            var slice = slices[i];
             var color = PiePalette[i % PiePalette.Length];
+            var isHighlighted = string.Equals(_hoveredPieKey, slice.Key, StringComparison.Ordinal);
+
             series.Add(new PieSeries<double>
             {
-                Values = new[] { item.Minutes },
-                Name = item.Title,
+                Values = new[] { slice.Minutes },
+                Name = slice.Key,
                 Fill = new SolidColorPaint(color),
                 Stroke = new SolidColorPaint(_chartSliceBorderColor) { StrokeThickness = 2 },
                 Pushout = 0,
-                HoverPushout = 0
+                HoverPushout = 10
             });
 
             legendItems.Add(new PieLegendItem
             {
-                Title = item.Title,
-                PlaytimeText = FormatPlaytime(item.TotalTime),
-                PercentageText = totalMinutes <= 0 ? "0%" : $"{item.Minutes / totalMinutes:P0}",
-                SwatchBrush = CreateBrush(color)
+                Key = slice.Key,
+                Title = slice.Title,
+                PlaytimeText = FormatPlaytime(slice.TotalTime),
+                PercentageText = totalMinutes <= 0 ? "0%" : $"{slice.Minutes / totalMinutes:P0}",
+                SwatchBrush = CreateBrush(color),
+                IsHighlighted = isHighlighted
             });
+        }
+
+        if (_hoveredPieKey != null && legendItems.All(item => !item.IsHighlighted))
+        {
+            _hoveredPieKey = null;
         }
 
         PieLegendItems = legendItems;
         PieSeries = series.ToArray();
+        HighlightedLegendItem = PieLegendItems.FirstOrDefault(item => item.IsHighlighted);
+    }
+
+    private void SetHoveredPieKey(string? hoveredPieKey)
+    {
+        if (string.Equals(_hoveredPieKey, hoveredPieKey, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _hoveredPieKey = hoveredPieKey;
+        UpdateLegendHighlight();
+    }
+
+    private void UpdateLegendHighlight()
+    {
+        PieLegendItem? highlightedItem = null;
+
+        foreach (var item in PieLegendItems)
+        {
+            var isHighlighted = _hoveredPieKey != null &&
+                string.Equals(item.Key, _hoveredPieKey, StringComparison.Ordinal);
+
+            item.IsHighlighted = isHighlighted;
+            if (isHighlighted)
+            {
+                highlightedItem = item;
+            }
+        }
+
+        HighlightedLegendItem = highlightedItem;
     }
 
     internal static string FormatPlaytime(TimeSpan totalPlaytime)
     {
-        int h = (int)totalPlaytime.TotalHours;
-        int m = totalPlaytime.Minutes;
-        return h > 0 ? $"{h}h {m}m" : $"{m}m";
+        int hours = (int)totalPlaytime.TotalHours;
+        int minutes = totalPlaytime.Minutes;
+        return hours > 0 ? $"{hours}h {minutes}m" : $"{minutes}m";
     }
 
     private static SolidColorBrush CreateBrush(SKColor color)
@@ -229,8 +302,6 @@ public partial class PlaytimeStatsViewModel : ObservableObject
         return fallback;
     }
 
-    // ---- Period generation helpers ----
-
     private List<(string Label, DateTime Start, DateTime End)> GetLast7Days(DateTime now)
     {
         var result = new List<(string, DateTime, DateTime)>();
@@ -239,6 +310,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             var day = now.Date.AddDays(-i);
             result.Add((day.ToString("MM/dd (ddd)"), day, day.AddDays(1)));
         }
+
         return result;
     }
 
@@ -251,6 +323,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             var weekEnd = weekStart.AddDays(7);
             result.Add(($"{weekStart:MM/dd}~{weekEnd.AddDays(-1):MM/dd}", weekStart, weekEnd));
         }
+
         return result;
     }
 
@@ -263,6 +336,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             var monthEnd = monthStart.AddMonths(1);
             result.Add((monthStart.ToString("yyyy/MM"), monthStart, monthEnd));
         }
+
         return result;
     }
 
@@ -275,13 +349,11 @@ public partial class PlaytimeStatsViewModel : ObservableObject
             var yearEnd = yearStart.AddYears(1);
             result.Add((yearStart.ToString("yyyy"), yearStart, yearEnd));
         }
+
         return result;
     }
 }
 
-/// <summary>
-/// Row model for the period data table.
-/// </summary>
 public class PeriodRow
 {
     public string Label { get; set; } = "";
@@ -290,19 +362,19 @@ public class PeriodRow
     public TimeSpan TotalPlaytime { get; set; }
     public int SessionCount { get; set; }
 
-    public string PlaytimeText
-    {
-        get
-        {
-            return PlaytimeStatsViewModel.FormatPlaytime(TotalPlaytime);
-        }
-    }
+    public string PlaytimeText => PlaytimeStatsViewModel.FormatPlaytime(TotalPlaytime);
 }
 
-public class PieLegendItem
+public partial class PieLegendItem : ObservableObject
 {
+    [ObservableProperty]
+    private bool _isHighlighted;
+
+    public string Key { get; set; } = "";
     public string Title { get; set; } = "";
     public string PlaytimeText { get; set; } = "";
     public string PercentageText { get; set; } = "";
-    public SolidColorBrush SwatchBrush { get; set; } = new(System.Windows.Media.Colors.Transparent);
+    public SolidColorBrush SwatchBrush { get; set; } = new(Colors.Transparent);
 }
+
+internal sealed record PieSliceData(string Key, string Title, TimeSpan TotalTime, double Minutes);
