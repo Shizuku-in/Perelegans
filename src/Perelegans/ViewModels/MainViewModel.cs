@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
@@ -65,8 +66,8 @@ public partial class MainViewModel : ObservableObject
 
         // Subscribe to process monitor events
         _processMonitor.PlaytimeUpdated += OnPlaytimeUpdated;
-
-        Games.CollectionChanged += (_, _) => RefreshStats();
+        _processMonitor.GameDetectionChanged += OnGameDetectionChanged;
+        AttachGamesCollection(Games);
     }
 
     /// <summary>
@@ -78,8 +79,9 @@ public partial class MainViewModel : ObservableObject
 
         var games = await _dbService.GetAllGamesAsync();
 
+        Games.CollectionChanged -= OnGamesCollectionChanged;
         Games = new ObservableCollection<Game>(games);
-        Games.CollectionChanged += (_, _) => RefreshStats();
+        AttachGamesCollection(Games);
         RefreshStats();
 
         // Start process monitor
@@ -101,6 +103,27 @@ public partial class MainViewModel : ObservableObject
             game.AccessedDate = DateTime.Now;
             RefreshStats();
         }
+    }
+
+    private void OnGameDetectionChanged(int gameId, bool isDetectedRunning)
+    {
+        var game = Games.FirstOrDefault(g => g.Id == gameId);
+        if (game != null)
+        {
+            game.IsDetectedRunning = isDetectedRunning;
+        }
+    }
+
+    private void AttachGamesCollection(ObservableCollection<Game> games)
+    {
+        games.CollectionChanged -= OnGamesCollectionChanged;
+        games.CollectionChanged += OnGamesCollectionChanged;
+    }
+
+    private void OnGamesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
     }
 
     private void RefreshStats()

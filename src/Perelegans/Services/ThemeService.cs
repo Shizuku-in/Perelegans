@@ -19,6 +19,10 @@ public class ThemeService
         string ThemeForeground,
         string WindowBackground,
         string PanelBackground,
+        string StatsChartPanelBackgroundColor,
+        string StatsChartPanelBorderColor,
+        string StatsChartMetricBackgroundColor,
+        string StatsChartSliceBorderColor,
         string AccentColor,
         string AccentHoverColor,
         string MahAppsAccentColor,
@@ -42,6 +46,10 @@ public class ThemeService
         ThemeForeground: "#1E1E1E",
         WindowBackground: "#FDFCF8",
         PanelBackground: "#F5F3EE",
+        StatsChartPanelBackgroundColor: "#FDFCF8",
+        StatsChartPanelBorderColor: "#D8D1C6",
+        StatsChartMetricBackgroundColor: "#EFECE5",
+        StatsChartSliceBorderColor: "#F3EFE8",
         AccentColor: "#F48FB1",
         AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
@@ -65,6 +73,10 @@ public class ThemeService
         ThemeForeground: "#DCDCDC",
         WindowBackground: "#252526",
         PanelBackground: "#2D2D30",
+        StatsChartPanelBackgroundColor: "#252526",
+        StatsChartPanelBorderColor: "#3A3A3C",
+        StatsChartMetricBackgroundColor: "#303033",
+        StatsChartSliceBorderColor: "#252526",
         AccentColor: "#F48FB1",
         AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
@@ -155,6 +167,10 @@ public class ThemeService
         resources["Perelegans.AccentHoverBrush"] = CreateBrush(palette.AccentHoverColor);
         resources["Perelegans.WindowBackground"] = CreateBrush(palette.WindowBackground);
         resources["Perelegans.PanelBackground"] = CreateBrush(palette.PanelBackground);
+        resources["Perelegans.StatsChartPanelBackground"] = CreateBrush(palette.StatsChartPanelBackgroundColor);
+        resources["Perelegans.StatsChartPanelBorderBrush"] = CreateBrush(palette.StatsChartPanelBorderColor);
+        resources["Perelegans.StatsChartMetricBackground"] = CreateBrush(palette.StatsChartMetricBackgroundColor);
+        resources["Perelegans.StatsChartSliceBorderBrush"] = CreateBrush(palette.StatsChartSliceBorderColor);
         resources["Perelegans.ForegroundBrush"] = CreateBrush(palette.ForegroundColor);
         resources["Perelegans.SubtleForegroundBrush"] = CreateBrush(palette.SubtleForegroundColor);
         resources["Perelegans.PlaytimeForegroundBrush"] = CreateBrush(palette.PlaytimeForegroundColor);

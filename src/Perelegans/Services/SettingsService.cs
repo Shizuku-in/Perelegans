@@ -36,6 +36,7 @@ public class SettingsService
             {
                 var json = File.ReadAllText(SettingsPath);
                 Settings = JsonSerializer.Deserialize<AppSettings>(json, JsonOptions) ?? new AppSettings();
+                Settings.Language = TranslationService.NormalizeLanguageCode(Settings.Language);
             }
         }
         catch

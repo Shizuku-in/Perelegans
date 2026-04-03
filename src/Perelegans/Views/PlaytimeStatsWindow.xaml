@@ -6,7 +6,7 @@
         xmlns:i18n="clr-namespace:Perelegans.i18n"
         Title="{i18n:Translate Stats_Title}"
         TitleCharacterCasing="Normal"
-        Height="520" Width="720"
+        Height="540" Width="720"
         WindowStartupLocation="CenterOwner"
         ShowTitleBar="True"
         TitleBarHeight="28"
@@ -78,12 +78,127 @@
                 </DataGrid.Columns>
             </DataGrid>
 
-            <!-- Pink Pie Chart -->
-            <lvc:PieChart Grid.Column="1"
-                          Series="{Binding PieSeries}"
-                          LegendPosition="Bottom"
-                          LegendTextSize="11"
-                          InitialRotation="-90"/>
+            <!-- Chart panel -->
+            <Border Grid.Column="1"
+                    Background="{DynamicResource Perelegans.StatsChartPanelBackground}"
+                    BorderBrush="{DynamicResource Perelegans.StatsChartPanelBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="0"
+                    Padding="14,12,14,10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="{i18n:Translate Stats_Title}"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                        <TextBlock Text="{Binding ChartSubtitle}"
+                                   Margin="0,2,0,0"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" Margin="0,12,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource Perelegans.StatsChartMetricBackground}"
+                                CornerRadius="0"
+                                Padding="8,6">
+                            <StackPanel>
+                                <TextBlock Text="{i18n:Translate Stats_ColPlaytime}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                                <TextBlock Text="{Binding SelectedPeriod.PlaytimeText, TargetNullValue=-}"
+                                           Margin="0,2,0,0"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2"
+                                Background="{DynamicResource Perelegans.StatsChartMetricBackground}"
+                                CornerRadius="0"
+                                Padding="8,6">
+                            <StackPanel>
+                                <TextBlock Text="{i18n:Translate Stats_ColSessions}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                                <TextBlock Text="{Binding SelectedPeriod.SessionCount, TargetNullValue=-}"
+                                           Margin="0,2,0,0"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <Border Grid.Row="2"
+                            Width="208"
+                            Height="208"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Margin="0,0,0,10">
+                        <lvc:PieChart Series="{Binding PieSeries}"
+                                      LegendPosition="Hidden"
+                                      TooltipPosition="Hidden"
+                                      InitialRotation="-90"
+                                      Background="Transparent"/>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="3"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding PieLegendItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Width="10"
+                                                Height="10"
+                                                CornerRadius="0"
+                                                Background="{Binding SwatchBrush}"
+                                                VerticalAlignment="Center"/>
+
+                                        <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                                            <TextBlock Text="{Binding Title}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Text="{Binding PlaytimeText}"
+                                                       FontSize="10"
+                                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding PercentageText}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                                                   VerticalAlignment="Center"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
     </Grid>
 </mah:MetroWindow>

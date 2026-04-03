@@ -36,6 +36,24 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="RunningTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
+                    <Setter Property="Foreground" Value="#E37F7F"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsDetectedRunning}" Value="True"/>
+                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Foreground" Value="#E37F7F"/>
+                </MultiDataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="PlaytimeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="{DynamicResource Perelegans.PlaytimeForegroundBrush}"/>
             <Style.Triggers>
@@ -306,7 +324,7 @@
                     <!-- Title -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Title}" Binding="{Binding Title}"
                                          Width="*" MinWidth="120"
-                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
+                                         ElementStyle="{StaticResource RunningTitleTextStyle}"/>
 
                     <!-- Brand -->
                     <DataGridTextColumn Header="{i18n:Translate Column_Brand}" Binding="{Binding Brand}"

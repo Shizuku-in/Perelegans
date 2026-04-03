@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using Perelegans.Models;
 using Perelegans.Services;
 using SkiaSharp;
+using System.Windows.Media;
 
 namespace Perelegans.ViewModels;
 
@@ -20,20 +21,26 @@ public partial class PlaytimeStatsViewModel : ObservableObject
     private List<Game> _allGames = new();
     private List<PlaySession> _allSessions = new();
 
-    // Pink gradient palette for pie chart
-    private static readonly SKColor[] PinkPalette = new[]
+    private static readonly SKColor[] PiePalette = new[]
     {
-        SKColor.Parse("#E91E78"),
-        SKColor.Parse("#F06292"),
-        SKColor.Parse("#F48FB1"),
-        SKColor.Parse("#F8BBD0"),
-        SKColor.Parse("#FCE4EC"),
-        SKColor.Parse("#EC407A"),
-        SKColor.Parse("#D81B60"),
-        SKColor.Parse("#C2185B"),
-        SKColor.Parse("#AD1457"),
-        SKColor.Parse("#880E4F")
+        SKColor.Parse("#F09199"), // 桃色
+        SKColor.Parse("#F2A0A1"), // 紅梅色
+        SKColor.Parse("#EE827C"), // 甚三紅
+        SKColor.Parse("#EB9B6F"), // 深支子
+        SKColor.Parse("#F6B894"), // 赤香
+        SKColor.Parse("#F5B1AA"), // 珊瑚色
+        SKColor.Parse("#EEBBCB"), // 撫子色
+        SKColor.Parse("#BC64A4"), // 若紫
+        SKColor.Parse("#FDEFF2"), // 薄桜
+        SKColor.Parse("#FDDEA5"), // 蜂蜜色
+        SKColor.Parse("#E4D2D8"), // 鴇鼠
+        SKColor.Parse("#F7B977"), // 杏色
+        SKColor.Parse("#E0815E"), // 纁
+        SKColor.Parse("#F2C9AC"), // 洗柿
+        SKColor.Parse("#A58F86"), // 胡桃染
     };
+
+    private SKColor _chartSliceBorderColor = SKColor.Parse("#252526");
 
     [ObservableProperty]
     private int _selectedTabIndex;
@@ -47,9 +54,25 @@ public partial class PlaytimeStatsViewModel : ObservableObject
     [ObservableProperty]
     private ISeries[] _pieSeries = Array.Empty<ISeries>();
 
+    [ObservableProperty]
+    private ObservableCollection<PieLegendItem> _pieLegendItems = new();
+
+    [ObservableProperty]
+    private string _chartSubtitle = string.Empty;
+
     public PlaytimeStatsViewModel(DatabaseService dbService)
     {
         _dbService = dbService;
+    }
+
+    public void ApplyChartTheme(ResourceDictionary resources)
+    {
+        _chartSliceBorderColor = GetBrushColor(resources, "Perelegans.StatsChartSliceBorderBrush", _chartSliceBorderColor);
+
+        if (SelectedPeriod != null || PieSeries.Length > 0)
+        {
+            RefreshPieChart();
+        }
     }
 
     public async Task InitializeAsync()
@@ -105,16 +128,24 @@ public partial class PlaytimeStatsViewModel : ObservableObject
         if (PeriodData.Count > 0)
             SelectedPeriod = PeriodData[0];
         else
+        {
+            ChartSubtitle = string.Empty;
+            PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
+        }
     }
 
     private void RefreshPieChart()
     {
         if (SelectedPeriod == null)
         {
+            ChartSubtitle = string.Empty;
+            PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
             return;
         }
+
+        ChartSubtitle = SelectedPeriod.Label;
 
         var sessionsInPeriod = _allSessions
             .Where(s => s.StartTime >= SelectedPeriod.Start && s.StartTime < SelectedPeriod.End)
@@ -128,6 +159,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
                 return new
                 {
                     Title = game?.Title ?? $"Game #{g.Key}",
+                    TotalTime = total,
                     Minutes = total.TotalMinutes
                 };
             })
@@ -137,25 +169,64 @@ public partial class PlaytimeStatsViewModel : ObservableObject
 
         if (sessionsInPeriod.Count == 0)
         {
+            PieLegendItems = new ObservableCollection<PieLegendItem>();
             PieSeries = Array.Empty<ISeries>();
             return;
         }
 
+        var totalMinutes = sessionsInPeriod.Sum(x => x.Minutes);
         var series = new List<ISeries>();
+        var legendItems = new ObservableCollection<PieLegendItem>();
+
         for (int i = 0; i < sessionsInPeriod.Count; i++)
         {
             var item = sessionsInPeriod[i];
-            var color = PinkPalette[i % PinkPalette.Length];
+            var color = PiePalette[i % PiePalette.Length];
             series.Add(new PieSeries<double>
             {
                 Values = new[] { item.Minutes },
                 Name = item.Title,
                 Fill = new SolidColorPaint(color),
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
-                DataLabelsSize = 11
+                Stroke = new SolidColorPaint(_chartSliceBorderColor) { StrokeThickness = 2 },
+                Pushout = 0,
+                HoverPushout = 0
+            });
+
+            legendItems.Add(new PieLegendItem
+            {
+                Title = item.Title,
+                PlaytimeText = FormatPlaytime(item.TotalTime),
+                PercentageText = totalMinutes <= 0 ? "0%" : $"{item.Minutes / totalMinutes:P0}",
+                SwatchBrush = CreateBrush(color)
             });
         }
+
+        PieLegendItems = legendItems;
         PieSeries = series.ToArray();
+    }
+
+    internal static string FormatPlaytime(TimeSpan totalPlaytime)
+    {
+        int h = (int)totalPlaytime.TotalHours;
+        int m = totalPlaytime.Minutes;
+        return h > 0 ? $"{h}h {m}m" : $"{m}m";
+    }
+
+    private static SolidColorBrush CreateBrush(SKColor color)
+    {
+        var brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb(color.Red, color.Green, color.Blue));
+        brush.Freeze();
+        return brush;
+    }
+
+    private static SKColor GetBrushColor(ResourceDictionary resources, string key, SKColor fallback)
+    {
+        if (resources[key] is SolidColorBrush brush)
+        {
+            return new SKColor(brush.Color.R, brush.Color.G, brush.Color.B, brush.Color.A);
+        }
+
+        return fallback;
     }
 
     // ---- Period generation helpers ----
@@ -223,9 +294,15 @@ public class PeriodRow
     {
         get
         {
-            int h = (int)TotalPlaytime.TotalHours;
-            int m = TotalPlaytime.Minutes;
-            return h > 0 ? $"{h}h {m}m" : $"{m}m";
+            return PlaytimeStatsViewModel.FormatPlaytime(TotalPlaytime);
         }
     }
+}
+
+public class PieLegendItem
+{
+    public string Title { get; set; } = "";
+    public string PlaytimeText { get; set; } = "";
+    public string PercentageText { get; set; } = "";
+    public SolidColorBrush SwatchBrush { get; set; } = new(System.Windows.Media.Colors.Transparent);
 }

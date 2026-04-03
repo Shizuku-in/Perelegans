@@ -84,6 +84,7 @@ public class ProcessMonitorService
         foreach (var kvp in _activeSessions.ToList())
         {
             await FinalizeSession(kvp.Key, kvp.Value);
+            GameDetectionChanged?.Invoke(kvp.Key, false);
         }
         _activeSessions.Clear();
     }

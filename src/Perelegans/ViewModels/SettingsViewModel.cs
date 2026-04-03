@@ -33,7 +33,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private AppCloseBehavior _selectedCloseBehavior;
 
-    public string[] LanguageOptions { get; } = { "zh-Hans", "en-US", "ja-JP" };
+    public string[] LanguageOptions { get; } = ["zh-Hans", "en-US", "ja-JP"];
     public IReadOnlyList<AppCloseBehaviorOption> CloseBehaviorOptions { get; } =
     [
         new(AppCloseBehavior.Exit, TranslationService.Instance["Settings_CloseBehaviorExit"]),
@@ -55,7 +55,7 @@ public partial class SettingsViewModel : ObservableObject
         _monitorIntervalSeconds = s.MonitorIntervalSeconds;
         _proxyAddress = s.ProxyAddress;
         _monitorEnabled = s.MonitorEnabled;
-        _selectedLanguage = s.Language;
+        _selectedLanguage = TranslationService.NormalizeLanguageCode(s.Language);
         _launchAtStartup = s.LaunchAtStartup;
         _selectedCloseBehavior = s.CloseBehavior;
     }
@@ -73,13 +73,13 @@ public partial class SettingsViewModel : ObservableObject
         s.MonitorIntervalSeconds = MonitorIntervalSeconds;
         s.ProxyAddress = ProxyAddress;
         s.MonitorEnabled = MonitorEnabled;
-        s.Language = SelectedLanguage;
+        s.Language = TranslationService.NormalizeLanguageCode(SelectedLanguage);
         s.LaunchAtStartup = LaunchAtStartup;
         s.CloseBehavior = SelectedCloseBehavior;
 
         _settingsService.Save();
         _themeService.ApplyTheme(SelectedTheme);
-        TranslationService.Instance.ChangeLanguage(SelectedLanguage);
+        TranslationService.Instance.ChangeLanguage(s.Language);
     }
 
     /// <summary>

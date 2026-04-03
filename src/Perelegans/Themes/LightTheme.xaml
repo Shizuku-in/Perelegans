@@ -7,6 +7,10 @@
     <!-- Window & Panel Backgrounds -->
     <SolidColorBrush x:Key="Perelegans.WindowBackground" Color="#FDFCF8"/>
     <SolidColorBrush x:Key="Perelegans.PanelBackground" Color="#F5F3EE"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartPanelBackground" Color="#FDFCF8"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartPanelBorderBrush" Color="#D8D1C6"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartMetricBackground" Color="#EFECE5"/>
+    <SolidColorBrush x:Key="Perelegans.StatsChartSliceBorderBrush" Color="#F3EFE8"/>
     
     <!-- Accent -->
     <Color x:Key="Perelegans.AccentColor">#FFC0CB</Color>

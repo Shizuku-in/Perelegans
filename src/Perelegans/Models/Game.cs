@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.CompilerServices;
 
 namespace Perelegans.Models;
 
@@ -10,8 +13,10 @@ public enum GameStatus
     Completed = 2
 }
 
-public class Game
+public class Game : INotifyPropertyChanged
 {
+    private bool _isDetectedRunning;
+
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Brand { get; set; } = string.Empty;
@@ -32,4 +37,23 @@ public class Game
 
     // Navigation property
     public List<PlaySession> PlaySessions { get; set; } = new();
+
+    [NotMapped]
+    public bool IsDetectedRunning
+    {
+        get => _isDetectedRunning;
+        set
+        {
+            if (_isDetectedRunning == value) return;
+            _isDetectedRunning = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
 }
