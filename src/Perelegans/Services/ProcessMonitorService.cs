@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows.Threading;
 using Perelegans.Models;
@@ -17,9 +18,9 @@ public class ProcessMonitorService
     private readonly Dictionary<int, ActiveSession> _activeSessions = new();
 
     /// <summary>
-    /// List of games to monitor (process names mapped to game IDs).
+    /// List of games to monitor, primarily matched by executable path.
     /// </summary>
-    private List<Game> _monitoredGames = new();
+    private List<MonitoredGame> _monitoredGames = new();
 
     public bool IsRunning { get; private set; }
 
@@ -57,7 +58,14 @@ public class ProcessMonitorService
     public void UpdateMonitoredGames(IEnumerable<Game> games)
     {
         _monitoredGames = games
-            .Where(g => !string.IsNullOrWhiteSpace(g.ProcessName))
+            .Select(g => new MonitoredGame
+            {
+                GameId = g.Id,
+                NormalizedExecutablePath = NormalizeExecutablePath(g.ExecutablePath),
+                NormalizedProcessName = NormalizeProcessName(g.ProcessName)
+            })
+            .Where(g => !string.IsNullOrWhiteSpace(g.NormalizedExecutablePath) ||
+                        !string.IsNullOrWhiteSpace(g.NormalizedProcessName))
             .ToList();
     }
 
@@ -101,49 +109,44 @@ public class ProcessMonitorService
     {
         try
         {
-            var runningProcessNames = Process.GetProcesses()
-                .Select(p =>
-                {
-                    try { return p.ProcessName; }
-                    catch { return null; }
-                })
-                .Where(n => n != null)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var runningProcesses = CaptureRunningProcesses();
 
             // Check each monitored game
             foreach (var game in _monitoredGames)
             {
-                bool isRunning = runningProcessNames.Contains(game.ProcessName);
+                bool isRunning = !string.IsNullOrWhiteSpace(game.NormalizedExecutablePath)
+                    ? runningProcesses.ExecutablePaths.Contains(game.NormalizedExecutablePath)
+                    : runningProcesses.ProcessNames.Contains(game.NormalizedProcessName);
 
-                if (isRunning && !_activeSessions.ContainsKey(game.Id))
+                if (isRunning && !_activeSessions.ContainsKey(game.GameId))
                 {
                     // Game just started
-                    _activeSessions[game.Id] = new ActiveSession
+                    _activeSessions[game.GameId] = new ActiveSession
                     {
-                        GameId = game.Id,
+                        GameId = game.GameId,
                         StartTime = DateTime.Now,
                         LastTick = DateTime.Now
                     };
-                    GameDetectionChanged?.Invoke(game.Id, true);
+                    GameDetectionChanged?.Invoke(game.GameId, true);
                 }
-                else if (isRunning && _activeSessions.ContainsKey(game.Id))
+                else if (isRunning && _activeSessions.ContainsKey(game.GameId))
                 {
                     // Game still running - update elapsed time
-                    var session = _activeSessions[game.Id];
+                    var session = _activeSessions[game.GameId];
                     var now = DateTime.Now;
                     var elapsed = now - session.LastTick;
                     session.LastTick = now;
                     session.AccumulatedTime += elapsed;
 
                     // Notify UI of updated playtime
-                    PlaytimeUpdated?.Invoke(game.Id, elapsed);
+                    PlaytimeUpdated?.Invoke(game.GameId, elapsed);
                 }
-                else if (!isRunning && _activeSessions.TryGetValue(game.Id, out var session))
+                else if (!isRunning && _activeSessions.TryGetValue(game.GameId, out var session))
                 {
                     // Game just stopped
-                    await FinalizeSession(game.Id, session);
-                    _activeSessions.Remove(game.Id);
-                    GameDetectionChanged?.Invoke(game.Id, false);
+                    await FinalizeSession(game.GameId, session);
+                    _activeSessions.Remove(game.GameId);
+                    GameDetectionChanged?.Invoke(game.GameId, false);
                 }
             }
         }
@@ -181,5 +184,90 @@ public class ProcessMonitorService
         public DateTime StartTime { get; set; }
         public DateTime LastTick { get; set; }
         public TimeSpan AccumulatedTime { get; set; } = TimeSpan.Zero;
+    }
+
+    private static RunningProcessSnapshot CaptureRunningProcesses()
+    {
+        var processNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var executablePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var process in Process.GetProcesses())
+        {
+            try
+            {
+                var normalizedProcessName = NormalizeProcessName(TryGetProcessName(process));
+                if (!string.IsNullOrWhiteSpace(normalizedProcessName))
+                    processNames.Add(normalizedProcessName);
+
+                var normalizedExecutablePath = NormalizeExecutablePath(TryGetExecutablePath(process));
+                if (!string.IsNullOrWhiteSpace(normalizedExecutablePath))
+                    executablePaths.Add(normalizedExecutablePath);
+            }
+            finally
+            {
+                process.Dispose();
+            }
+        }
+
+        return new RunningProcessSnapshot(processNames, executablePaths);
+    }
+
+    private static string? TryGetProcessName(Process process)
+    {
+        try
+        {
+            return process.ProcessName;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? TryGetExecutablePath(Process process)
+    {
+        try
+        {
+            return process.MainModule?.FileName;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string NormalizeProcessName(string? processName)
+    {
+        return string.IsNullOrWhiteSpace(processName)
+            ? string.Empty
+            : processName.Trim();
+    }
+
+    private static string NormalizeExecutablePath(string? executablePath)
+    {
+        if (string.IsNullOrWhiteSpace(executablePath))
+            return string.Empty;
+
+        var trimmed = executablePath.Trim().Trim('"');
+
+        try
+        {
+            return Path.GetFullPath(trimmed);
+        }
+        catch
+        {
+            return trimmed;
+        }
+    }
+
+    private sealed record RunningProcessSnapshot(
+        HashSet<string> ProcessNames,
+        HashSet<string> ExecutablePaths);
+
+    private sealed class MonitoredGame
+    {
+        public int GameId { get; set; }
+        public string NormalizedExecutablePath { get; set; } = string.Empty;
+        public string NormalizedProcessName { get; set; } = string.Empty;
     }
 }
