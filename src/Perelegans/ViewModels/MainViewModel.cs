@@ -22,7 +22,7 @@ public partial class MainViewModel : ObservableObject
     private readonly SettingsService _settingsService;
     private readonly ThemeService _themeService;
     private readonly ProcessMonitorService _processMonitor;
-    private readonly HttpClient _httpClient;
+    private HttpClient _httpClient;
     private readonly IDialogCoordinator _dialogCoordinator;
 
     [ObservableProperty]
@@ -311,6 +311,9 @@ public partial class MainViewModel : ObservableObject
             // Settings were saved - update monitor
             var settings = _settingsService.Settings;
             _processMonitor.SetInterval(settings.MonitorIntervalSeconds);
+            var previousClient = _httpClient;
+            _httpClient = MetadataHttpClientFactory.Create(settings);
+            previousClient.Dispose();
 
             if (settings.MonitorEnabled && !_processMonitor.IsRunning)
                 _processMonitor.Start();

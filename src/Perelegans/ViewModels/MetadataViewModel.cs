@@ -142,8 +142,12 @@ public partial class MetadataViewModel : ObservableObject
     {
         if (SelectedResult == null) return;
 
-        if (!string.IsNullOrEmpty(SelectedResult.Title))
-            EditTitle = SelectedResult.Title;
+        var selectedTitle = !string.IsNullOrWhiteSpace(SelectedResult.OriginalTitle)
+            ? SelectedResult.OriginalTitle
+            : SelectedResult.Title;
+
+        if (!string.IsNullOrEmpty(selectedTitle))
+            EditTitle = selectedTitle;
         if (!string.IsNullOrEmpty(SelectedResult.Brand))
             EditBrand = SelectedResult.Brand;
         if (SelectedResult.ReleaseDate.HasValue)
