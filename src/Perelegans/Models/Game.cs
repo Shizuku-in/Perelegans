@@ -33,7 +33,6 @@ public class Game : INotifyPropertyChanged
     public string? ErogameSpaceId { get; set; }
     public string? BangumiId { get; set; }
     public string? OfficialWebsite { get; set; }
-    public string? TachieImagePath { get; set; }
 
     // Navigation property
     public List<PlaySession> PlaySessions { get; set; } = new();

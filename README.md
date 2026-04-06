@@ -274,7 +274,6 @@ erDiagram
 | `ErogameSpaceId` | 可空字符串，最长 50 | ErogameSpace 关联 ID |
 | `BangumiId` | 可空字符串，最长 50 | Bangumi 关联 ID |
 | `OfficialWebsite` | 可空字符串，最长 500 | 官网地址 |
-| `TachieImagePath` | 可空字符串，最长 1000 | 立绘或封面资源路径，当前预留未正式接通 |
 
 ### `PlaySessions` 表
 
@@ -311,8 +310,6 @@ erDiagram
 
 ### 当前已知现状
 
-- 设置页里有“代理地址”字段，但当前代码里尚未真正应用到 `HttpClient`。
-- `TachieImagePath` / `MetadataResult.ImageUrl` 已经有模型字段，但暂时没有完整的图片下载与展示流程。
 - 项目当前没有自动化测试。
 - 当前数据库初始化方式是 `EnsureCreated`，更适合个人项目和早期阶段，不利于后续结构演进。
 
@@ -327,11 +324,8 @@ erDiagram
 ### 开发建议
 
 1. 把数据库初始化从 `EnsureCreated` 升级为 `EF Core Migrations`，方便后续字段变更和版本升级。
-2. 将“代理地址”真正接入 `HttpClientHandler`，让元数据抓取能在受限网络环境下正常使用。
-3. 将进程识别从“仅按进程名”提升为“进程名 + 可执行路径”甚至校验文件签名，以减少误判。
-4. 为 `DatabaseService`、`ProcessMonitorService`、元数据服务补充自动化测试。
-5. 完善图片资源链路，把 `TachieImagePath` / 远程封面落地到本地缓存并在 UI 中展示。
-6. 如果未来要支持大规模数据或多人同步，可以继续抽象仓储层，并补充导入导出、云同步或标签系统。
+2. 为 `DatabaseService`、`ProcessMonitorService`、元数据服务补充自动化测试。
+3. 如果未来要支持大规模数据或多人同步，可以继续抽象仓储层，并补充导入导出、云同步或标签系统。
 
 ## 适合作为练手项目的点
 

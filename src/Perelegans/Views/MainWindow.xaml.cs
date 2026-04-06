@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using MahApps.Metro.Controls;
 using Perelegans.ViewModels;
 
@@ -7,9 +8,18 @@ namespace Perelegans.Views;
 
 public partial class MainWindow : MetroWindow
 {
+    private readonly DispatcherTimer _refreshTimer = new()
+    {
+        Interval = TimeSpan.FromMinutes(1)
+    };
+
     public MainWindow()
     {
         InitializeComponent();
+
+        Loaded += OnLoaded;
+        Closed += OnClosed;
+        _refreshTimer.Tick += OnRefreshTimerTick;
     }
 
     // ---- Title Bar Drag ----
@@ -60,6 +70,37 @@ public partial class MainWindow : MetroWindow
         {
             WindowState = WindowState.Maximized;
             MaximizeIcon.Kind = MahApps.Metro.IconPacks.PackIconMaterialKind.WindowRestore;
+        }
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (!_refreshTimer.IsEnabled)
+        {
+            _refreshTimer.Start();
+        }
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _refreshTimer.Stop();
+        _refreshTimer.Tick -= OnRefreshTimerTick;
+        Loaded -= OnLoaded;
+        Closed -= OnClosed;
+    }
+
+    private void OnRefreshTimerTick(object? sender, EventArgs e)
+    {
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        GameDataGrid.Items.Refresh();
+
+        if (DataContext is MainViewModel vm)
+        {
+            vm.RefreshUi();
         }
     }
 }

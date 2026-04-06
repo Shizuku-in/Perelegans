@@ -127,6 +127,11 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CompletedCount));
     }
 
+    public void RefreshUi()
+    {
+        RefreshStats();
+    }
+
     private void ReplaceGames(IEnumerable<Game> games)
     {
         Games.CollectionChanged -= OnGamesCollectionChanged;
@@ -274,15 +279,17 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void PlaytimeStatistics()
+    private async Task PlaytimeStatistics()
     {
-        var vm = new PlaytimeStatsViewModel(_dbService);
+        var vm = new PlaytimeStatsViewModel(_dbService, _processMonitor);
+        await vm.RefreshAsync();
+
         var win = new PlaytimeStatsWindow
         {
             DataContext = vm,
             Owner = Application.Current.MainWindow
         };
-        _ = vm.InitializeAsync();
+
         win.ShowDialog();
     }
 

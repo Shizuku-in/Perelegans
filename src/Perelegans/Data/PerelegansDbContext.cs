@@ -50,7 +50,6 @@ public class PerelegansDbContext : DbContext
             entity.Property(g => g.ErogameSpaceId).HasMaxLength(50);
             entity.Property(g => g.BangumiId).HasMaxLength(50);
             entity.Property(g => g.OfficialWebsite).HasMaxLength(500);
-            entity.Property(g => g.TachieImagePath).HasMaxLength(1000);
 
             // Store TimeSpan as ticks (long)
             entity.Property(g => g.Playtime)

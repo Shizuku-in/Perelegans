@@ -79,6 +79,18 @@ public class ProcessMonitorService
         _timer.Start();
     }
 
+    public IReadOnlyList<ActiveSessionSnapshot> GetActiveSessionsSnapshot()
+    {
+        var now = DateTime.Now;
+
+        return _activeSessions.Values
+            .Select(session => new ActiveSessionSnapshot(
+                session.GameId,
+                session.StartTime,
+                GetCurrentDuration(session, now)))
+            .ToList();
+    }
+
     /// <summary>
     /// Stops the process monitoring timer and finalizes active sessions.
     /// </summary>
@@ -97,12 +109,14 @@ public class ProcessMonitorService
         IsRunning = false;
 
         // Finalize all active sessions
-        foreach (var kvp in _activeSessions.ToList())
+        var sessionsToFinalize = _activeSessions.ToList();
+        _activeSessions.Clear();
+
+        foreach (var kvp in sessionsToFinalize)
         {
             await FinalizeSession(kvp.Key, kvp.Value);
             GameDetectionChanged?.Invoke(kvp.Key, false);
         }
-        _activeSessions.Clear();
     }
 
     private async void OnTimerTick(object? sender, EventArgs e)
@@ -144,8 +158,8 @@ public class ProcessMonitorService
                 else if (!isRunning && _activeSessions.TryGetValue(game.GameId, out var session))
                 {
                     // Game just stopped
-                    await FinalizeSession(game.GameId, session);
                     _activeSessions.Remove(game.GameId);
+                    await FinalizeSession(game.GameId, session);
                     GameDetectionChanged?.Invoke(game.GameId, false);
                 }
             }
@@ -158,14 +172,15 @@ public class ProcessMonitorService
 
     private async Task FinalizeSession(int gameId, ActiveSession session)
     {
-        if (session.AccumulatedTime.TotalSeconds < 1) return;
+        var duration = GetCurrentDuration(session, DateTime.Now);
+        if (duration.TotalSeconds < 1) return;
 
         var playSession = new PlaySession
         {
             GameId = gameId,
             StartTime = session.StartTime,
             EndTime = DateTime.Now,
-            Duration = session.AccumulatedTime
+            Duration = duration
         };
 
         try
@@ -184,6 +199,15 @@ public class ProcessMonitorService
         public DateTime StartTime { get; set; }
         public DateTime LastTick { get; set; }
         public TimeSpan AccumulatedTime { get; set; } = TimeSpan.Zero;
+    }
+
+    private static TimeSpan GetCurrentDuration(ActiveSession session, DateTime now)
+    {
+        var tail = now > session.LastTick
+            ? now - session.LastTick
+            : TimeSpan.Zero;
+
+        return session.AccumulatedTime + tail;
     }
 
     private static RunningProcessSnapshot CaptureRunningProcesses()
@@ -271,3 +295,5 @@ public class ProcessMonitorService
         public string NormalizedProcessName { get; set; } = string.Empty;
     }
 }
+
+public sealed record ActiveSessionSnapshot(int GameId, DateTime StartTime, TimeSpan Duration);

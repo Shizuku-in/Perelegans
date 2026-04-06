@@ -21,9 +21,12 @@ namespace Perelegans.ViewModels;
 public partial class PlaytimeStatsViewModel : ObservableObject
 {
     private readonly DatabaseService _dbService;
+    private readonly ProcessMonitorService? _processMonitorService;
     private List<Game> _allGames = new();
     private List<PlaySession> _allSessions = new();
+    private Dictionary<int, string> _gameTitlesById = new();
     private string? _hoveredPieKey;
+    private bool _isRefreshing;
 
     private static readonly SKColor[] PiePalette = new[]
     {
@@ -67,9 +70,10 @@ public partial class PlaytimeStatsViewModel : ObservableObject
     [ObservableProperty]
     private PieLegendItem? _highlightedLegendItem;
 
-    public PlaytimeStatsViewModel(DatabaseService dbService)
+    public PlaytimeStatsViewModel(DatabaseService dbService, ProcessMonitorService? processMonitorService = null)
     {
         _dbService = dbService;
+        _processMonitorService = processMonitorService;
     }
 
     public void ApplyChartTheme(ResourceDictionary resources)
@@ -89,15 +93,46 @@ public partial class PlaytimeStatsViewModel : ObservableObject
 
     public async Task InitializeAsync()
     {
-        _allGames = await _dbService.GetAllGamesAsync();
-        _allSessions = new List<PlaySession>();
-        foreach (var g in _allGames)
+        await RefreshAsync();
+    }
+
+    public async Task RefreshAsync()
+    {
+        if (_isRefreshing)
         {
-            var sessions = await _dbService.GetSessionsForGameAsync(g.Id);
-            _allSessions.AddRange(sessions);
+            return;
         }
 
-        RefreshData();
+        _isRefreshing = true;
+
+        try
+        {
+            var selectedStart = SelectedPeriod?.Start;
+            var selectedEnd = SelectedPeriod?.End;
+
+            _allGames = await _dbService.GetAllGamesAsync();
+            _gameTitlesById = _allGames.ToDictionary(g => g.Id, g => g.Title);
+            _allSessions = await _dbService.GetAllSessionsAsync();
+
+            if (_processMonitorService != null)
+            {
+                _allSessions.AddRange(_processMonitorService
+                    .GetActiveSessionsSnapshot()
+                    .Select(snapshot => new PlaySession
+                    {
+                        GameId = snapshot.GameId,
+                        StartTime = snapshot.StartTime,
+                        EndTime = snapshot.StartTime + snapshot.Duration,
+                        Duration = snapshot.Duration
+                    }));
+            }
+
+            RefreshData(selectedStart, selectedEnd);
+        }
+        finally
+        {
+            _isRefreshing = false;
+        }
     }
 
     [RelayCommand]
@@ -115,7 +150,7 @@ public partial class PlaytimeStatsViewModel : ObservableObject
         RefreshPieChart();
     }
 
-    private void RefreshData()
+    private void RefreshData(DateTime? preferredStart = null, DateTime? preferredEnd = null)
     {
         PeriodData.Clear();
         var now = DateTime.Now;
@@ -153,7 +188,11 @@ public partial class PlaytimeStatsViewModel : ObservableObject
 
         if (PeriodData.Count > 0)
         {
-            SelectedPeriod = PeriodData[0];
+            var selectedPeriod = preferredStart.HasValue && preferredEnd.HasValue
+                ? PeriodData.FirstOrDefault(row => row.Start == preferredStart.Value && row.End == preferredEnd.Value)
+                : null;
+
+            SelectedPeriod = selectedPeriod ?? PeriodData[0];
         }
         else
         {
@@ -188,10 +227,9 @@ public partial class PlaytimeStatsViewModel : ObservableObject
                     total += session.Duration;
                 }
 
-                var game = _allGames.FirstOrDefault(g => g.Id == group.Key);
                 return new PieSliceData(
                     group.Key.ToString(CultureInfo.InvariantCulture),
-                    game?.Title ?? $"Game #{group.Key}",
+                    _gameTitlesById.TryGetValue(group.Key, out var title) ? title : $"Game #{group.Key}",
                     total,
                     total.TotalMinutes);
             })

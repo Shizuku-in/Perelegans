@@ -93,6 +93,14 @@ public class DatabaseService
             .ToListAsync();
     }
 
+    public async Task<List<PlaySession>> GetAllSessionsAsync()
+    {
+        await using var db = new PerelegansDbContext();
+        return await db.PlaySessions
+            .OrderByDescending(s => s.StartTime)
+            .ToListAsync();
+    }
+
     /// <summary>
     /// Updates a game's playtime and accessed date atomically.
     /// Used by the process monitor during live tracking.

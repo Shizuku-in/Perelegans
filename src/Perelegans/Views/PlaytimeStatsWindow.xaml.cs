@@ -14,6 +14,10 @@ namespace Perelegans.Views;
 public partial class PlaytimeStatsWindow : MetroWindow
 {
     private const double LegendScrollPadding = 8;
+    private readonly DispatcherTimer _refreshTimer = new()
+    {
+        Interval = TimeSpan.FromMinutes(1)
+    };
 
     public PlaytimeStatsWindow()
     {
@@ -22,6 +26,9 @@ public partial class PlaytimeStatsWindow : MetroWindow
         Loaded += (_, _) => ApplyChartTheme();
         Activated += (_, _) => ApplyChartTheme();
         DataContextChanged += OnDataContextChanged;
+        Loaded += OnLoaded;
+        Closed += OnClosed;
+        _refreshTimer.Tick += OnRefreshTimerTick;
     }
 
     private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -109,6 +116,32 @@ public partial class PlaytimeStatsWindow : MetroWindow
 
         targetOffset = Math.Max(0, Math.Min(targetOffset, LegendScrollViewer.ScrollableHeight));
         ScrollAnimationHelper.AnimateVerticalOffset(LegendScrollViewer, targetOffset);
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        if (!_refreshTimer.IsEnabled)
+        {
+            _refreshTimer.Start();
+        }
+    }
+
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _refreshTimer.Stop();
+        _refreshTimer.Tick -= OnRefreshTimerTick;
+        Loaded -= OnLoaded;
+        Closed -= OnClosed;
+    }
+
+    private async void OnRefreshTimerTick(object? sender, EventArgs e)
+    {
+        if (!IsVisible || DataContext is not PlaytimeStatsViewModel viewModel)
+        {
+            return;
+        }
+
+        await viewModel.RefreshAsync();
     }
 }
 
