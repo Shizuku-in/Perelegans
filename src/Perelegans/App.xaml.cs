@@ -30,6 +30,7 @@ public partial class App : System.Windows.Application
     private CancellationTokenSource? _activationListenerCts;
     private Task? _activationListenerTask;
     private volatile bool _pendingActivationRequest;
+    private System.Net.Http.HttpClient? _metadataHttpClient;
 
     private async void App_OnStartup(object sender, StartupEventArgs e)
     {
@@ -54,10 +55,10 @@ public partial class App : System.Windows.Application
 
         var dbService = new DatabaseService();
         _processMonitor = new ProcessMonitorService(dbService);
-        var httpClient = new System.Net.Http.HttpClient();
+        _metadataHttpClient = MetadataHttpClientFactory.Create(settingsService.Settings);
 
         // Create MainViewModel with all services
-        var mainVm = new MainViewModel(dbService, settingsService, _themeService, _processMonitor, httpClient, DialogCoordinator.Instance);
+        var mainVm = new MainViewModel(dbService, settingsService, _themeService, _processMonitor, _metadataHttpClient, DialogCoordinator.Instance);
 
         // Create and show MainWindow
         _mainWindow = new MainWindow
@@ -128,6 +129,7 @@ public partial class App : System.Windows.Application
             _trayIcon.Dispose();
         }
 
+        _metadataHttpClient?.Dispose();
         _processMonitor?.Stop();
         _themeService?.Dispose();
         base.OnExit(e);

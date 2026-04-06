@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -31,7 +32,7 @@ public class VndbService
             var requestBody = new
             {
                 filters = new object[] { "search", "=", query },
-                fields = "id, title, titles.title, titles.lang, released, developers.name",
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name",
                 results = 10
             };
 
@@ -52,18 +53,25 @@ public class VndbService
                 var result = new MetadataResult
                 {
                     Source = "VNDB",
-                    Title = item.TryGetProperty("title", out var title) ? title.GetString() ?? "" : "",
                     WebUrl = item.TryGetProperty("id", out var id)
                         ? $"https://vndb.org/{id.GetString()}" : null,
                     SourceId = item.TryGetProperty("id", out var sid) ? sid.GetString() ?? "" : ""
                 };
 
-                // Parse original title from titles array
+                var fallbackTitle = item.TryGetProperty("title", out var title)
+                    ? title.GetString() ?? ""
+                    : "";
+                result.OriginalTitle = item.TryGetProperty("alttitle", out var altTitle)
+                    ? altTitle.GetString() ?? ""
+                    : "";
+
+                // Prefer the original-language title instead of the site display title/romanization.
                 if (item.TryGetProperty("titles", out var titles))
                 {
                     foreach (var t in titles.EnumerateArray())
                     {
-                        if (t.TryGetProperty("lang", out var lang) && lang.GetString() == "ja")
+                        if (t.TryGetProperty("main", out var isMain) &&
+                            isMain.ValueKind == JsonValueKind.True)
                         {
                             result.OriginalTitle = t.TryGetProperty("title", out var ot)
                                 ? ot.GetString() ?? "" : "";
@@ -72,11 +80,15 @@ public class VndbService
                     }
                 }
 
+                result.Title = string.IsNullOrWhiteSpace(result.OriginalTitle)
+                    ? fallbackTitle
+                    : result.OriginalTitle;
+
                 // Parse release date
                 if (item.TryGetProperty("released", out var released))
                 {
                     var dateStr = released.GetString();
-                    if (DateTime.TryParse(dateStr, out var dt))
+                    if (TryParseFlexibleDate(dateStr, out var dt))
                         result.ReleaseDate = dt;
                 }
 
@@ -101,5 +113,22 @@ public class VndbService
         }
 
         return results;
+    }
+
+    private static bool TryParseFlexibleDate(string? value, out DateTime date)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            date = default;
+            return false;
+        }
+
+        return DateTime.TryParseExact(
+                   value,
+                   ["yyyy-MM-dd", "yyyy-MM", "yyyy"],
+                   CultureInfo.InvariantCulture,
+                   DateTimeStyles.None,
+                   out date)
+               || DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
     }
 }
