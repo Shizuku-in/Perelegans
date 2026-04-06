@@ -74,7 +74,15 @@ public class ProcessMonitorService
     /// <summary>
     /// Stops the process monitoring timer and finalizes active sessions.
     /// </summary>
-    public async void Stop()
+    public void Stop()
+    {
+        _ = StopAsync();
+    }
+
+    /// <summary>
+    /// Stops the process monitoring timer and finalizes active sessions.
+    /// </summary>
+    public async Task StopAsync()
     {
         if (!IsRunning) return;
         _timer.Stop();

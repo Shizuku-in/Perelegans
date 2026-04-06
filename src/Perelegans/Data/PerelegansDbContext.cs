@@ -14,11 +14,7 @@ public class PerelegansDbContext : DbContext
 
     public PerelegansDbContext()
     {
-        var appData = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Perelegans");
-        Directory.CreateDirectory(appData);
-        _dbPath = Path.Combine(appData, "perelegans.db");
+        _dbPath = GetDefaultDatabasePath();
     }
 
     public PerelegansDbContext(string dbPath)
@@ -29,6 +25,15 @@ public class PerelegansDbContext : DbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSqlite($"Data Source={_dbPath}");
+    }
+
+    public static string GetDefaultDatabasePath()
+    {
+        var appData = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Perelegans");
+        Directory.CreateDirectory(appData);
+        return Path.Combine(appData, "perelegans.db");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

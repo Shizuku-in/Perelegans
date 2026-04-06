@@ -78,14 +78,9 @@ public partial class MainViewModel : ObservableObject
         await _dbService.EnsureDatabaseCreatedAsync();
 
         var games = await _dbService.GetAllGamesAsync();
-
-        Games.CollectionChanged -= OnGamesCollectionChanged;
-        Games = new ObservableCollection<Game>(games);
-        AttachGamesCollection(Games);
-        RefreshStats();
+        ReplaceGames(games);
 
         // Start process monitor
-        _processMonitor.UpdateMonitoredGames(Games);
         var settings = _settingsService.Settings;
         _processMonitor.SetInterval(settings.MonitorIntervalSeconds);
         if (settings.MonitorEnabled)
@@ -132,6 +127,16 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(CompletedCount));
     }
 
+    private void ReplaceGames(IEnumerable<Game> games)
+    {
+        Games.CollectionChanged -= OnGamesCollectionChanged;
+        Games = new ObservableCollection<Game>(games);
+        AttachGamesCollection(Games);
+        SelectedGame = null;
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
+    }
+
     // ---- Menu Commands (File) ----
 
     [RelayCommand]
@@ -176,14 +181,6 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private string GetDatabasePath()
-    {
-        var appData = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Perelegans");
-        return System.IO.Path.Combine(appData, "perelegans.db");
-    }
-
     [RelayCommand]
     private async Task SaveBackup()
     {
@@ -196,7 +193,7 @@ public partial class MainViewModel : ObservableObject
         {
             try
             {
-                System.IO.File.Copy(GetDatabasePath(), dialog.FileName, true);
+                await _dbService.BackupDatabaseAsync(dialog.FileName);
                 await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_BackupSuccess"]);
             }
             catch (Exception ex)
@@ -215,17 +212,31 @@ public partial class MainViewModel : ObservableObject
         };
         if (dialog.ShowDialog() == true)
         {
+            var shouldResumeMonitor = _processMonitor.IsRunning;
+
             try
             {
-                System.IO.File.Copy(dialog.FileName, GetDatabasePath(), true);
-                Games.Clear();
+                if (shouldResumeMonitor)
+                {
+                    await _processMonitor.StopAsync();
+                }
+
+                await _dbService.RestoreDatabaseAsync(dialog.FileName);
                 var games = await _dbService.GetAllGamesAsync();
-                foreach (var g in games) Games.Add(g);
+                ReplaceGames(games);
                 await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_RestoreSuccess"]);
             }
             catch (Exception ex)
             {
                 await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_ErrorTitle"], string.Format(TranslationService.Instance["Msg_RestoreFailed"], ex.Message));
+            }
+            finally
+            {
+                if (shouldResumeMonitor && _settingsService.Settings.MonitorEnabled && !_processMonitor.IsRunning)
+                {
+                    _processMonitor.UpdateMonitoredGames(Games);
+                    _processMonitor.Start();
+                }
             }
         }
     }

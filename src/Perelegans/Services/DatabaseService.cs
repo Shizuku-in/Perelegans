@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Perelegans.Data;
 using Perelegans.Models;
@@ -12,6 +14,8 @@ namespace Perelegans.Services;
 /// </summary>
 public class DatabaseService
 {
+    public string GetDatabasePath() => PerelegansDbContext.GetDefaultDatabasePath();
+
     /// <summary>
     /// Ensures the database and tables exist.
     /// </summary>
@@ -103,5 +107,45 @@ public class DatabaseService
             game.AccessedDate = accessedDate;
             await db.SaveChangesAsync();
         }
+    }
+
+    public async Task BackupDatabaseAsync(string backupPath)
+    {
+        var directory = Path.GetDirectoryName(backupPath);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await using var source = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+        await using var destination = new SqliteConnection(BuildConnectionString(backupPath));
+
+        await source.OpenAsync();
+        await destination.OpenAsync();
+        source.BackupDatabase(destination);
+    }
+
+    public async Task RestoreDatabaseAsync(string backupPath)
+    {
+        SqliteConnection.ClearAllPools();
+
+        await using var source = new SqliteConnection(BuildConnectionString(backupPath));
+        await using var destination = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+
+        await source.OpenAsync();
+        await destination.OpenAsync();
+        source.BackupDatabase(destination);
+
+        await destination.CloseAsync();
+        await source.CloseAsync();
+        SqliteConnection.ClearAllPools();
+    }
+
+    private static string BuildConnectionString(string dbPath)
+    {
+        return new SqliteConnectionStringBuilder
+        {
+            DataSource = dbPath
+        }.ToString();
     }
 }
