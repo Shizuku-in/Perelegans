@@ -32,7 +32,7 @@ public class VndbService
             var requestBody = new
             {
                 filters = new object[] { "search", "=", query },
-                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name",
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name",
                 results = 10
             };
 
@@ -102,6 +102,22 @@ public class VndbService
                             devNames.Add(devName.GetString() ?? "");
                     }
                     result.Brand = string.Join(", ", devNames);
+                }
+
+                if (item.TryGetProperty("tags", out var tags))
+                {
+                    var tagNames = new List<string>();
+                    foreach (var tag in tags.EnumerateArray())
+                    {
+                        if (tag.TryGetProperty("name", out var tagName))
+                        {
+                            var name = tagName.GetString();
+                            if (!string.IsNullOrWhiteSpace(name))
+                                tagNames.Add(name);
+                        }
+                    }
+
+                    result.Tags = TagUtilities.Normalize(tagNames);
                 }
 
                 results.Add(result);

@@ -145,6 +145,24 @@ public class BangumiService
                 if (!string.IsNullOrWhiteSpace(brand))
                     result.Brand = brand;
             }
+
+            var tagNames = new List<string>();
+
+            if (root.TryGetProperty("tags", out var tags) &&
+                tags.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var tag in tags.EnumerateArray())
+                {
+                    if (tag.TryGetProperty("name", out var tagName))
+                    {
+                        var tagValue = tagName.GetString();
+                        if (!string.IsNullOrWhiteSpace(tagValue))
+                            tagNames.Add(tagValue);
+                    }
+                }
+            }
+
+            result.Tags = TagUtilities.Normalize(tagNames);
         }
         catch (Exception ex)
         {

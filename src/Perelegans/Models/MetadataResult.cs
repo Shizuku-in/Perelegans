@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Perelegans.Models;
 
@@ -15,4 +16,5 @@ public class MetadataResult
     public DateTime? ReleaseDate { get; set; }
     public string? ImageUrl { get; set; }
     public string? WebUrl { get; set; }
+    public List<string> Tags { get; set; } = [];
 }

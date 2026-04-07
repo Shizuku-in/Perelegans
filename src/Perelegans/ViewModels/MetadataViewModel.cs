@@ -62,6 +62,9 @@ public partial class MetadataViewModel : ObservableObject
     private string _editWebsite = string.Empty;
 
     [ObservableProperty]
+    private string _editTagsText = string.Empty;
+
+    [ObservableProperty]
     private string _editProcessName = string.Empty;
 
     [ObservableProperty]
@@ -102,6 +105,7 @@ public partial class MetadataViewModel : ObservableObject
         _editBangumiId = game.BangumiId ?? "";
         _editEgsId = game.ErogameSpaceId ?? "";
         _editWebsite = game.OfficialWebsite ?? "";
+        _editTagsText = TagUtilities.ToMultilineText(TagUtilities.Deserialize(game.Tags));
         _editProcessName = game.ProcessName ?? "";
         _editExecutablePath = game.ExecutablePath ?? "";
     }
@@ -153,6 +157,11 @@ public partial class MetadataViewModel : ObservableObject
         if (SelectedResult.ReleaseDate.HasValue)
             EditReleaseDate = SelectedResult.ReleaseDate;
 
+        var mergedTags = TagUtilities.Merge(
+            TagUtilities.ParseMultilineText(EditTagsText),
+            SelectedResult.Tags);
+        EditTagsText = TagUtilities.ToMultilineText(mergedTags);
+
         // Fill source-specific ID
         switch (SelectedResult.Source)
         {
@@ -198,6 +207,7 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.BangumiId = string.IsNullOrWhiteSpace(EditBangumiId) ? null : EditBangumiId;
         TargetGame.ErogameSpaceId = string.IsNullOrWhiteSpace(EditEgsId) ? null : EditEgsId;
         TargetGame.OfficialWebsite = string.IsNullOrWhiteSpace(EditWebsite) ? null : EditWebsite;
+        TargetGame.Tags = TagUtilities.Serialize(TagUtilities.ParseMultilineText(EditTagsText));
         TargetGame.ProcessName = EditProcessName;
         TargetGame.ExecutablePath = EditExecutablePath;
 
