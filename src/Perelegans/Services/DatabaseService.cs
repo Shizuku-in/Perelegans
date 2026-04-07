@@ -42,6 +42,12 @@ public class DatabaseService
         return await db.Games.FindAsync(id);
     }
 
+    public async Task<Game?> GetGameByVndbIdAsync(string vndbId)
+    {
+        await using var db = new PerelegansDbContext();
+        return await db.Games.FirstOrDefaultAsync(g => g.VndbId == vndbId);
+    }
+
     public async Task AddGameAsync(Game game)
     {
         await using var db = new PerelegansDbContext();

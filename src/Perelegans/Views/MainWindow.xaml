@@ -173,6 +173,11 @@
                         <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- Help -->

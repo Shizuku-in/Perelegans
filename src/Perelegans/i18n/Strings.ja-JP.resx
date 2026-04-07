@@ -123,4 +123,38 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameStatus_Completed" xml:space="preserve"><value>完了</value></data>
   <data name="Tray_Show" xml:space="preserve"><value>表示</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>終了</value></data>
+  <data name="Menu_Recommendations" xml:space="preserve"><value>おすすめ (_R)</value></data>
+  <data name="Settings_Ai" xml:space="preserve"><value>AI おすすめ</value></data>
+  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API ベースURL:</value></data>
+  <data name="Settings_AiApiKey" xml:space="preserve"><value>API キー:</value></data>
+  <data name="Settings_AiModel" xml:space="preserve"><value>モデル:</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>VN おすすめ</value></data>
+  <data name="Rec_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB メタデータ付きの {1} 件中 {0} 件を使って好みを分析しています。</value></data>
+  <data name="Rec_TopTags" xml:space="preserve"><value>好みのタグ: {0}</value></data>
+  <data name="Rec_AvoidTags" xml:space="preserve"><value>避けたいタグ: {0}</value></data>
+  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>好みのブランド: {0}</value></data>
+  <data name="Rec_None" xml:space="preserve"><value>なし</value></data>
+  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>少なくとも 3 本のゲームに VNDB メタデータを紐づけると、おすすめを生成できます。</value></data>
+  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>現在表示できるおすすめはありません。</value></data>
+  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>AI による推薦理由を表示しています。</value></data>
+  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>AI が未設定のため、ローカルの推薦理由のみ表示しています。</value></data>
+  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI の説明を取得できなかったため、ローカルの推薦理由のみ表示しています。</value></data>
+  <data name="Rec_ColTitle" xml:space="preserve"><value>タイトル</value></data>
+  <data name="Rec_ColBrand" xml:space="preserve"><value>ブランド</value></data>
+  <data name="Rec_ColDate" xml:space="preserve"><value>発売日</value></data>
+  <data name="Rec_ColScore" xml:space="preserve"><value>スコア</value></data>
+  <data name="Rec_ColReason" xml:space="preserve"><value>理由</value></data>
+  <data name="Rec_ColActions" xml:space="preserve"><value>操作</value></data>
+  <data name="Rec_Import" xml:space="preserve"><value>追加</value></data>
+  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>登録済み</value></data>
+  <data name="Rec_OpenVndb" xml:space="preserve"><value>VNDB を開く</value></data>
+  <data name="Rec_ImportFailed" xml:space="preserve"><value>おすすめの追加に失敗しました: {0}</value></data>
+  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>好みのタグに一致: {0}。</value></data>
+  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>よく好むブランド: {0}。</value></data>
+  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>好みの年代に近い作品です。</value></data>
+  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>ライブラリ傾向との総合相性が高い候補です。</value></data>
+  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>苦手な傾向のタグを含む可能性があります: {0}。</value></data>
+  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>発売時期が普段の好みからやや離れています。</value></data>
+  <data name="GameStatus_Planned" xml:space="preserve"><value>プレイ予定</value></data>
 </root>

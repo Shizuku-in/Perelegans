@@ -123,4 +123,38 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameStatus_Completed" xml:space="preserve"><value>已通关</value></data>
   <data name="Tray_Show" xml:space="preserve"><value>显示主窗口</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>退出程序</value></data>
+  <data name="Menu_Recommendations" xml:space="preserve"><value>推荐游戏 (_R)</value></data>
+  <data name="Settings_Ai" xml:space="preserve"><value>AI 推荐</value></data>
+  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 地址:</value></data>
+  <data name="Settings_AiApiKey" xml:space="preserve"><value>API 密钥:</value></data>
+  <data name="Settings_AiModel" xml:space="preserve"><value>模型名:</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>VN 推荐</value></data>
+  <data name="Rec_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB 元数据的游戏生成画像。</value></data>
+  <data name="Rec_TopTags" xml:space="preserve"><value>偏好标签: {0}</value></data>
+  <data name="Rec_AvoidTags" xml:space="preserve"><value>回避标签: {0}</value></data>
+  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>偏好厂商: {0}</value></data>
+  <data name="Rec_None" xml:space="preserve"><value>无</value></data>
+  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>至少为 3 个游戏补全 VNDB 元数据后，才能生成推荐。</value></data>
+  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>当前没有合适的推荐结果。</value></data>
+  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>已启用 AI 推荐理由。</value></data>
+  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>尚未配置 AI，当前仅显示本地推荐理由。</value></data>
+  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI 理由暂不可用，当前仅显示本地推荐理由。</value></data>
+  <data name="Rec_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Rec_ColBrand" xml:space="preserve"><value>厂商</value></data>
+  <data name="Rec_ColDate" xml:space="preserve"><value>发售日</value></data>
+  <data name="Rec_ColScore" xml:space="preserve"><value>分数</value></data>
+  <data name="Rec_ColReason" xml:space="preserve"><value>推荐理由</value></data>
+  <data name="Rec_ColActions" xml:space="preserve"><value>操作</value></data>
+  <data name="Rec_Import" xml:space="preserve"><value>导入</value></data>
+  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>已在库中</value></data>
+  <data name="Rec_OpenVndb" xml:space="preserve"><value>打开 VNDB</value></data>
+  <data name="Rec_ImportFailed" xml:space="preserve"><value>导入推荐失败: {0}</value></data>
+  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>命中你的偏好标签: {0}。</value></data>
+  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>来自你常喜欢的厂商: {0}。</value></data>
+  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>发售年代接近你的偏好区间。</value></data>
+  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>基于你的游戏库画像，它是一个整体匹配度较高的候选。</value></data>
+  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>可能包含你常弃坑的标签: {0}。</value></data>
+  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>发售年代与你平时偏好差距较大。</value></data>
+  <data name="GameStatus_Planned" xml:space="preserve"><value>待玩</value></data>
 </root>

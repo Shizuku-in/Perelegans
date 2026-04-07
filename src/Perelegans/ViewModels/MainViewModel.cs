@@ -293,6 +293,31 @@ public partial class MainViewModel : ObservableObject
         win.ShowDialog();
     }
 
+    [RelayCommand]
+    private void OpenRecommendations()
+    {
+        var vm = new RecommendationViewModel(
+            _dbService,
+            _settingsService,
+            _httpClient,
+            _dialogCoordinator,
+            importedGame =>
+            {
+                Games.Insert(0, importedGame);
+                SelectedGame = importedGame;
+                RefreshStats();
+                _processMonitor.UpdateMonitoredGames(Games);
+            });
+
+        var win = new RecommendationWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        win.ShowDialog();
+    }
+
     // ---- Menu Commands (Help) ----
 
     [RelayCommand]

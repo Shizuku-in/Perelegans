@@ -10,7 +10,8 @@ public enum GameStatus
 {
     Playing = 0,
     Dropped = 1,
-    Completed = 2
+    Completed = 2,
+    Planned = 3
 }
 
 public class Game : INotifyPropertyChanged

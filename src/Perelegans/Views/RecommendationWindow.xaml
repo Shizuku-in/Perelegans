@@ -1,0 +1,120 @@
+<mah:MetroWindow x:Class="Perelegans.Views.RecommendationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate Rec_Title}"
+        TitleCharacterCasing="Normal"
+        Height="640" Width="980"
+        MinHeight="520" MinWidth="760"
+        WindowStartupLocation="CenterOwner"
+        ShowTitleBar="True"
+        TitleBarHeight="28"
+        BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+        mah:DialogParticipation.Register="{Binding}">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </mah:MetroWindow.Resources>
+
+    <Grid Margin="12,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Left">
+                <TextBlock Text="{Binding ProfileSummaryText}" FontSize="13" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding TopTagsText}" Margin="0,3,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                <TextBlock Text="{Binding AvoidTagsText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                <TextBlock Text="{Binding PreferredDevelopersText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                <TextBlock Text="{Binding AiStatusText}" Margin="0,6,0,0" Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+            </StackPanel>
+
+            <Button DockPanel.Dock="Right"
+                    Width="108" Height="30"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                    Content="{i18n:Translate Rec_Refresh}"
+                    Command="{Binding RefreshCommand}"/>
+        </DockPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,8">
+            <ProgressBar Height="4"
+                         IsIndeterminate="True"
+                         Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+            <TextBlock Text="{Binding EmptyStateText}"
+                       Margin="0,8,0,0"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Recommendations}"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserResizeRows="False"
+                  CanUserSortColumns="True"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  RowHeight="86"
+                  ColumnHeaderHeight="28"
+                  FontSize="12"
+                  BorderThickness="1"
+                  BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                  Background="Transparent"
+                  Visibility="{Binding HasRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColTitle}" Binding="{Binding DisplayTitle}" Width="2*"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColBrand}" Binding="{Binding Brand}" Width="1.3*"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColDate}" Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}" Width="110"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColScore}" Binding="{Binding RecommendationScore, StringFormat=F2}" Width="90"/>
+                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColReason}" Width="3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="2,4">
+                                <TextBlock Text="{Binding Reason}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding Caution}" Margin="0,6,0,0"
+                                           TextWrapping="Wrap"
+                                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColActions}" Width="160" CanUserSort="False">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center">
+                                <Button Height="28"
+                                        Margin="0,4,0,0"
+                                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                                        IsEnabled="{Binding CanImport}"
+                                        Content="{Binding ImportButtonText}"
+                                        Command="{Binding DataContext.ImportRecommendationCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"/>
+                                <Button Height="28"
+                                        Margin="0,6,0,0"
+                                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                        Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                        Content="{i18n:Translate Rec_OpenVndb}"
+                                        Command="{Binding DataContext.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</mah:MetroWindow>

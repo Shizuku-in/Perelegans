@@ -75,6 +75,7 @@ public partial class MetadataViewModel : ObservableObject
     public string[] SourceOptions { get; } = { "VNDB", "Bangumi", "ErogameSpace" };
     public IReadOnlyList<GameStatusOption> StatusOptions { get; } =
     [
+        new(GameStatus.Planned, TranslationService.Instance["GameStatus_Planned"]),
         new(GameStatus.Completed, TranslationService.Instance["GameStatus_Completed"]),
         new(GameStatus.Playing, TranslationService.Instance["GameStatus_Playing"]),
         new(GameStatus.Dropped, TranslationService.Instance["GameStatus_Dropped"])

@@ -6,7 +6,7 @@
         xmlns:models="clr-namespace:Perelegans.Models"
         Title="Settings"
         TitleCharacterCasing="Normal"
-        Height="500" Width="420"
+        Height="650" Width="420"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         ShowTitleBar="True"
@@ -29,6 +29,7 @@
 
     <Grid Margin="16,12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -112,7 +113,43 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Grid.Row="3" Header="{i18n:Translate Settings_System}" Margin="0,0,0,8"
+        <GroupBox Grid.Row="3" Header="{i18n:Translate Settings_Ai}" Margin="0,0,0,8"
+                  Padding="8,6" FontSize="12"
+                  BorderBrush="{DynamicResource Perelegans.BorderBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="6"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Row="0" Text="{i18n:Translate Settings_AiBaseUrl}" VerticalAlignment="Center" FontSize="12"/>
+                <TextBox Grid.Row="0" Grid.Column="1" Height="26" FontSize="12"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding AiApiBaseUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         mah:TextBoxHelper.Watermark="https://api.openai.com/v1"/>
+
+                <TextBlock Grid.Row="2" Text="{i18n:Translate Settings_AiApiKey}" VerticalAlignment="Center" FontSize="12"/>
+                <TextBox Grid.Row="2" Grid.Column="1" Height="26" FontSize="12"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding AiApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         mah:TextBoxHelper.Watermark="sk-..."/>
+
+                <TextBlock Grid.Row="4" Text="{i18n:Translate Settings_AiModel}" VerticalAlignment="Center" FontSize="12"/>
+                <TextBox Grid.Row="4" Grid.Column="1" Height="26" FontSize="12"
+                         VerticalContentAlignment="Center"
+                         Text="{Binding AiModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         mah:TextBoxHelper.Watermark="gpt-4.1-mini"/>
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Grid.Row="4" Header="{i18n:Translate Settings_System}" Margin="0,0,0,8"
                   Padding="8,6" FontSize="12"
                   BorderBrush="{DynamicResource Perelegans.BorderBrush}">
             <Grid>
@@ -141,7 +178,7 @@
         </GroupBox>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal"
+        <StackPanel Grid.Row="5" Orientation="Horizontal"
                     HorizontalAlignment="Right" Margin="0,4,0,0">
             <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                     Margin="0,0,8,0"
