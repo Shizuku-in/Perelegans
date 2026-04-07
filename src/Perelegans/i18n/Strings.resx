@@ -65,8 +65,10 @@
   <data name="Meta_FieldDate" xml:space="preserve"><value>Release Date:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>Progress:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>Website:</value></data>
+  <data name="Meta_FieldTags" xml:space="preserve"><value>Tags:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>Process Name:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>Exec Path:</value></data>
+  <data name="Meta_TagsWatermark" xml:space="preserve"><value>One tag per line</value></data>
   <data name="Meta_ColSource" xml:space="preserve"><value>Source</value></data>
   <data name="Meta_ColTitle" xml:space="preserve"><value>Title</value></data>
   <data name="Meta_ColBrand" xml:space="preserve"><value>Brand</value></data>

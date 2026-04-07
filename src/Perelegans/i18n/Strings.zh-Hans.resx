@@ -65,8 +65,10 @@
   <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>游玩进度:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
+  <data name="Meta_FieldTags" xml:space="preserve"><value>标签:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>进程特征:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>启动路径:</value></data>
+  <data name="Meta_TagsWatermark" xml:space="preserve"><value>每行一个标签</value></data>
   <data name="Meta_ColSource" xml:space="preserve"><value>来源</value></data>
   <data name="Meta_ColTitle" xml:space="preserve"><value>标题</value></data>
   <data name="Meta_ColBrand" xml:space="preserve"><value>厂商</value></data>
