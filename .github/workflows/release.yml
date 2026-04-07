@@ -2,10 +2,32 @@ name: Release
 
 on:
   push:
+    branches:
+      - "**"
     tags:
       - "*"
 
 jobs:
+  build-check:
+    name: Build Check
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore src/Perelegans/Perelegans.csproj
+
+      - name: Build
+        run: dotnet build src/Perelegans/Perelegans.csproj -c Release --no-restore
+
   publish:
     name: Publish ${{ matrix.rid }}
     if: startsWith(github.ref, 'refs/tags/')
