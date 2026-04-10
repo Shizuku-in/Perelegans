@@ -13,7 +13,7 @@ namespace Perelegans.Services;
 public class RecommendationService
 {
     private const string VndbApiUrl = "https://api.vndb.org/kana/vn";
-    private const string DetailFields = "id, title, alttitle, released, developers.name, tags{id,name,rating}, extlinks{url,label,name}";
+    private const string DetailFields = "id, title, alttitle, released, developers.name, tags.id, tags.name, tags.rating, extlinks.url, extlinks.label, extlinks.name";
     private const int CacheTtlDays = 7;
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
@@ -134,7 +134,7 @@ public class RecommendationService
                 "or",
                 batch.Select(id => (object)new object[] { "id", "=", id }));
 
-            var responseJson = await PostToVndbAsync(filters, batch.Count, DetailFields, "searchrank");
+            var responseJson = await PostToVndbAsync(filters, batch.Count, DetailFields, "id");
             if (responseJson != null)
                 results.AddRange(ParseVisualNovels(responseJson));
         }

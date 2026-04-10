@@ -107,17 +107,19 @@ public partial class RecommendationViewModel : ObservableObject
             if (!_aiRecommendationService.IsConfigured)
                 return;
 
-            var aiExplanations = await _aiRecommendationService.ExplainAsync(
+            var aiResult = await _aiRecommendationService.ExplainAsync(
                 result.ProfileSummary,
                 Recommendations.Take(10).ToList());
 
-            if (aiExplanations.Count == 0)
+            if (!aiResult.HasExplanations)
             {
-                AiStatusText = TranslationService.Instance["Rec_AiStatusFallback"];
+                AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
+                    ? TranslationService.Instance["Rec_AiStatusFallback"]
+                    : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
                 return;
             }
 
-            foreach (var explanation in aiExplanations)
+            foreach (var explanation in aiResult.Explanations)
             {
                 var candidate = Recommendations.FirstOrDefault(item =>
                     string.Equals(item.VndbId, explanation.CandidateId, StringComparison.OrdinalIgnoreCase));

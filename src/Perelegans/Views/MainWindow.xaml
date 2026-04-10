@@ -178,6 +178,12 @@
                         <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <Separator/>
+                <MenuItem Header="{i18n:Translate Menu_BatchMetadata}" Command="{Binding OpenBatchMetadataCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="DatabaseEdit" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- Help -->
@@ -224,9 +230,14 @@
 
         <!-- ==================== 3. CLIENT AREA ==================== -->
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- Background Tachie Image (lower z-index) -->
+            <!-- Background Tachie Image -->
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
+                   Grid.RowSpan="2"
                    Stretch="Uniform"
                    Opacity="0.12"
                    HorizontalAlignment="Right"
@@ -237,8 +248,33 @@
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
+            <!-- Batch Operation Toolbar -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8,4">
+                <Button Height="26" FontSize="12" Margin="0,0,6,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                        Content="{i18n:Translate GameMgmt_SelectAll}"
+                        Command="{Binding SelectAllGamesCommand}"/>
+                <Button Height="26" FontSize="12" Margin="0,0,6,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                        Content="{i18n:Translate GameMgmt_DeselectAll}"
+                        Command="{Binding DeselectAllGamesCommand}"/>
+                <Button Height="26" FontSize="12"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square}"
+                        Command="{Binding DeleteSelectedGamesCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
+                                                    Foreground="#E53935" Margin="0,0,4,0"/>
+                        <TextBlock Text="{i18n:Translate GameMgmt_DeleteSelected}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
             <!-- DataGrid (upper z-index) -->
             <DataGrid x:Name="GameDataGrid"
+                      Grid.Row="1"
                       ItemsSource="{Binding Games}"
                       SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                       AutoGenerateColumns="False"
@@ -311,6 +347,16 @@
 
                 <!-- Column Definitions -->
                 <DataGrid.Columns>
+                    <!-- Checkbox -->
+                    <DataGridTemplateColumn Width="40" CanUserResize="False" CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
                     <!-- Status (icon only) -->
                     <DataGridTemplateColumn Header="" Width="32" CanUserResize="False"
                                              SortMemberPath="Status">

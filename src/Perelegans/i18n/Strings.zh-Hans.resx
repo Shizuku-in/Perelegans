@@ -140,6 +140,7 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>已启用 AI 推荐理由。</value></data>
   <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>尚未配置 AI，当前仅显示本地推荐理由。</value></data>
   <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI 理由暂不可用，当前仅显示本地推荐理由。</value></data>
+  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI 理由暂不可用，当前仅显示本地推荐理由。原因: {0}</value></data>
   <data name="Rec_ColTitle" xml:space="preserve"><value>标题</value></data>
   <data name="Rec_ColBrand" xml:space="preserve"><value>厂商</value></data>
   <data name="Rec_ColDate" xml:space="preserve"><value>发售日</value></data>
@@ -157,4 +158,27 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_LocalCautionTags" xml:space="preserve"><value>可能包含你常弃坑的标签: {0}。</value></data>
   <data name="Rec_LocalCautionYear" xml:space="preserve"><value>发售年代与你平时偏好差距较大。</value></data>
   <data name="GameStatus_Planned" xml:space="preserve"><value>待玩</value></data>
+  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>确定要删除这 {0} 个游戏吗？</value></data>
+  <data name="Msg_NoSelection" xml:space="preserve"><value>没有选中任何游戏。</value></data>
+  <data name="Menu_GameManagement" xml:space="preserve"><value>游戏管理 (_G)</value></data>
+  <data name="GameMgmt_Title" xml:space="preserve"><value>游戏管理</value></data>
+  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>全选</value></data>
+  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>取消全选</value></data>
+  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>反选</value></data>
+  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>删除选中</value></data>
+  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>总计:</value></data>
+  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>已选:</value></data>
+  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>按标题过滤...</value></data>
+  <data name="Menu_BatchMetadata" xml:space="preserve"><value>批量元数据 (_B)</value></data>
+  <data name="BatchMeta_Title" xml:space="preserve"><value>批量元数据管理</value></data>
+  <data name="BatchMeta_FilterWatermark" xml:space="preserve"><value>筛选游戏...</value></data>
+  <data name="BatchMeta_SearchBtn" xml:space="preserve"><value>全库搜索</value></data>
+  <data name="BatchMeta_ApplyBtn" xml:space="preserve"><value>应用结果</value></data>
+  <data name="BatchMeta_SaveAll" xml:space="preserve"><value>保存全部</value></data>
+  <data name="BatchMeta_Editing" xml:space="preserve"><value>编辑元数据</value></data>
+  <data name="BatchMeta_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="BatchMeta_ColBrand" xml:space="preserve"><value>厂商</value></data>
+  <data name="BatchMeta_ColDate" xml:space="preserve"><value>发售日</value></data>
+  <data name="BatchMeta_ColStatus" xml:space="preserve"><value>进度</value></data>
+  <data name="BatchMeta_ColComplete" xml:space="preserve"><value>完整度</value></data>
 </root>

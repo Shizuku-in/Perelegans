@@ -17,6 +17,7 @@ public enum GameStatus
 public class Game : INotifyPropertyChanged
 {
     private bool _isDetectedRunning;
+    private bool _isSelected;
 
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -47,6 +48,18 @@ public class Game : INotifyPropertyChanged
         {
             if (_isDetectedRunning == value) return;
             _isDetectedRunning = value;
+            OnPropertyChanged();
+        }
+    }
+
+    [NotMapped]
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value) return;
+            _isSelected = value;
             OnPropertyChanged();
         }
     }

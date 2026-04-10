@@ -108,6 +108,7 @@
   <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>AI explanations enabled.</value></data>
   <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>AI is not configured. Showing local recommendation reasons only.</value></data>
   <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI explanation unavailable. Showing local recommendation reasons.</value></data>
+  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI explanation unavailable. Showing local recommendation reasons. Cause: {0}</value></data>
   <data name="Rec_ColTitle" xml:space="preserve"><value>Title</value></data>
   <data name="Rec_ColBrand" xml:space="preserve"><value>Brand</value></data>
   <data name="Rec_ColDate" xml:space="preserve"><value>Release Date</value></data>
@@ -158,4 +159,27 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="GameStatus_Planned" xml:space="preserve"><value>Planned</value></data>
   <data name="Tray_Show" xml:space="preserve"><value>Show</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>Are you sure you want to delete {0} game(s)?</value></data>
+  <data name="Msg_NoSelection" xml:space="preserve"><value>No games selected.</value></data>
+  <data name="Menu_GameManagement" xml:space="preserve"><value>Game Management (_G)</value></data>
+  <data name="GameMgmt_Title" xml:space="preserve"><value>Game Management</value></data>
+  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>Select All</value></data>
+  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>Deselect All</value></data>
+  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>Invert Selection</value></data>
+  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>Delete Selected</value></data>
+  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>Total:</value></data>
+  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>Selected:</value></data>
+  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>Filter by title...</value></data>
+  <data name="Menu_BatchMetadata" xml:space="preserve"><value>Batch Metadata (_B)</value></data>
+  <data name="BatchMeta_Title" xml:space="preserve"><value>Batch Metadata Management</value></data>
+  <data name="BatchMeta_FilterWatermark" xml:space="preserve"><value>Filter games...</value></data>
+  <data name="BatchMeta_SearchBtn" xml:space="preserve"><value>Search All</value></data>
+  <data name="BatchMeta_ApplyBtn" xml:space="preserve"><value>Apply</value></data>
+  <data name="BatchMeta_SaveAll" xml:space="preserve"><value>Save All</value></data>
+  <data name="BatchMeta_Editing" xml:space="preserve"><value>Edit Metadata</value></data>
+  <data name="BatchMeta_ColTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="BatchMeta_ColBrand" xml:space="preserve"><value>Brand</value></data>
+  <data name="BatchMeta_ColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="BatchMeta_ColStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="BatchMeta_ColComplete" xml:space="preserve"><value>Complete</value></data>
 </root>

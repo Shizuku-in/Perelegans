@@ -536,4 +536,60 @@ public partial class MainViewModel : ObservableObject
             _processMonitor.UpdateMonitoredGames(Games);
         }
     }
+
+    [RelayCommand]
+    private void SelectAllGames()
+    {
+        foreach (var g in Games)
+            g.IsSelected = true;
+    }
+
+    [RelayCommand]
+    private void DeselectAllGames()
+    {
+        foreach (var g in Games)
+            g.IsSelected = false;
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedGames()
+    {
+        var selected = Games.Where(g => g.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            await _dialogCoordinator.ShowMessageAsync(this,
+                TranslationService.Instance["Msg_AppTitle"],
+                TranslationService.Instance["Msg_NoSelection"]);
+            return;
+        }
+
+        var result = await _dialogCoordinator.ShowMessageAsync(this,
+            TranslationService.Instance["Msg_DeleteConfirmTitle"],
+            string.Format(TranslationService.Instance["Msg_DeleteSelectedConfirmText"], selected.Count),
+            MessageDialogStyle.AffirmativeAndNegative);
+
+        if (result != MessageDialogResult.Affirmative)
+            return;
+
+        foreach (var g in selected)
+        {
+            await _dbService.DeleteGameAsync(g.Id);
+            Games.Remove(g);
+        }
+
+        _processMonitor.UpdateMonitoredGames(Games);
+        RefreshStats();
+    }
+
+    [RelayCommand]
+    private void OpenBatchMetadata()
+    {
+        var vm = new BatchMetadataViewModel(_dbService, _httpClient, _dialogCoordinator);
+        var win = new BatchMetadataWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+        win.ShowDialog();
+    }
 }
