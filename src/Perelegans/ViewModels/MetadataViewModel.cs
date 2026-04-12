@@ -211,6 +211,11 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.Tags = TagUtilities.Serialize(TagUtilities.ParseMultilineText(EditTagsText));
         TargetGame.ProcessName = EditProcessName;
         TargetGame.ExecutablePath = EditExecutablePath;
+        TargetGame.CoverImageUrl = SelectedResult?.ImageUrl ?? TargetGame.CoverImageUrl;
+        if (SelectedResult?.ImageUrl != null)
+        {
+            TargetGame.CoverImagePath = null;
+        }
 
         if (!_isNewGame)
         {

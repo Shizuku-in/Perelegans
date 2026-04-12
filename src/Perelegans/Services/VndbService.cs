@@ -32,7 +32,7 @@ public class VndbService
             var requestBody = new
             {
                 filters = new object[] { "search", "=", query },
-                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name",
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url",
                 results = 10
             };
 
@@ -118,6 +118,12 @@ public class VndbService
                     }
 
                     result.Tags = TagUtilities.Normalize(tagNames);
+                }
+
+                if (item.TryGetProperty("image", out var image) &&
+                    image.TryGetProperty("url", out var imageUrl))
+                {
+                    result.ImageUrl = imageUrl.GetString();
                 }
 
                 results.Add(result);

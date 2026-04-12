@@ -169,6 +169,12 @@ public partial class BatchMetadataViewModel : ObservableObject
         if (result.Source == "ErogameSpace" && string.IsNullOrWhiteSpace(entry.EgsId))
             entry.EgsId = result.SourceId;
 
+        if (!string.IsNullOrWhiteSpace(result.ImageUrl))
+        {
+            entry.CoverImageUrl = result.ImageUrl;
+            entry.CoverImagePath = string.Empty;
+        }
+
         entry.RefreshCompleteness();
         SearchProgress = $"Applied {result.Source} result.";
     }
@@ -241,6 +247,8 @@ public partial class GameMetadataEntry : ObservableObject
         EgsId = game.ErogameSpaceId ?? string.Empty;
         Website = game.OfficialWebsite ?? string.Empty;
         TagsText = ParseTagsText(game.Tags);
+        CoverImageUrl = game.CoverImageUrl ?? string.Empty;
+        CoverImagePath = game.CoverImagePath ?? string.Empty;
         StatusText = GetStatusText(game.Status);
         RefreshCompleteness();
     }
@@ -279,6 +287,8 @@ public partial class GameMetadataEntry : ObservableObject
     [ObservableProperty] private string _egsId;
     [ObservableProperty] private string _website;
     [ObservableProperty] private string _tagsText;
+    [ObservableProperty] private string _coverImageUrl;
+    [ObservableProperty] private string _coverImagePath;
     [ObservableProperty] private string _statusText;
 
     [ObservableProperty] private int _completenessScore;
@@ -328,6 +338,8 @@ public partial class GameMetadataEntry : ObservableObject
         _game.ErogameSpaceId = string.IsNullOrWhiteSpace(EgsId) ? null : EgsId;
         _game.OfficialWebsite = string.IsNullOrWhiteSpace(Website) ? null : Website;
         _game.Tags = SerializeTags(TagsText);
+        _game.CoverImageUrl = string.IsNullOrWhiteSpace(CoverImageUrl) ? null : CoverImageUrl;
+        _game.CoverImagePath = string.IsNullOrWhiteSpace(CoverImagePath) ? null : CoverImagePath;
     }
 
     private static string? SerializeTags(string? text)

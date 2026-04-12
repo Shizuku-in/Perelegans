@@ -18,6 +18,9 @@ public class Game : INotifyPropertyChanged
 {
     private bool _isDetectedRunning;
     private bool _isSelected;
+    private string? _coverImageUrl;
+    private string? _coverImagePath;
+    private double? _coverAspectRatio;
 
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -36,6 +39,45 @@ public class Game : INotifyPropertyChanged
     public string? BangumiId { get; set; }
     public string? OfficialWebsite { get; set; }
     public string? Tags { get; set; }
+
+    public string? CoverImageUrl
+    {
+        get => _coverImageUrl;
+        set
+        {
+            if (_coverImageUrl == value) return;
+            _coverImageUrl = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CoverDisplaySource));
+        }
+    }
+
+    public string? CoverImagePath
+    {
+        get => _coverImagePath;
+        set
+        {
+            if (_coverImagePath == value) return;
+            _coverImagePath = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CoverDisplaySource));
+        }
+    }
+
+    [NotMapped]
+    public string? CoverDisplaySource => !string.IsNullOrWhiteSpace(CoverImagePath) ? CoverImagePath : CoverImageUrl;
+
+    [NotMapped]
+    public double? CoverAspectRatio
+    {
+        get => _coverAspectRatio;
+        set
+        {
+            if (_coverAspectRatio == value) return;
+            _coverAspectRatio = value;
+            OnPropertyChanged();
+        }
+    }
 
     // Navigation property
     public List<PlaySession> PlaySessions { get; set; } = new();

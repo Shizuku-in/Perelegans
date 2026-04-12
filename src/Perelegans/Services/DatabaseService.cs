@@ -24,6 +24,8 @@ public class DatabaseService
         await using var db = new PerelegansDbContext();
         await db.Database.EnsureCreatedAsync();
         await EnsureGamesTagsColumnAsync();
+        await EnsureGamesCoverImageUrlColumnAsync();
+        await EnsureGamesCoverImagePathColumnAsync();
     }
 
     // ---- Games ----
@@ -190,6 +192,64 @@ public class DatabaseService
 
         await using var alterCommand = connection.CreateCommand();
         alterCommand.CommandText = "ALTER TABLE \"Games\" ADD COLUMN \"Tags\" TEXT NULL;";
+        await alterCommand.ExecuteNonQueryAsync();
+    }
+
+    private async Task EnsureGamesCoverImageUrlColumnAsync()
+    {
+        await using var connection = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(\"Games\");";
+
+        var hasCoverImageUrlColumn = false;
+        await using (var reader = await command.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                if (string.Equals(reader.GetString(1), "CoverImageUrl", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasCoverImageUrlColumn = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasCoverImageUrlColumn)
+            return;
+
+        await using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE \"Games\" ADD COLUMN \"CoverImageUrl\" TEXT NULL;";
+        await alterCommand.ExecuteNonQueryAsync();
+    }
+
+    private async Task EnsureGamesCoverImagePathColumnAsync()
+    {
+        await using var connection = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "PRAGMA table_info(\"Games\");";
+
+        var hasCoverImagePathColumn = false;
+        await using (var reader = await command.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                if (string.Equals(reader.GetString(1), "CoverImagePath", StringComparison.OrdinalIgnoreCase))
+                {
+                    hasCoverImagePathColumn = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasCoverImagePathColumn)
+            return;
+
+        await using var alterCommand = connection.CreateCommand();
+        alterCommand.CommandText = "ALTER TABLE \"Games\" ADD COLUMN \"CoverImagePath\" TEXT NULL;";
         await alterCommand.ExecuteNonQueryAsync();
     }
 }

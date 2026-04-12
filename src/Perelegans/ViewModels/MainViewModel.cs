@@ -34,6 +34,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isAboutOverlayVisible;
 
+    [ObservableProperty]
+    private bool _isBulkDeleteMode;
+
     public string TotalPlaytimeText
     {
         get
@@ -79,6 +82,7 @@ public partial class MainViewModel : ObservableObject
 
         var games = await _dbService.GetAllGamesAsync();
         ReplaceGames(games);
+        _ = PopulateMissingCoverImagesAsync(games.ToList());
 
         // Start process monitor
         var settings = _settingsService.Settings;
@@ -138,8 +142,35 @@ public partial class MainViewModel : ObservableObject
         Games = new ObservableCollection<Game>(games);
         AttachGamesCollection(Games);
         SelectedGame = null;
+        IsBulkDeleteMode = false;
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private async Task PopulateMissingCoverImagesAsync(IEnumerable<Game> games)
+    {
+        var coverArtService = new CoverArtService(_httpClient);
+
+        foreach (var game in games)
+        {
+            var cachedPath = await coverArtService.ResolveAndCacheCoverAsync(game);
+            if (string.IsNullOrWhiteSpace(cachedPath))
+                continue;
+
+            try
+            {
+                await _dbService.UpdateGameAsync(game);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    partial void OnIsBulkDeleteModeChanged(bool value)
+    {
+        SelectedGame = null;
+        DeselectAllGames();
     }
 
     // ---- Menu Commands (File) ----
@@ -534,7 +565,14 @@ public partial class MainViewModel : ObservableObject
             await _dbService.DeleteGameAsync(SelectedGame.Id);
             Games.Remove(SelectedGame);
             _processMonitor.UpdateMonitoredGames(Games);
+            SelectedGame = null;
         }
+    }
+
+    [RelayCommand]
+    private void ToggleBulkDeleteMode()
+    {
+        IsBulkDeleteMode = !IsBulkDeleteMode;
     }
 
     [RelayCommand]
@@ -578,6 +616,8 @@ public partial class MainViewModel : ObservableObject
         }
 
         _processMonitor.UpdateMonitoredGames(Games);
+        SelectedGame = null;
+        IsBulkDeleteMode = false;
         RefreshStats();
     }
 
