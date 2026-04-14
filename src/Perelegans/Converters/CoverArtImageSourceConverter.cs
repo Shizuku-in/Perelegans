@@ -12,6 +12,14 @@ public class CoverArtImageSourceConverter : IValueConverter
 {
     private static readonly ConcurrentDictionary<string, ImageSource> Cache = new(StringComparer.OrdinalIgnoreCase);
 
+    public static void InvalidateCache(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+            return;
+
+        Cache.TryRemove(source.Trim(), out _);
+    }
+
     public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
         if (value is not string url || string.IsNullOrWhiteSpace(url))
@@ -39,19 +47,49 @@ public class CoverArtImageSourceConverter : IValueConverter
     {
         try
         {
+            if (!TryResolveSourceUri(url, out var sourceUri, out var isLocalSource))
+                return null;
+
             var image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = File.Exists(url) ? new Uri(Path.GetFullPath(url), UriKind.Absolute) : new Uri(url, UriKind.Absolute);
-            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.UriSource = sourceUri;
+            image.CacheOption = isLocalSource ? BitmapCacheOption.OnLoad : BitmapCacheOption.Default;
             image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
             image.DecodePixelWidth = 1200;
             image.EndInit();
-            image.Freeze();
+
+            if (isLocalSource && image.CanFreeze)
+            {
+                image.Freeze();
+            }
+
             return image;
         }
         catch
         {
             return null;
         }
+    }
+
+    private static bool TryResolveSourceUri(string source, out Uri uri, out bool isLocalSource)
+    {
+        isLocalSource = false;
+
+        if (File.Exists(source))
+        {
+            uri = new Uri(Path.GetFullPath(source), UriKind.Absolute);
+            isLocalSource = true;
+            return true;
+        }
+
+        var normalized = source.StartsWith("//", StringComparison.Ordinal)
+            ? $"https:{source}"
+            : source;
+
+        if (!Uri.TryCreate(normalized, UriKind.Absolute, out uri!))
+            return false;
+
+        isLocalSource = uri.IsFile;
+        return true;
     }
 }

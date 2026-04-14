@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 using Perelegans.Models;
@@ -48,6 +49,54 @@ public class CoverArtService
             return vndbSearchCover;
 
         return null;
+    }
+
+    public async Task<IReadOnlyList<CoverCandidate>> GetCoverCandidatesAsync(
+        string title,
+        string? bangumiId,
+        string? vndbId)
+    {
+        var candidates = new List<CoverCandidate>();
+        var seenImageUrls = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var vndbService = new VndbService(_httpClient);
+        var bangumiService = new BangumiService(_httpClient);
+
+        if (!string.IsNullOrWhiteSpace(vndbId))
+        {
+            var vndbCandidate = await vndbService.GetByIdAsync(vndbId);
+            AddCandidate(candidates, seenImageUrls, vndbCandidate);
+        }
+
+        if (!string.IsNullOrWhiteSpace(bangumiId))
+        {
+            var bangumiCandidate = await bangumiService.GetByIdAsync(bangumiId);
+            AddCandidate(candidates, seenImageUrls, bangumiCandidate);
+        }
+
+        if (!string.IsNullOrWhiteSpace(title))
+        {
+            var normalizedTitle = title.Trim();
+            AddCandidates(candidates, seenImageUrls, await vndbService.SearchAsync(normalizedTitle));
+            AddCandidates(candidates, seenImageUrls, await bangumiService.SearchAsync(normalizedTitle));
+        }
+
+        return candidates;
+    }
+
+    public async Task PopulateCandidatePreviewSourcesAsync(
+        IReadOnlyList<CoverCandidate> candidates,
+        string cacheKeyPrefix)
+    {
+        if (candidates.Count == 0)
+            return;
+
+        using var concurrencyLimiter = new SemaphoreSlim(4);
+        var tasks = candidates.Select((candidate, index) => PopulateCandidatePreviewSourceAsync(
+            candidate,
+            $"{cacheKeyPrefix}-{index}",
+            concurrencyLimiter));
+
+        await Task.WhenAll(tasks);
     }
 
     private async Task<string?> TryResolveBangumiCoverBySearchAsync(string title)
@@ -171,27 +220,83 @@ public class CoverArtService
         if (string.IsNullOrWhiteSpace(coverUrl))
             return null;
 
-        var cachedPath = await DownloadCoverAsync(game.Id, coverUrl);
-        if (!string.IsNullOrWhiteSpace(cachedPath))
+        var cachedCover = await CacheCoverFromUrlAsync(coverUrl, $"game-{game.Id}");
+        if (cachedCover == null)
+            return null;
+
+        if (!string.IsNullOrWhiteSpace(cachedCover.CachedPath))
         {
-            game.CoverImageUrl = coverUrl;
-            game.CoverImagePath = cachedPath;
-            UpdateCoverMetadataFromFile(game, cachedPath);
-            return cachedPath;
+            game.CoverImageUrl = cachedCover.CoverUrl;
+            game.CoverImagePath = cachedCover.CachedPath;
+            if (cachedCover.AspectRatio.HasValue)
+            {
+                game.CoverAspectRatio = cachedCover.AspectRatio.Value;
+            }
+            else
+            {
+                UpdateCoverMetadataFromFile(game, cachedCover.CachedPath);
+            }
+
+            return cachedCover.CachedPath;
         }
 
-        game.CoverImageUrl = coverUrl;
-        return coverUrl;
+        game.CoverImageUrl = cachedCover.CoverUrl;
+        return cachedCover.CoverUrl;
     }
 
-    private async Task<string?> DownloadCoverAsync(int gameId, string coverUrl)
+    public async Task<CoverArtFetchResult?> ResolveAndCacheCoverAsync(
+        string title,
+        string? bangumiId,
+        string? vndbId,
+        string cacheKey)
+    {
+        var coverUrl = await ResolveCoverUrlAsync(new Game
+        {
+            Title = title,
+            BangumiId = bangumiId,
+            VndbId = vndbId
+        });
+
+        if (string.IsNullOrWhiteSpace(coverUrl))
+            return null;
+
+        return await CacheCoverFromUrlAsync(coverUrl, cacheKey);
+    }
+
+    public async Task<CoverArtFetchResult?> CacheCoverFromUrlAsync(string coverUrl, string cacheKey)
+    {
+        var normalizedCoverUrl = NormalizeCoverUrl(coverUrl);
+        if (string.IsNullOrWhiteSpace(normalizedCoverUrl) ||
+            !Uri.TryCreate(normalizedCoverUrl, UriKind.Absolute, out var coverUri))
+        {
+            return null;
+        }
+
+        if (coverUri.IsFile)
+        {
+            var localPath = coverUri.LocalPath;
+            return File.Exists(localPath)
+                ? new CoverArtFetchResult(normalizedCoverUrl, localPath, TryReadCoverAspectRatio(localPath))
+                : null;
+        }
+
+        if (coverUri.Scheme != Uri.UriSchemeHttp && coverUri.Scheme != Uri.UriSchemeHttps)
+            return null;
+
+        var cachedPath = await DownloadCoverAsync(cacheKey, normalizedCoverUrl);
+        var aspectRatio = TryReadCoverAspectRatio(cachedPath);
+        return new CoverArtFetchResult(normalizedCoverUrl, cachedPath, aspectRatio);
+    }
+
+    private async Task<string?> DownloadCoverAsync(string cacheKey, string coverUrl)
     {
         try
         {
             Directory.CreateDirectory(CoverCacheDir);
 
             var extension = GetExtensionFromUrl(coverUrl);
-            var filePath = Path.Combine(CoverCacheDir, $"game-{gameId}{extension}");
+            var sanitizedKey = SanitizeCacheKey(cacheKey);
+            var filePath = Path.Combine(CoverCacheDir, $"{sanitizedKey}{extension}");
 
             using var response = await _httpClient.GetAsync(coverUrl, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
@@ -223,23 +328,122 @@ public class CoverArtService
         return ".jpg";
     }
 
-    private static void UpdateCoverMetadataFromFile(Game game, string filePath)
+    public static double? TryReadCoverAspectRatio(string? filePath)
     {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            return null;
+
         try
         {
             using var stream = File.OpenRead(filePath);
             var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
             if (decoder.Frames.Count == 0)
-                return;
+                return null;
 
             var frame = decoder.Frames[0];
-            if (frame.PixelHeight > 0)
+            return frame.PixelHeight > 0
+                ? (double)frame.PixelWidth / frame.PixelHeight
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void UpdateCoverMetadataFromFile(Game game, string filePath)
+    {
+        var aspectRatio = TryReadCoverAspectRatio(filePath);
+        if (aspectRatio.HasValue)
+        {
+            game.CoverAspectRatio = aspectRatio.Value;
+        }
+    }
+
+    private static void AddCandidates(
+        ICollection<CoverCandidate> candidates,
+        ISet<string> seenImageUrls,
+        IEnumerable<MetadataResult> results)
+    {
+        foreach (var result in results)
+            AddCandidate(candidates, seenImageUrls, result);
+    }
+
+    private static void AddCandidate(
+        ICollection<CoverCandidate> candidates,
+        ISet<string> seenImageUrls,
+        MetadataResult? result)
+    {
+        var imageUrl = NormalizeCoverUrl(result?.ImageUrl);
+        if (string.IsNullOrWhiteSpace(imageUrl) || !seenImageUrls.Add(imageUrl))
+            return;
+
+        result!.ImageUrl = imageUrl;
+        candidates.Add(CoverCandidate.FromMetadataResult(result));
+    }
+
+    private async Task PopulateCandidatePreviewSourceAsync(
+        CoverCandidate candidate,
+        string cacheKey,
+        SemaphoreSlim concurrencyLimiter)
+    {
+        var normalizedImageUrl = NormalizeCoverUrl(candidate.ImageUrl);
+        candidate.PreviewSource = normalizedImageUrl ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(normalizedImageUrl))
+            return;
+
+        await concurrencyLimiter.WaitAsync();
+        try
+        {
+            var cachedCover = await CacheCoverFromUrlAsync(normalizedImageUrl, cacheKey);
+            if (!string.IsNullOrWhiteSpace(cachedCover?.CachedPath))
             {
-                game.CoverAspectRatio = (double)frame.PixelWidth / frame.PixelHeight;
+                candidate.PreviewSource = cachedCover.CachedPath!;
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cachedCover?.CoverUrl))
+            {
+                candidate.PreviewSource = cachedCover.CoverUrl;
             }
         }
         catch
         {
+            candidate.PreviewSource = normalizedImageUrl;
+        }
+        finally
+        {
+            concurrencyLimiter.Release();
         }
     }
+
+    private static string? NormalizeCoverUrl(string? coverUrl)
+    {
+        if (string.IsNullOrWhiteSpace(coverUrl))
+            return null;
+
+        var trimmed = coverUrl.Trim();
+        return trimmed.StartsWith("//", StringComparison.Ordinal)
+            ? $"https:{trimmed}"
+            : trimmed;
+    }
+
+    private static string SanitizeCacheKey(string cacheKey)
+    {
+        if (string.IsNullOrWhiteSpace(cacheKey))
+            return "cover";
+
+        var sanitized = cacheKey.Trim();
+        foreach (var invalidChar in Path.GetInvalidFileNameChars())
+        {
+            sanitized = sanitized.Replace(invalidChar, '_');
+        }
+
+        return string.IsNullOrWhiteSpace(sanitized)
+            ? "cover"
+            : sanitized;
+    }
 }
+
+public sealed record CoverArtFetchResult(string CoverUrl, string? CachedPath, double? AspectRatio);

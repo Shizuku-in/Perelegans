@@ -34,9 +34,6 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isAboutOverlayVisible;
 
-    [ObservableProperty]
-    private bool _isBulkDeleteMode;
-
     public string TotalPlaytimeText
     {
         get
@@ -142,7 +139,17 @@ public partial class MainViewModel : ObservableObject
         Games = new ObservableCollection<Game>(games);
         AttachGamesCollection(Games);
         SelectedGame = null;
-        IsBulkDeleteMode = false;
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private void HandleMetadataSaved(Game? game)
+    {
+        if (game == null)
+            return;
+
+        game.CoverAspectRatio ??= CoverArtService.TryReadCoverAspectRatio(game.CoverImagePath);
+        game.RefreshCoverBindings();
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
     }
@@ -165,12 +172,6 @@ public partial class MainViewModel : ObservableObject
             {
             }
         }
-    }
-
-    partial void OnIsBulkDeleteModeChanged(bool value)
-    {
-        SelectedGame = null;
-        DeselectAllGames();
     }
 
     // ---- Menu Commands (File) ----
@@ -415,7 +416,8 @@ public partial class MainViewModel : ObservableObject
     private void FetchMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
+        var targetGame = SelectedGame;
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -424,16 +426,7 @@ public partial class MainViewModel : ObservableObject
 
         if (win.ShowDialog() == true)
         {
-            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
-            if (updated != null)
-            {
-                var index = Games.IndexOf(SelectedGame);
-                if (index >= 0)
-                {
-                    Games[index] = updated;
-                    SelectedGame = updated;
-                }
-            }
+            HandleMetadataSaved(targetGame);
         }
     }
 
@@ -441,7 +434,8 @@ public partial class MainViewModel : ObservableObject
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
+        var targetGame = SelectedGame;
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -450,16 +444,7 @@ public partial class MainViewModel : ObservableObject
 
         if (win.ShowDialog() == true)
         {
-            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
-            if (updated != null)
-            {
-                var index = Games.IndexOf(SelectedGame);
-                if (index >= 0)
-                {
-                    Games[index] = updated;
-                    SelectedGame = updated;
-                }
-            }
+            HandleMetadataSaved(targetGame);
         }
     }
 
@@ -569,67 +554,4 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void ToggleBulkDeleteMode()
-    {
-        IsBulkDeleteMode = !IsBulkDeleteMode;
-    }
-
-    [RelayCommand]
-    private void SelectAllGames()
-    {
-        foreach (var g in Games)
-            g.IsSelected = true;
-    }
-
-    [RelayCommand]
-    private void DeselectAllGames()
-    {
-        foreach (var g in Games)
-            g.IsSelected = false;
-    }
-
-    [RelayCommand]
-    private async Task DeleteSelectedGames()
-    {
-        var selected = Games.Where(g => g.IsSelected).ToList();
-        if (selected.Count == 0)
-        {
-            await _dialogCoordinator.ShowMessageAsync(this,
-                TranslationService.Instance["Msg_AppTitle"],
-                TranslationService.Instance["Msg_NoSelection"]);
-            return;
-        }
-
-        var result = await _dialogCoordinator.ShowMessageAsync(this,
-            TranslationService.Instance["Msg_DeleteConfirmTitle"],
-            string.Format(TranslationService.Instance["Msg_DeleteSelectedConfirmText"], selected.Count),
-            MessageDialogStyle.AffirmativeAndNegative);
-
-        if (result != MessageDialogResult.Affirmative)
-            return;
-
-        foreach (var g in selected)
-        {
-            await _dbService.DeleteGameAsync(g.Id);
-            Games.Remove(g);
-        }
-
-        _processMonitor.UpdateMonitoredGames(Games);
-        SelectedGame = null;
-        IsBulkDeleteMode = false;
-        RefreshStats();
-    }
-
-    [RelayCommand]
-    private void OpenBatchMetadata()
-    {
-        var vm = new BatchMetadataViewModel(_dbService, _httpClient, _dialogCoordinator);
-        var win = new BatchMetadataWindow
-        {
-            DataContext = vm,
-            Owner = Application.Current.MainWindow
-        };
-        win.ShowDialog();
-    }
 }

@@ -65,6 +65,7 @@
   <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>游玩进度:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
+  <data name="Meta_FieldCover" xml:space="preserve"><value>封面:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>标签:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>进程特征:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>启动路径:</value></data>
@@ -73,6 +74,28 @@
   <data name="Meta_ColTitle" xml:space="preserve"><value>标题</value></data>
   <data name="Meta_ColBrand" xml:space="preserve"><value>厂商</value></data>
   <data name="Meta_ColDate" xml:space="preserve"><value>发售</value></data>
+  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>尚未设置封面。</value></data>
+  <data name="Meta_CoverFile" xml:space="preserve"><value>本地文件:</value></data>
+  <data name="Meta_CoverUrl" xml:space="preserve"><value>图片链接:</value></data>
+  <data name="Meta_CoverPathWatermark" xml:space="preserve"><value>C:\Images\cover.jpg</value></data>
+  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>自动抓取</value></data>
+  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>从本地导入</value></data>
+  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>清空封面</value></data>
+  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>选择封面图片</value></data>
+  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>已选择本地封面。</value></data>
+  <data name="Meta_CoverCleared" xml:space="preserve"><value>已清空封面。</value></data>
+  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>请先填写标题或元数据 ID，再抓取封面。</value></data>
+  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>未能从网站找到封面。</value></data>
+  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>封面已抓取并缓存到本地。</value></data>
+  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>封面链接抓取成功。</value></data>
+  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>所选封面文件不是有效图片。</value></data>
+  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>封面链接必须是有效的绝对地址。</value></data>
+  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>已从所选元数据结果应用封面链接。</value></data>
+  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>已应用所选封面。</value></data>
+  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>选择封面</value></data>
+  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>请选择从 VNDB 或 Bangumi 抓取到的封面。</value></data>
+  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>正在抓取封面候选...</value></data>
+  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>使用选中封面</value></data>
 
   <data name="AddProc_Title" xml:space="preserve"><value>从活跃进程添加库游戏</value></data>
   <data name="AddProc_Refresh" xml:space="preserve"><value>重新扫描</value></data>
@@ -169,16 +192,4 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameMgmt_TotalCount" xml:space="preserve"><value>总计:</value></data>
   <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>已选:</value></data>
   <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>按标题过滤...</value></data>
-  <data name="Menu_BatchMetadata" xml:space="preserve"><value>批量元数据 (_B)</value></data>
-  <data name="BatchMeta_Title" xml:space="preserve"><value>批量元数据管理</value></data>
-  <data name="BatchMeta_FilterWatermark" xml:space="preserve"><value>筛选游戏...</value></data>
-  <data name="BatchMeta_SearchBtn" xml:space="preserve"><value>全库搜索</value></data>
-  <data name="BatchMeta_ApplyBtn" xml:space="preserve"><value>应用结果</value></data>
-  <data name="BatchMeta_SaveAll" xml:space="preserve"><value>保存全部</value></data>
-  <data name="BatchMeta_Editing" xml:space="preserve"><value>编辑元数据</value></data>
-  <data name="BatchMeta_ColTitle" xml:space="preserve"><value>标题</value></data>
-  <data name="BatchMeta_ColBrand" xml:space="preserve"><value>厂商</value></data>
-  <data name="BatchMeta_ColDate" xml:space="preserve"><value>发售日</value></data>
-  <data name="BatchMeta_ColStatus" xml:space="preserve"><value>进度</value></data>
-  <data name="BatchMeta_ColComplete" xml:space="preserve"><value>完整度</value></data>
 </root>

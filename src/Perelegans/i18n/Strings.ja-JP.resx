@@ -65,6 +65,7 @@
   <data name="Meta_FieldDate" xml:space="preserve"><value>発売日:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>進行状況:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>公式サイト:</value></data>
+  <data name="Meta_FieldCover" xml:space="preserve"><value>表紙:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>タグ:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>プロセス:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>実行パス:</value></data>
@@ -73,6 +74,28 @@
   <data name="Meta_ColTitle" xml:space="preserve"><value>タイトル</value></data>
   <data name="Meta_ColBrand" xml:space="preserve"><value>ブランド</value></data>
   <data name="Meta_ColDate" xml:space="preserve"><value>日付</value></data>
+  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>表紙はまだ設定されていません。</value></data>
+  <data name="Meta_CoverFile" xml:space="preserve"><value>ローカル:</value></data>
+  <data name="Meta_CoverUrl" xml:space="preserve"><value>画像 URL:</value></data>
+  <data name="Meta_CoverPathWatermark" xml:space="preserve"><value>C:\Images\cover.jpg</value></data>
+  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>自動取得</value></data>
+  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>ローカルから取り込む</value></data>
+  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>表紙をクリア</value></data>
+  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>表紙画像を選択</value></data>
+  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>ローカル表紙を選択しました。</value></data>
+  <data name="Meta_CoverCleared" xml:space="preserve"><value>表紙をクリアしました。</value></data>
+  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>表紙取得の前にタイトルまたはメタデータ ID を入力してください。</value></data>
+  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>サイトから表紙を取得できませんでした。</value></data>
+  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>表紙を取得し、ローカルに保存しました。</value></data>
+  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>表紙 URL を取得しました。</value></data>
+  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>選択した表紙ファイルは有効な画像ではありません。</value></data>
+  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>表紙 URL は有効な絶対 URL である必要があります。</value></data>
+  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>選択したメタデータ結果から表紙 URL を適用しました。</value></data>
+  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>選択した表紙を適用しました。</value></data>
+  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>表紙を選択</value></data>
+  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>VNDB または Bangumi から取得した表紙を選んでください。</value></data>
+  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>表紙候補を取得しています...</value></data>
+  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>この表紙を使う</value></data>
 
   <data name="AddProc_Title" xml:space="preserve"><value>稼働中のプロセスから追加</value></data>
   <data name="AddProc_Refresh" xml:space="preserve"><value>更新</value></data>
@@ -169,16 +192,4 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameMgmt_TotalCount" xml:space="preserve"><value>合計:</value></data>
   <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>選択:</value></data>
   <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>タイトルでフィルタ...</value></data>
-  <data name="Menu_BatchMetadata" xml:space="preserve"><value>一括メタデータ (_B)</value></data>
-  <data name="BatchMeta_Title" xml:space="preserve"><value>一括メタデータ管理</value></data>
-  <data name="BatchMeta_FilterWatermark" xml:space="preserve"><value>ゲームでフィルタ...</value></data>
-  <data name="BatchMeta_SearchBtn" xml:space="preserve"><value>全庫検索</value></data>
-  <data name="BatchMeta_ApplyBtn" xml:space="preserve"><value>適用</value></data>
-  <data name="BatchMeta_SaveAll" xml:space="preserve"><value>すべて保存</value></data>
-  <data name="BatchMeta_Editing" xml:space="preserve"><value>メタデータ編集</value></data>
-  <data name="BatchMeta_ColTitle" xml:space="preserve"><value>タイトル</value></data>
-  <data name="BatchMeta_ColBrand" xml:space="preserve"><value>ブランド</value></data>
-  <data name="BatchMeta_ColDate" xml:space="preserve"><value>発売日</value></data>
-  <data name="BatchMeta_ColStatus" xml:space="preserve"><value>進行状況</value></data>
-  <data name="BatchMeta_ColComplete" xml:space="preserve"><value>完全度</value></data>
 </root>

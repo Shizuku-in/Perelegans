@@ -1,0 +1,146 @@
+<mah:MetroWindow x:Class="Perelegans.Views.CoverPickerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:converters="clr-namespace:Perelegans.Converters"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        Title="{i18n:Translate Meta_CoverPickerTitle}"
+        TitleCharacterCasing="Normal"
+        Height="640" Width="860"
+        MinHeight="500" MinWidth="720"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        ShowTitleBar="True"
+        TitleBarHeight="28"
+        BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}">
+
+    <mah:MetroWindow.Resources>
+        <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
+    </mah:MetroWindow.Resources>
+
+    <Grid Margin="12,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="{Binding HintText}"
+                   Margin="0,0,0,10"
+                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+
+        <ListBox x:Name="CandidateList"
+                 Grid.Row="1"
+                 ItemsSource="{Binding Candidates}"
+                 SelectedItem="{Binding SelectedCandidate, Mode=TwoWay}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 MouseDoubleClick="CandidateList_MouseDoubleClick">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel IsItemsHost="True"/>
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                    <Setter Property="Margin" Value="0,0,12,12"/>
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource Perelegans.BorderBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="CardRoot"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="True">
+                                    <ContentPresenter/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.PanelBackground}"/>
+                                        <Setter TargetName="CardRoot" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.MenuHoverBrush}"/>
+                                        <Setter TargetName="CardRoot" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid Width="184">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Height="248"
+                                Background="{DynamicResource Perelegans.PanelBackground}"
+                                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                BorderThickness="0,0,0,1">
+                            <Image Source="{Binding PreviewSource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                   Stretch="Uniform"
+                                   SnapsToDevicePixels="True"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+
+                        <StackPanel Grid.Row="1" Margin="10,10,10,12">
+                            <TextBlock Text="{Binding Title}"
+                                       FontSize="12.5"
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       MaxHeight="40"/>
+                            <TextBlock Text="{Binding Source}"
+                                       Margin="0,6,0,0"
+                                       FontSize="10.5"
+                                       Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                            <TextBlock Text="{Binding Brand}"
+                                       Margin="0,4,0,0"
+                                       FontSize="10.5"
+                                       TextWrapping="Wrap"
+                                       MaxHeight="30"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                            <TextBlock Text="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}"
+                                       Margin="0,4,0,0"
+                                       FontSize="10.5"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,6,0,0">
+            <Button Content="{i18n:Translate Meta_CoverPickerApplyBtn}"
+                    Width="108" Height="28"
+                    Margin="0,0,8,0"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                    Click="BtnApply_Click"/>
+            <Button Content="{i18n:Translate Btn_Cancel}"
+                    Width="88" Height="28"
+                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                    Style="{DynamicResource MahApps.Styles.Button.Square}"
+                    Click="BtnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</mah:MetroWindow>

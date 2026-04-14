@@ -117,7 +117,7 @@ public partial class MainWindow : MetroWindow
 
     private void GameCard_MouseDoubleClick(object sender, MouseButtonEventArgs e)
     {
-        if (DataContext is not MainViewModel vm || vm.IsBulkDeleteMode)
+        if (DataContext is not MainViewModel vm)
         {
             return;
         }

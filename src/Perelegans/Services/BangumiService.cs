@@ -109,6 +109,31 @@ public class BangumiService
         return results;
     }
 
+    public async Task<MetadataResult?> GetByIdAsync(string bangumiId)
+    {
+        if (string.IsNullOrWhiteSpace(bangumiId))
+            return null;
+
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"{ApiBase}/v0/subjects/{bangumiId.Trim()}");
+            request.Headers.Add("User-Agent", "Perelegans/0.2");
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(responseJson);
+            return ParseSubjectResult(doc.RootElement, bangumiId.Trim());
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bangumi get-by-id error: {ex.Message}");
+            return null;
+        }
+    }
+
     private async Task PopulateSubjectDetailsAsync(MetadataResult result)
     {
         try
@@ -121,53 +146,75 @@ public class BangumiService
 
             var responseJson = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseJson);
-            var root = doc.RootElement;
-
-            if (root.TryGetProperty("name", out var name))
-            {
-                var originalTitle = name.GetString() ?? "";
-                if (!string.IsNullOrWhiteSpace(originalTitle))
-                {
-                    result.OriginalTitle = originalTitle;
-                    result.Title = originalTitle;
-                }
-            }
-
-            if (root.TryGetProperty("date", out var date) &&
-                TryParseFlexibleDate(date.GetString(), out var parsedDate))
-            {
-                result.ReleaseDate = parsedDate;
-            }
-
-            if (root.TryGetProperty("infobox", out var infobox))
-            {
-                var brand = ExtractBrand(infobox);
-                if (!string.IsNullOrWhiteSpace(brand))
-                    result.Brand = brand;
-            }
-
-            var tagNames = new List<string>();
-
-            if (root.TryGetProperty("tags", out var tags) &&
-                tags.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var tag in tags.EnumerateArray())
-                {
-                    if (tag.TryGetProperty("name", out var tagName))
-                    {
-                        var tagValue = tagName.GetString();
-                        if (!string.IsNullOrWhiteSpace(tagValue))
-                            tagNames.Add(tagValue);
-                    }
-                }
-            }
-
-            result.Tags = TagUtilities.Normalize(tagNames);
+            ApplySubjectDetails(doc.RootElement, result);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Bangumi subject detail error: {ex.Message}");
         }
+    }
+
+    private static MetadataResult ParseSubjectResult(JsonElement root, string sourceId)
+    {
+        var result = new MetadataResult
+        {
+            Source = "Bangumi",
+            SourceId = sourceId,
+            WebUrl = $"https://bgm.tv/subject/{sourceId}"
+        };
+
+        if (root.TryGetProperty("images", out var images) &&
+            images.TryGetProperty("common", out var imgUrl))
+        {
+            result.ImageUrl = imgUrl.GetString();
+        }
+
+        ApplySubjectDetails(root, result);
+        return result;
+    }
+
+    private static void ApplySubjectDetails(JsonElement root, MetadataResult result)
+    {
+        if (root.TryGetProperty("name", out var name))
+        {
+            var originalTitle = name.GetString() ?? "";
+            if (!string.IsNullOrWhiteSpace(originalTitle))
+            {
+                result.OriginalTitle = originalTitle;
+                result.Title = originalTitle;
+            }
+        }
+
+        if (root.TryGetProperty("date", out var date) &&
+            TryParseFlexibleDate(date.GetString(), out var parsedDate))
+        {
+            result.ReleaseDate = parsedDate;
+        }
+
+        if (root.TryGetProperty("infobox", out var infobox))
+        {
+            var brand = ExtractBrand(infobox);
+            if (!string.IsNullOrWhiteSpace(brand))
+                result.Brand = brand;
+        }
+
+        var tagNames = new List<string>();
+
+        if (root.TryGetProperty("tags", out var tags) &&
+            tags.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var tag in tags.EnumerateArray())
+            {
+                if (tag.TryGetProperty("name", out var tagName))
+                {
+                    var tagValue = tagName.GetString();
+                    if (!string.IsNullOrWhiteSpace(tagValue))
+                        tagNames.Add(tagValue);
+                }
+            }
+        }
+
+        result.Tags = TagUtilities.Normalize(tagNames);
     }
 
     private static bool TryParseFlexibleDate(string? value, out DateTime date)

@@ -50,10 +50,10 @@ public class MasonryPanel : System.Windows.Controls.Panel
             : availableSize.Width;
 
         var spacing = Math.Max(0, ItemSpacing);
-        var columnWidth = Math.Max(1, ColumnWidth);
-        var columns = Math.Max(1, (int)Math.Floor((panelWidth + spacing) / (columnWidth + spacing)));
-        var usedWidth = columns * columnWidth + (columns - 1) * spacing;
-        var horizontalOffset = Math.Max(0, (panelWidth - usedWidth) / 2d);
+        var minimumColumnWidth = Math.Max(1, ColumnWidth);
+        var columns = Math.Max(1, (int)Math.Floor((panelWidth + spacing) / (minimumColumnWidth + spacing)));
+        var totalSpacing = Math.Max(0, columns - 1) * spacing;
+        var columnWidth = Math.Max(1, (panelWidth - totalSpacing) / columns);
         var columnHeights = new double[columns];
 
         foreach (System.Windows.UIElement child in InternalChildren)
@@ -61,7 +61,7 @@ public class MasonryPanel : System.Windows.Controls.Panel
             child.Measure(new System.Windows.Size(columnWidth, double.PositiveInfinity));
 
             var targetColumn = GetShortestColumnIndex(columnHeights);
-            var x = horizontalOffset + targetColumn * (columnWidth + spacing);
+            var x = targetColumn * (columnWidth + spacing);
             var y = columnHeights[targetColumn];
 
             _arrangedRects.Add(new System.Windows.Rect(

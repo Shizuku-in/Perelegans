@@ -27,9 +27,6 @@
 
     <mah:MetroWindow.Resources>
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
-        <converters:StatusIconConverter x:Key="StatusIconConverter"/>
-        <converters:BulkDeleteSelectionModeConverter x:Key="BulkDeleteSelectionModeConverter"/>
-        <converters:CoverAspectRatioToStretchConverter x:Key="CoverAspectRatioToStretchConverter"/>
         <converters:CoverAspectRatioToHeightConverter x:Key="CoverAspectRatioToHeightConverter"/>
         <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -67,30 +64,30 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="BulkSelectableListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+        <Style x:Key="GameCardListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Width" Value="210"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Stretch"/>
-            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
                         <Border x:Name="CardRoot"
-                                Background="{DynamicResource Perelegans.PanelBackground}"
-                                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="10"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
                                 SnapsToDevicePixels="True">
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardRoot" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.PanelBackground}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="CardRoot" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
                                 <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.MenuHoverBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -109,22 +106,6 @@
             <Setter Property="Foreground" Value="#E8E8E8"/>
             <Setter Property="TextWrapping" Value="NoWrap"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
-        <Style x:Key="VisibleWhenBulkDeleteModeStyle" TargetType="{x:Type FrameworkElement}">
-            <Setter Property="Visibility" Value="Collapsed"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsBulkDeleteMode}" Value="True">
-                    <Setter Property="Visibility" Value="Visible"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="VisibleWhenNotBulkDeleteModeStyle" TargetType="{x:Type FrameworkElement}">
-            <Setter Property="Visibility" Value="Visible"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsBulkDeleteMode}" Value="True">
-                    <Setter Property="Visibility" Value="Collapsed"/>
-                </DataTrigger>
-            </Style.Triggers>
         </Style>
     </mah:MetroWindow.Resources>
 
@@ -242,12 +223,6 @@
                         <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
-                <Separator/>
-                <MenuItem Header="{i18n:Translate Menu_BatchMetadata}" Command="{Binding OpenBatchMetadataCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="DatabaseEdit" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
             </MenuItem>
 
             <!-- Help -->
@@ -295,13 +270,11 @@
         <!-- ==================== 3. CLIENT AREA ==================== -->
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- Background Tachie Image -->
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
-                   Grid.RowSpan="2"
                    Stretch="Uniform"
                    Opacity="0.12"
                    HorizontalAlignment="Right"
@@ -312,75 +285,12 @@
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
-            <Grid Grid.Row="0" Margin="8,4">
-                <Button HorizontalAlignment="Right"
-                        Height="26"
-                        FontSize="12"
-                        Padding="10,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Command="{Binding ToggleBulkDeleteModeCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource MahApps.Styles.Button.Square}">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsBulkDeleteMode}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
-                                                    Foreground="#E53935" Margin="0,0,4,0"/>
-                        <TextBlock Text="{i18n:Translate Context_Delete}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-
-            <!-- Batch Operation Toolbar -->
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Style="{StaticResource VisibleWhenBulkDeleteModeStyle}">
-                <Button Height="26" FontSize="12" Margin="0,0,6,0"
-                        Padding="10,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                        Command="{Binding ToggleBulkDeleteModeCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="Close" Width="14" Height="14"
-                                                    Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                                                    Margin="0,0,4,0"/>
-                        <TextBlock Text="{i18n:Translate Btn_Cancel}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Height="26" FontSize="12" Margin="0,0,6,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                        Content="{i18n:Translate GameMgmt_SelectAll}"
-                        Command="{Binding SelectAllGamesCommand}"/>
-                <Button Height="26" FontSize="12" Margin="0,0,6,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                        Content="{i18n:Translate GameMgmt_DeselectAll}"
-                        Command="{Binding DeselectAllGamesCommand}"/>
-                <Button Height="26" FontSize="12"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                        Command="{Binding DeleteSelectedGamesCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
-                                                    Foreground="#E53935" Margin="0,0,4,0"/>
-                        <TextBlock Text="{i18n:Translate GameMgmt_DeleteSelected}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-            </Grid>
-
             <!-- Card Gallery -->
             <ListBox x:Name="GameCards"
-                     Grid.Row="1"
+                     Grid.Row="0"
                      ItemsSource="{Binding Games}"
                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                     SelectionMode="{Binding IsBulkDeleteMode, Converter={StaticResource BulkDeleteSelectionModeConverter}}"
+                     SelectionMode="Single"
                      Background="Transparent"
                      BorderThickness="0"
                      Foreground="{DynamicResource Perelegans.ForegroundBrush}"
@@ -390,23 +300,23 @@
                      HorizontalContentAlignment="Stretch"
                      VerticalContentAlignment="Stretch"
                      Panel.ZIndex="1"
-                     Margin="12,4,12,12">
+                     Margin="4,4,4,8">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <controls:MasonryPanel IsItemsHost="True"
-                                               ColumnWidth="210"
-                                               ItemSpacing="14"/>
+                                               ColumnWidth="224"
+                                               ItemSpacing="8"/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemContainerStyle>
-                    <StaticResource ResourceKey="BulkSelectableListBoxItemStyle"/>
+                    <StaticResource ResourceKey="GameCardListBoxItemStyle"/>
                 </ListBox.ItemContainerStyle>
 
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:Game}">
                         <Border Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                CornerRadius="10"
+                                HorizontalAlignment="Stretch"
                                 SnapsToDevicePixels="True">
                             <Border.ContextMenu>
                                 <ContextMenu>
@@ -464,100 +374,47 @@
                                 </ContextMenu>
                             </Border.ContextMenu>
 
-                            <Grid Width="210" ClipToBounds="True">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
+                            <Grid ClipToBounds="True">
+                                <Grid.Height>
+                                    <MultiBinding Converter="{StaticResource CoverAspectRatioToHeightConverter}">
+                                        <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth"/>
+                                        <Binding Path="CoverAspectRatio"/>
+                                    </MultiBinding>
+                                </Grid.Height>
 
-                                <Grid Grid.Row="0">
-                                    <Grid.Height>
-                                        <MultiBinding Converter="{StaticResource CoverAspectRatioToHeightConverter}">
-                                            <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth"/>
-                                            <Binding Path="CoverAspectRatio"/>
-                                        </MultiBinding>
-                                    </Grid.Height>
+                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       SnapsToDevicePixels="True"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                                    <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
-                                           Stretch="UniformToFill"
-                                           HorizontalAlignment="Stretch"
-                                           VerticalAlignment="Stretch"
-                                           Opacity="0.22"
-                                           SnapsToDevicePixels="True"
-                                           RenderOptions.BitmapScalingMode="HighQuality">
-                                        <Image.Effect>
-                                            <BlurEffect Radius="18"/>
-                                        </Image.Effect>
-                                    </Image>
-
-                                    <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
-                                           Stretch="{Binding CoverAspectRatio, Converter={StaticResource CoverAspectRatioToStretchConverter}}"
-                                           HorizontalAlignment="Stretch"
-                                           VerticalAlignment="Stretch"
-                                           SnapsToDevicePixels="True"
-                                           RenderOptions.BitmapScalingMode="Linear"/>
-
-                                    <Border VerticalAlignment="Bottom" Height="96">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                                <GradientStop Color="#00000000" Offset="0"/>
-                                                <GradientStop Color="#33000000" Offset="0.35"/>
-                                                <GradientStop Color="#AA000000" Offset="1"/>
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                    </Border>
-
-                                    <Border HorizontalAlignment="Left"
-                                            VerticalAlignment="Top"
-                                            Margin="10"
-                                            Padding="6,2"
-                                            CornerRadius="10"
-                                            Background="#CCFFFFFF">
-                                        <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
-                                                                    Width="10"
-                                                                    Height="10"
-                                                                    VerticalAlignment="Center"
-                                                                    Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
-                                    </Border>
-
-                                    <Border HorizontalAlignment="Right"
-                                            VerticalAlignment="Top"
-                                            Margin="10"
-                                            Padding="6,2"
-                                            CornerRadius="10"
-                                            Background="#CCF48FB1"
-                                            Visibility="{Binding IsDetectedRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <TextBlock Text="Running"
-                                                   FontSize="10"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="White"/>
-                                    </Border>
-                                </Grid>
-
-                                <StackPanel Grid.Row="1" Margin="12,12,12,14">
+                                <StackPanel VerticalAlignment="Bottom"
+                                            HorizontalAlignment="Left"
+                                            Margin="12,0,12,14">
+                                    <StackPanel.Effect>
+                                        <DropShadowEffect BlurRadius="10"
+                                                          ShadowDepth="0"
+                                                          Color="#E0000000"
+                                                          Opacity="1"/>
+                                    </StackPanel.Effect>
                                     <TextBlock Text="{Binding Title}"
-                                               Style="{StaticResource RunningTitleTextStyle}"
+                                               Style="{StaticResource CardTitleTextStyle}"
                                                FontSize="13"
                                                FontWeight="SemiBold"
                                                TextWrapping="Wrap"
                                                MaxHeight="42"/>
-                                    <TextBlock Text="{Binding Brand}"
-                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
-                                               FontSize="10.5"
-                                               Margin="0,4,0,0"
-                                               TextWrapping="Wrap"
-                                               MaxHeight="32"/>
                                     <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
-                                               Style="{StaticResource PlaytimeTextStyle}"
+                                               Style="{StaticResource CardMetaTextStyle}"
                                                FontSize="11.5"
                                                FontWeight="SemiBold"
                                                Margin="0,8,0,0"/>
                                     <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
-                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                               Style="{StaticResource CardMetaTextStyle}"
                                                FontSize="10.5"
                                                Margin="0,5,0,0"/>
                                     <TextBlock Text="{Binding CreatedDate, StringFormat=Added {0:yyyy-MM-dd}}"
-                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                               Style="{StaticResource CardMetaTextStyle}"
                                                FontSize="10.5"
                                                Margin="0,2,0,0"/>
                                 </StackPanel>

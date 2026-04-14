@@ -49,85 +49,7 @@ public class VndbService
                 return results;
 
             foreach (var item in resultsArray.EnumerateArray())
-            {
-                var result = new MetadataResult
-                {
-                    Source = "VNDB",
-                    WebUrl = item.TryGetProperty("id", out var id)
-                        ? $"https://vndb.org/{id.GetString()}" : null,
-                    SourceId = item.TryGetProperty("id", out var sid) ? sid.GetString() ?? "" : ""
-                };
-
-                var fallbackTitle = item.TryGetProperty("title", out var title)
-                    ? title.GetString() ?? ""
-                    : "";
-                result.OriginalTitle = item.TryGetProperty("alttitle", out var altTitle)
-                    ? altTitle.GetString() ?? ""
-                    : "";
-
-                // Prefer the original-language title instead of the site display title/romanization.
-                if (item.TryGetProperty("titles", out var titles))
-                {
-                    foreach (var t in titles.EnumerateArray())
-                    {
-                        if (t.TryGetProperty("main", out var isMain) &&
-                            isMain.ValueKind == JsonValueKind.True)
-                        {
-                            result.OriginalTitle = t.TryGetProperty("title", out var ot)
-                                ? ot.GetString() ?? "" : "";
-                            break;
-                        }
-                    }
-                }
-
-                result.Title = string.IsNullOrWhiteSpace(result.OriginalTitle)
-                    ? fallbackTitle
-                    : result.OriginalTitle;
-
-                // Parse release date
-                if (item.TryGetProperty("released", out var released))
-                {
-                    var dateStr = released.GetString();
-                    if (TryParseFlexibleDate(dateStr, out var dt))
-                        result.ReleaseDate = dt;
-                }
-
-                // Parse developers
-                if (item.TryGetProperty("developers", out var devs))
-                {
-                    var devNames = new List<string>();
-                    foreach (var dev in devs.EnumerateArray())
-                    {
-                        if (dev.TryGetProperty("name", out var devName))
-                            devNames.Add(devName.GetString() ?? "");
-                    }
-                    result.Brand = string.Join(", ", devNames);
-                }
-
-                if (item.TryGetProperty("tags", out var tags))
-                {
-                    var tagNames = new List<string>();
-                    foreach (var tag in tags.EnumerateArray())
-                    {
-                        if (tag.TryGetProperty("name", out var tagName))
-                        {
-                            var name = tagName.GetString();
-                            if (!string.IsNullOrWhiteSpace(name))
-                                tagNames.Add(name);
-                        }
-                    }
-
-                    result.Tags = TagUtilities.Normalize(tagNames);
-                }
-
-                if (item.TryGetProperty("image", out var image) &&
-                    image.TryGetProperty("url", out var imageUrl))
-                {
-                    result.ImageUrl = imageUrl.GetString();
-                }
-
-                results.Add(result);
-            }
+                results.Add(ParseMetadataResult(item));
         }
         catch (Exception ex)
         {
@@ -135,6 +57,127 @@ public class VndbService
         }
 
         return results;
+    }
+
+    public async Task<MetadataResult?> GetByIdAsync(string vndbId)
+    {
+        var normalizedId = VndbIdUtilities.Normalize(vndbId);
+        if (string.IsNullOrWhiteSpace(normalizedId))
+            return null;
+
+        try
+        {
+            var requestBody = new
+            {
+                filters = new object[] { "id", "=", normalizedId },
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url",
+                results = 1
+            };
+
+            var json = JsonSerializer.Serialize(requestBody);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync(ApiUrl, content);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(responseJson);
+
+            if (!doc.RootElement.TryGetProperty("results", out var resultsArray) ||
+                resultsArray.ValueKind != JsonValueKind.Array ||
+                resultsArray.GetArrayLength() == 0)
+            {
+                return null;
+            }
+
+            return ParseMetadataResult(resultsArray[0]);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"VNDB get-by-id error: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static MetadataResult ParseMetadataResult(JsonElement item)
+    {
+        var result = new MetadataResult
+        {
+            Source = "VNDB",
+            WebUrl = item.TryGetProperty("id", out var id)
+                ? $"https://vndb.org/{id.GetString()}" : null,
+            SourceId = item.TryGetProperty("id", out var sid) ? sid.GetString() ?? "" : ""
+        };
+
+        var fallbackTitle = item.TryGetProperty("title", out var title)
+            ? title.GetString() ?? ""
+            : "";
+        result.OriginalTitle = item.TryGetProperty("alttitle", out var altTitle)
+            ? altTitle.GetString() ?? ""
+            : "";
+
+        if (item.TryGetProperty("titles", out var titles))
+        {
+            foreach (var t in titles.EnumerateArray())
+            {
+                if (t.TryGetProperty("main", out var isMain) &&
+                    isMain.ValueKind == JsonValueKind.True)
+                {
+                    result.OriginalTitle = t.TryGetProperty("title", out var ot)
+                        ? ot.GetString() ?? ""
+                        : "";
+                    break;
+                }
+            }
+        }
+
+        result.Title = string.IsNullOrWhiteSpace(result.OriginalTitle)
+            ? fallbackTitle
+            : result.OriginalTitle;
+
+        if (item.TryGetProperty("released", out var released))
+        {
+            var dateStr = released.GetString();
+            if (TryParseFlexibleDate(dateStr, out var dt))
+                result.ReleaseDate = dt;
+        }
+
+        if (item.TryGetProperty("developers", out var devs))
+        {
+            var devNames = new List<string>();
+            foreach (var dev in devs.EnumerateArray())
+            {
+                if (dev.TryGetProperty("name", out var devName))
+                    devNames.Add(devName.GetString() ?? "");
+            }
+
+            result.Brand = string.Join(", ", devNames);
+        }
+
+        if (item.TryGetProperty("tags", out var tags))
+        {
+            var tagNames = new List<string>();
+            foreach (var tag in tags.EnumerateArray())
+            {
+                if (tag.TryGetProperty("name", out var tagName))
+                {
+                    var name = tagName.GetString();
+                    if (!string.IsNullOrWhiteSpace(name))
+                        tagNames.Add(name);
+                }
+            }
+
+            result.Tags = TagUtilities.Normalize(tagNames);
+        }
+
+        if (item.TryGetProperty("image", out var image) &&
+            image.TryGetProperty("url", out var imageUrl))
+        {
+            result.ImageUrl = imageUrl.GetString();
+        }
+
+        return result;
     }
 
     private static bool TryParseFlexibleDate(string? value, out DateTime date)
