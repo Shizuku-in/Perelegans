@@ -44,4 +44,19 @@ public class AppSettings
     /// Behavior to apply when the main window is closed.
     /// </summary>
     public AppCloseBehavior CloseBehavior { get; set; } = AppCloseBehavior.Exit;
+
+    /// <summary>
+    /// OpenAI-compatible API base URL (e.g. https://api.openai.com/v1).
+    /// </summary>
+    public string AiApiBaseUrl { get; set; } = string.Empty;
+
+    /// <summary>
+    /// OpenAI-compatible API key.
+    /// </summary>
+    public string AiApiKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Model identifier for recommendation explanations.
+    /// </summary>
+    public string AiModel { get; set; } = string.Empty;
 }

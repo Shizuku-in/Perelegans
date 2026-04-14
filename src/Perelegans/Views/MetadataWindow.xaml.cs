@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
+using Perelegans.Models;
 using Perelegans.Services;
 using Perelegans.ViewModels;
 
@@ -46,5 +48,38 @@ public partial class MetadataWindow : MetroWindow
     {
         DialogResult = false;
         Close();
+    }
+
+    private async void AutoFetchCover_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MetadataViewModel vm)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<CoverCandidate> candidates = await vm.LoadCoverCandidatesAsync();
+            if (candidates.Count == 0)
+            {
+                return;
+            }
+
+            var pickerVm = new CoverPickerViewModel(candidates);
+            var pickerWindow = new CoverPickerWindow
+            {
+                DataContext = pickerVm,
+                Owner = this
+            };
+
+            if (pickerWindow.ShowDialog() == true && pickerVm.SelectedCandidate != null)
+            {
+                await vm.ApplyCoverCandidateAsync(pickerVm.SelectedCandidate);
+            }
+        }
+        catch (Exception ex)
+        {
+            await this.ShowMessageAsync(TranslationService.Instance["Msg_ErrorTitle"], ex.Message);
+        }
     }
 }

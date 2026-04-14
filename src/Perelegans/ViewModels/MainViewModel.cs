@@ -79,6 +79,7 @@ public partial class MainViewModel : ObservableObject
 
         var games = await _dbService.GetAllGamesAsync();
         ReplaceGames(games);
+        _ = PopulateMissingCoverImagesAsync(games.ToList());
 
         // Start process monitor
         var settings = _settingsService.Settings;
@@ -140,6 +141,37 @@ public partial class MainViewModel : ObservableObject
         SelectedGame = null;
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private void HandleMetadataSaved(Game? game)
+    {
+        if (game == null)
+            return;
+
+        game.CoverAspectRatio ??= CoverArtService.TryReadCoverAspectRatio(game.CoverImagePath);
+        game.RefreshCoverBindings();
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private async Task PopulateMissingCoverImagesAsync(IEnumerable<Game> games)
+    {
+        var coverArtService = new CoverArtService(_httpClient);
+
+        foreach (var game in games)
+        {
+            var cachedPath = await coverArtService.ResolveAndCacheCoverAsync(game);
+            if (string.IsNullOrWhiteSpace(cachedPath))
+                continue;
+
+            try
+            {
+                await _dbService.UpdateGameAsync(game);
+            }
+            catch
+            {
+            }
+        }
     }
 
     // ---- Menu Commands (File) ----
@@ -293,6 +325,31 @@ public partial class MainViewModel : ObservableObject
         win.ShowDialog();
     }
 
+    [RelayCommand]
+    private void OpenRecommendations()
+    {
+        var vm = new RecommendationViewModel(
+            _dbService,
+            _settingsService,
+            _httpClient,
+            _dialogCoordinator,
+            importedGame =>
+            {
+                Games.Insert(0, importedGame);
+                SelectedGame = importedGame;
+                RefreshStats();
+                _processMonitor.UpdateMonitoredGames(Games);
+            });
+
+        var win = new RecommendationWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        win.ShowDialog();
+    }
+
     // ---- Menu Commands (Help) ----
 
     [RelayCommand]
@@ -359,7 +416,8 @@ public partial class MainViewModel : ObservableObject
     private void FetchMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
+        var targetGame = SelectedGame;
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -368,16 +426,7 @@ public partial class MainViewModel : ObservableObject
 
         if (win.ShowDialog() == true)
         {
-            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
-            if (updated != null)
-            {
-                var index = Games.IndexOf(SelectedGame);
-                if (index >= 0)
-                {
-                    Games[index] = updated;
-                    SelectedGame = updated;
-                }
-            }
+            HandleMetadataSaved(targetGame);
         }
     }
 
@@ -385,7 +434,8 @@ public partial class MainViewModel : ObservableObject
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        var vm = new MetadataViewModel(SelectedGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
+        var targetGame = SelectedGame;
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -394,16 +444,7 @@ public partial class MainViewModel : ObservableObject
 
         if (win.ShowDialog() == true)
         {
-            var updated = _dbService.GetGameByIdAsync(SelectedGame.Id).Result;
-            if (updated != null)
-            {
-                var index = Games.IndexOf(SelectedGame);
-                if (index >= 0)
-                {
-                    Games[index] = updated;
-                    SelectedGame = updated;
-                }
-            }
+            HandleMetadataSaved(targetGame);
         }
     }
 
@@ -509,6 +550,8 @@ public partial class MainViewModel : ObservableObject
             await _dbService.DeleteGameAsync(SelectedGame.Id);
             Games.Remove(SelectedGame);
             _processMonitor.UpdateMonitoredGames(Games);
+            SelectedGame = null;
         }
     }
+
 }

@@ -10,6 +10,7 @@
   <data name="Menu_Tool" xml:space="preserve"><value>_Tool</value></data>
   <data name="Menu_MonitorProcess" xml:space="preserve"><value>Process Monitor Settings (_M)</value></data>
   <data name="Menu_PlaytimeStats" xml:space="preserve"><value>Playtime Statistics (_T)</value></data>
+  <data name="Menu_Recommendations" xml:space="preserve"><value>Recommendations (_R)</value></data>
   <data name="Menu_Language" xml:space="preserve"><value>Language (_L)</value></data>
   
   <data name="Menu_Help" xml:space="preserve"><value>_Help</value></data>
@@ -45,6 +46,10 @@
   <data name="Settings_Interval" xml:space="preserve"><value>Interval (sec):</value></data>
   <data name="Settings_Network" xml:space="preserve"><value>Network Proxy</value></data>
   <data name="Settings_Proxy" xml:space="preserve"><value>Proxy URL:</value></data>
+  <data name="Settings_Ai" xml:space="preserve"><value>AI Recommendations</value></data>
+  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API Base URL:</value></data>
+  <data name="Settings_AiApiKey" xml:space="preserve"><value>API Key:</value></data>
+  <data name="Settings_AiModel" xml:space="preserve"><value>Model:</value></data>
   <data name="Settings_System" xml:space="preserve"><value>Startup &amp; Exit</value></data>
   <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>Launch at startup:</value></data>
   <data name="Settings_CloseBehavior" xml:space="preserve"><value>When closed:</value></data>
@@ -65,6 +70,7 @@
   <data name="Meta_FieldDate" xml:space="preserve"><value>Release Date:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>Progress:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>Website:</value></data>
+  <data name="Meta_FieldCover" xml:space="preserve"><value>Cover:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>Tags:</value></data>
   <data name="Meta_FieldProcess" xml:space="preserve"><value>Process Name:</value></data>
   <data name="Meta_FieldExec" xml:space="preserve"><value>Exec Path:</value></data>
@@ -73,6 +79,28 @@
   <data name="Meta_ColTitle" xml:space="preserve"><value>Title</value></data>
   <data name="Meta_ColBrand" xml:space="preserve"><value>Brand</value></data>
   <data name="Meta_ColDate" xml:space="preserve"><value>Date</value></data>
+  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>No cover selected.</value></data>
+  <data name="Meta_CoverFile" xml:space="preserve"><value>Local File:</value></data>
+  <data name="Meta_CoverUrl" xml:space="preserve"><value>Image URL:</value></data>
+  <data name="Meta_CoverPathWatermark" xml:space="preserve"><value>C:\Images\cover.jpg</value></data>
+  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>Auto Fetch</value></data>
+  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>Import from Local</value></data>
+  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>Clear Cover</value></data>
+  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>Select Cover Image</value></data>
+  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>Local cover selected.</value></data>
+  <data name="Meta_CoverCleared" xml:space="preserve"><value>Cover cleared.</value></data>
+  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>Enter a title or metadata ID before fetching a cover.</value></data>
+  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>No cover was found from the website.</value></data>
+  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>Cover fetched and cached locally.</value></data>
+  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>Cover URL fetched successfully.</value></data>
+  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>The selected cover file is not a valid image.</value></data>
+  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>The cover URL must be a valid absolute image URL.</value></data>
+  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>Cover URL applied from the selected metadata result.</value></data>
+  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>Selected cover applied.</value></data>
+  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>Choose Cover</value></data>
+  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>Select a cover fetched from VNDB or Bangumi.</value></data>
+  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>Fetching cover candidates...</value></data>
+  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>Use Selected</value></data>
 
   <data name="AddProc_Title" xml:space="preserve"><value>Add From Running Process</value></data>
   <data name="AddProc_Refresh" xml:space="preserve"><value>Refresh</value></data>
@@ -90,6 +118,36 @@
   <data name="Stats_ColPeriod" xml:space="preserve"><value>Period</value></data>
   <data name="Stats_ColPlaytime" xml:space="preserve"><value>Playtime</value></data>
   <data name="Stats_ColSessions" xml:space="preserve"><value>Sessions</value></data>
+
+  <data name="Rec_Title" xml:space="preserve"><value>VN Recommendations</value></data>
+  <data name="Rec_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>Using {0} of {1} library games with VNDB metadata.</value></data>
+  <data name="Rec_TopTags" xml:space="preserve"><value>Top tags: {0}</value></data>
+  <data name="Rec_AvoidTags" xml:space="preserve"><value>Avoid tags: {0}</value></data>
+  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>Preferred developers: {0}</value></data>
+  <data name="Rec_None" xml:space="preserve"><value>None</value></data>
+  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>Add or enrich at least 3 games with VNDB metadata to get recommendations.</value></data>
+  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>No matching recommendations are available right now.</value></data>
+  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>AI explanations enabled.</value></data>
+  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>AI is not configured. Showing local recommendation reasons only.</value></data>
+  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI explanation unavailable. Showing local recommendation reasons.</value></data>
+  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI explanation unavailable. Showing local recommendation reasons. Cause: {0}</value></data>
+  <data name="Rec_ColTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="Rec_ColBrand" xml:space="preserve"><value>Brand</value></data>
+  <data name="Rec_ColDate" xml:space="preserve"><value>Release Date</value></data>
+  <data name="Rec_ColScore" xml:space="preserve"><value>Score</value></data>
+  <data name="Rec_ColReason" xml:space="preserve"><value>Reason</value></data>
+  <data name="Rec_ColActions" xml:space="preserve"><value>Actions</value></data>
+  <data name="Rec_Import" xml:space="preserve"><value>Import</value></data>
+  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>Already in Library</value></data>
+  <data name="Rec_OpenVndb" xml:space="preserve"><value>Open VNDB</value></data>
+  <data name="Rec_ImportFailed" xml:space="preserve"><value>Failed to import recommendation: {0}</value></data>
+  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>Matches your preferred tags: {0}.</value></data>
+  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>From a developer you often enjoy: {0}.</value></data>
+  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>Released near your favorite era.</value></data>
+  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>Strong overall match based on your library profile.</value></data>
+  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>May overlap with tags you often drop: {0}.</value></data>
+  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>The release period is farther from your usual picks.</value></data>
 
   <data name="Log_Title" xml:space="preserve"><value>Play Session Logs</value></data>
   <data name="Log_ColSession" xml:space="preserve"><value>Session ID</value></data>
@@ -121,6 +179,18 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="GameStatus_Playing" xml:space="preserve"><value>Playing</value></data>
   <data name="GameStatus_Dropped" xml:space="preserve"><value>Dropped</value></data>
   <data name="GameStatus_Completed" xml:space="preserve"><value>Completed</value></data>
+  <data name="GameStatus_Planned" xml:space="preserve"><value>Planned</value></data>
   <data name="Tray_Show" xml:space="preserve"><value>Show</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>Are you sure you want to delete {0} game(s)?</value></data>
+  <data name="Msg_NoSelection" xml:space="preserve"><value>No games selected.</value></data>
+  <data name="Menu_GameManagement" xml:space="preserve"><value>Game Management (_G)</value></data>
+  <data name="GameMgmt_Title" xml:space="preserve"><value>Game Management</value></data>
+  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>Select All</value></data>
+  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>Deselect All</value></data>
+  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>Invert Selection</value></data>
+  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>Delete Selected</value></data>
+  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>Total:</value></data>
+  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>Selected:</value></data>
+  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>Filter by title...</value></data>
 </root>

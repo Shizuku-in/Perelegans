@@ -1,4 +1,4 @@
-<mah:MetroWindow x:Class="Perelegans.Views.MainWindow"
+﻿<mah:MetroWindow x:Class="Perelegans.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -6,6 +6,7 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
         xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
         xmlns:converters="clr-namespace:Perelegans.Converters"
+        xmlns:controls="clr-namespace:Perelegans.Controls"
         xmlns:models="clr-namespace:Perelegans.Models"
         xmlns:i18n="clr-namespace:Perelegans.i18n"
         mc:Ignorable="d"
@@ -26,12 +27,13 @@
 
     <mah:MetroWindow.Resources>
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
-        <converters:StatusIconConverter x:Key="StatusIconConverter"/>
+        <converters:CoverAspectRatioToHeightConverter x:Key="CoverAspectRatioToHeightConverter"/>
+        <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style x:Key="SelectedPrimaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -42,13 +44,13 @@
                 <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
                     <Setter Property="Foreground" Value="#E37F7F"/>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
                 </DataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding IsDetectedRunning}" Value="True"/>
-                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True"/>
+                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Foreground" Value="#E37F7F"/>
                 </MultiDataTrigger>
@@ -57,10 +59,53 @@
         <Style x:Key="PlaytimeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="{DynamicResource Perelegans.PlaytimeForegroundBrush}"/>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=IsSelected}" Value="True">
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
+        </Style>
+        <Style x:Key="GameCardListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="CardRoot"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.PanelBackground}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.MenuHoverBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="PreviewMouseRightButtonDown" Handler="GameCard_PreviewMouseRightButtonDown"/>
+            <EventSetter Event="MouseDoubleClick" Handler="GameCard_MouseDoubleClick"/>
+        </Style>
+        <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style x:Key="CardMetaTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="#E8E8E8"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
     </mah:MetroWindow.Resources>
 
@@ -173,6 +218,11 @@
                         <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
             </MenuItem>
 
             <!-- Help -->
@@ -219,8 +269,11 @@
 
         <!-- ==================== 3. CLIENT AREA ==================== -->
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-            <!-- Background Tachie Image (lower z-index) -->
+            <!-- Background Tachie Image -->
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
                    Opacity="0.12"
@@ -232,131 +285,144 @@
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
-            <!-- DataGrid (upper z-index) -->
-            <DataGrid x:Name="GameDataGrid"
-                      ItemsSource="{Binding Games}"
-                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      CanUserReorderColumns="True"
-                      CanUserResizeColumns="True"
-                      CanUserSortColumns="True"
-                      IsReadOnly="True"
-                      SelectionMode="Single"
-                      SelectionUnit="FullRow"
-                      GridLinesVisibility="Horizontal"
-                      HeadersVisibility="Column"
-                      RowHeight="24"
-                      ColumnHeaderHeight="26"
-                      FontSize="12"
-                      BorderThickness="0"
-                      Background="Transparent"
-                      RowBackground="Transparent"
-                      AlternatingRowBackground="Transparent"
-                      Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                      HorizontalGridLinesBrush="{DynamicResource Perelegans.BorderBrush}"
-                      Panel.ZIndex="1"
-                      Margin="0">
+            <!-- Card Gallery -->
+            <ListBox x:Name="GameCards"
+                     Grid.Row="0"
+                     ItemsSource="{Binding Games}"
+                     SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
+                     SelectionMode="Single"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.CanContentScroll="False"
+                     HorizontalContentAlignment="Stretch"
+                     VerticalContentAlignment="Stretch"
+                     Panel.ZIndex="1"
+                     Margin="4,4,4,8">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <controls:MasonryPanel IsItemsHost="True"
+                                               ColumnWidth="224"
+                                               ItemSpacing="8"/>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
 
-                <!-- Context Menu -->
-                <DataGrid.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="{i18n:Translate Context_StartGame}" Command="{Binding StartGameCommand}">
-                            <MenuItem.Icon>
-                                <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="{i18n:Translate Context_Metadata}">
-                            <MenuItem.Icon>
-                                <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                            <MenuItem Header="{i18n:Translate Context_FetchMetadata}" Command="{Binding FetchMetadataCommand}"/>
-                            <MenuItem Header="{i18n:Translate Context_EditMetadata}" Command="{Binding EditMetadataCommand}"/>
-                        </MenuItem>
-                        <MenuItem Header="{i18n:Translate Context_Open}">
-                            <MenuItem.Icon>
-                                <iconPacks:PackIconMaterial Kind="FolderOpenOutline" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                            <MenuItem Header="{i18n:Translate Context_OpenFolder}" Command="{Binding OpenGameFolderCommand}"/>
-                            <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
-                                <MenuItem Header="VNDB" Command="{Binding OpenVndbCommand}"/>
-                                <MenuItem Header="ErogameSpace" Command="{Binding OpenErogameSpaceCommand}"/>
-                                <MenuItem Header="Bangumi" Command="{Binding OpenBangumiCommand}"/>
-                                <MenuItem Header="Official Site" Command="{Binding OpenOfficialSiteCommand}"/>
-                            </MenuItem>
-                            <MenuItem Header="{i18n:Translate Context_OpenGameStats}" Command="{Binding OpenGamePlaytimeStatsCommand}"/>
-                        </MenuItem>
-                        <MenuItem Header="{i18n:Translate Context_Copy}">
-                            <MenuItem.Icon>
-                                <iconPacks:PackIconMaterial Kind="ContentCopy" Width="14" Height="14"/>
-                            </MenuItem.Icon>
-                            <MenuItem Header="{i18n:Translate Context_CopyTitle}" Command="{Binding CopyTitleCommand}"/>
-                            <MenuItem Header="{i18n:Translate Context_CopyBrand}" Command="{Binding CopyBrandCommand}"/>
-                        </MenuItem>
-                        <Separator/>
-                        <MenuItem Header="{i18n:Translate Context_Delete}" Command="{Binding DeleteGameCommand}">
-                            <MenuItem.Icon>
-                                <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
-                                                            Foreground="#E53935"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </ContextMenu>
-                </DataGrid.ContextMenu>
+                <ListBox.ItemContainerStyle>
+                    <StaticResource ResourceKey="GameCardListBoxItemStyle"/>
+                </ListBox.ItemContainerStyle>
 
-                <!-- Column Definitions -->
-                <DataGrid.Columns>
-                    <!-- Status (icon only) -->
-                    <DataGridTemplateColumn Header="" Width="32" CanUserResize="False"
-                                             SortMemberPath="Status">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <iconPacks:PackIconMaterial
-                                    Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
-                                    Width="14" Height="14"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:Game}">
+                        <Border Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                HorizontalAlignment="Stretch"
+                                SnapsToDevicePixels="True">
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="{i18n:Translate Context_StartGame}"
+                                              Command="{Binding PlacementTarget.Tag.StartGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="{i18n:Translate Context_Metadata}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                        <MenuItem Header="{i18n:Translate Context_FetchMetadata}"
+                                                  Command="{Binding PlacementTarget.Tag.FetchMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="{i18n:Translate Context_EditMetadata}"
+                                                  Command="{Binding PlacementTarget.Tag.EditMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    </MenuItem>
+                                    <MenuItem Header="{i18n:Translate Context_Open}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="FolderOpenOutline" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                        <MenuItem Header="{i18n:Translate Context_OpenFolder}"
+                                                  Command="{Binding PlacementTarget.Tag.OpenGameFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
+                                            <MenuItem Header="VNDB"
+                                                      Command="{Binding PlacementTarget.Tag.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="ErogameSpace"
+                                                      Command="{Binding PlacementTarget.Tag.OpenErogameSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="Bangumi"
+                                                      Command="{Binding PlacementTarget.Tag.OpenBangumiCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                            <MenuItem Header="Official Site"
+                                                      Command="{Binding PlacementTarget.Tag.OpenOfficialSiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        </MenuItem>
+                                        <MenuItem Header="{i18n:Translate Context_OpenGameStats}"
+                                                  Command="{Binding PlacementTarget.Tag.OpenGamePlaytimeStatsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    </MenuItem>
+                                    <MenuItem Header="{i18n:Translate Context_Copy}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="ContentCopy" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                        <MenuItem Header="{i18n:Translate Context_CopyTitle}"
+                                                  Command="{Binding PlacementTarget.Tag.CopyTitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                        <MenuItem Header="{i18n:Translate Context_CopyBrand}"
+                                                  Command="{Binding PlacementTarget.Tag.CopyBrandCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                    </MenuItem>
+                                    <Separator/>
+                                    <MenuItem Header="{i18n:Translate Context_Delete}"
+                                              Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
+                                                                        Foreground="#E53935"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </Border.ContextMenu>
 
-                    <!-- Title -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_Title}" Binding="{Binding Title}"
-                                         Width="*" MinWidth="120"
-                                         ElementStyle="{StaticResource RunningTitleTextStyle}"/>
+                            <Grid ClipToBounds="True">
+                                <Grid.Height>
+                                    <MultiBinding Converter="{StaticResource CoverAspectRatioToHeightConverter}">
+                                        <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth"/>
+                                        <Binding Path="CoverAspectRatio"/>
+                                    </MultiBinding>
+                                </Grid.Height>
 
-                    <!-- Brand -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_Brand}" Binding="{Binding Brand}"
-                                         Width="120"
-                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
+                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                       Stretch="Uniform"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       SnapsToDevicePixels="True"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                    <!-- Release Date -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_ReleaseDate}"
-                                         Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}"
-                                         Width="95"
-                                         ElementStyle="{StaticResource SelectedPrimaryTextStyle}"/>
-
-                    <!-- Playtime -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_Playtime}"
-                                         Binding="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
-                                         Width="75"
-                                         ElementStyle="{StaticResource PlaytimeTextStyle}"/>
-
-                    <!-- Created Date -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_Created}"
-                                         Binding="{Binding CreatedDate, StringFormat=yyyy-MM-dd}"
-                                         Width="85"
-                                         Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
-
-                    <!-- Accessed Date -->
-                    <DataGridTextColumn Header="{i18n:Translate Column_LastPlayed}"
-                                         Binding="{Binding AccessedDate, StringFormat=yyyy-MM-dd}"
-                                         Width="85"
-                                         Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
-                </DataGrid.Columns>
-
-            </DataGrid>
+                                <StackPanel VerticalAlignment="Bottom"
+                                            HorizontalAlignment="Left"
+                                            Margin="12,0,12,14">
+                                    <StackPanel.Effect>
+                                        <DropShadowEffect BlurRadius="10"
+                                                          ShadowDepth="0"
+                                                          Color="#E0000000"
+                                                          Opacity="1"/>
+                                    </StackPanel.Effect>
+                                    <TextBlock Text="{Binding Title}"
+                                               Style="{StaticResource CardTitleTextStyle}"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               TextWrapping="Wrap"
+                                               MaxHeight="42"/>
+                                    <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
+                                               Style="{StaticResource CardMetaTextStyle}"
+                                               FontSize="11.5"
+                                               FontWeight="SemiBold"
+                                               Margin="0,8,0,0"/>
+                                    <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
+                                               Style="{StaticResource CardMetaTextStyle}"
+                                               FontSize="10.5"
+                                               Margin="0,5,0,0"/>
+                                    <TextBlock Text="{Binding CreatedDate, StringFormat=Added {0:yyyy-MM-dd}}"
+                                               Style="{StaticResource CardMetaTextStyle}"
+                                               FontSize="10.5"
+                                               Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
 
     </DockPanel>

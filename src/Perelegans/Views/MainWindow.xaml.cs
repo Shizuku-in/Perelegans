@@ -1,6 +1,8 @@
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Perelegans.Models;
 using MahApps.Metro.Controls;
 using Perelegans.ViewModels;
 
@@ -96,11 +98,39 @@ public partial class MainWindow : MetroWindow
             return;
         }
 
-        GameDataGrid.Items.Refresh();
-
         if (DataContext is MainViewModel vm)
         {
             vm.RefreshUi();
+        }
+    }
+
+    private void GameCard_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not ListBoxItem item || item.DataContext is not Game game || DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        item.IsSelected = true;
+        vm.SelectedGame = game;
+    }
+
+    private void GameCard_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        if (sender is not ListBoxItem item || item.DataContext is not Game game)
+        {
+            return;
+        }
+
+        vm.SelectedGame = game;
+        if (vm.StartGameCommand.CanExecute(null))
+        {
+            vm.StartGameCommand.Execute(null);
         }
     }
 }

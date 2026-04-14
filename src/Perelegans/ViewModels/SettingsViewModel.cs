@@ -33,6 +33,15 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private AppCloseBehavior _selectedCloseBehavior;
 
+    [ObservableProperty]
+    private string _aiApiBaseUrl = string.Empty;
+
+    [ObservableProperty]
+    private string _aiApiKey = string.Empty;
+
+    [ObservableProperty]
+    private string _aiModel = string.Empty;
+
     public string[] LanguageOptions { get; } = ["zh-Hans", "en-US", "ja-JP"];
     public IReadOnlyList<AppCloseBehaviorOption> CloseBehaviorOptions { get; } =
     [
@@ -58,6 +67,9 @@ public partial class SettingsViewModel : ObservableObject
         _selectedLanguage = TranslationService.NormalizeLanguageCode(s.Language);
         _launchAtStartup = s.LaunchAtStartup;
         _selectedCloseBehavior = s.CloseBehavior;
+        _aiApiBaseUrl = s.AiApiBaseUrl;
+        _aiApiKey = s.AiApiKey;
+        _aiModel = s.AiModel;
     }
 
     /// <summary>
@@ -76,6 +88,9 @@ public partial class SettingsViewModel : ObservableObject
         s.Language = TranslationService.NormalizeLanguageCode(SelectedLanguage);
         s.LaunchAtStartup = LaunchAtStartup;
         s.CloseBehavior = SelectedCloseBehavior;
+        s.AiApiBaseUrl = AiApiBaseUrl.Trim();
+        s.AiApiKey = AiApiKey.Trim();
+        s.AiModel = AiModel.Trim();
 
         _settingsService.Save();
         _themeService.ApplyTheme(SelectedTheme);
@@ -96,7 +111,10 @@ public partial class SettingsViewModel : ObservableObject
                 || s.MonitorEnabled != MonitorEnabled
                 || s.Language != SelectedLanguage
                 || s.LaunchAtStartup != LaunchAtStartup
-                || s.CloseBehavior != SelectedCloseBehavior;
+                || s.CloseBehavior != SelectedCloseBehavior
+                || s.AiApiBaseUrl != AiApiBaseUrl
+                || s.AiApiKey != AiApiKey
+                || s.AiModel != AiModel;
         }
     }
 }
