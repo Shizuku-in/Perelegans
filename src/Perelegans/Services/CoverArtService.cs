@@ -288,6 +288,45 @@ public class CoverArtService
         return new CoverArtFetchResult(normalizedCoverUrl, cachedPath, aspectRatio);
     }
 
+    public CoverArtFetchResult? ImportLocalCoverToCache(string localFilePath, string cacheKey)
+    {
+        if (string.IsNullOrWhiteSpace(localFilePath))
+            return null;
+
+        try
+        {
+            var sourcePath = Path.GetFullPath(localFilePath.Trim());
+            if (!File.Exists(sourcePath))
+                return null;
+
+            Directory.CreateDirectory(CoverCacheDir);
+
+            var extension = Path.GetExtension(sourcePath);
+            if (string.IsNullOrWhiteSpace(extension) || extension.Length > 5)
+            {
+                extension = ".jpg";
+            }
+
+            var sanitizedKey = SanitizeCacheKey(cacheKey);
+            var cachedPath = Path.Combine(CoverCacheDir, $"{sanitizedKey}{extension}");
+
+            if (!string.Equals(sourcePath, cachedPath, StringComparison.OrdinalIgnoreCase))
+            {
+                File.Copy(sourcePath, cachedPath, overwrite: true);
+            }
+
+            var aspectRatio = TryReadCoverAspectRatio(cachedPath);
+            if (!aspectRatio.HasValue)
+                return null;
+
+            return new CoverArtFetchResult(new Uri(cachedPath, UriKind.Absolute).AbsoluteUri, cachedPath, aspectRatio);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private async Task<string?> DownloadCoverAsync(string cacheKey, string coverUrl)
     {
         try

@@ -27,6 +27,8 @@
     <SolidColorBrush x:Key="Perelegans.StatusBarValueForegroundBrush" Color="#1E1E1E"/>
     <SolidColorBrush x:Key="Perelegans.DataGridSelectedPrimaryForegroundBrush" Color="#5D1135"/>
     <SolidColorBrush x:Key="Perelegans.StatusIconBrush" Color="#FFD2DB"/>
+    <SolidColorBrush x:Key="Perelegans.CoverStatusBadgeBackgroundBrush" Color="#FDFCF8"/>
+    <Color x:Key="Perelegans.CoverStatusBadgeShadowColor">#2d2d30</Color>
     
     <!-- Borders -->
     <SolidColorBrush x:Key="Perelegans.BorderBrush" Color="#E0DDD5"/>

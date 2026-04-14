@@ -289,17 +289,17 @@ public partial class MetadataViewModel : ObservableObject
         if (dialog.ShowDialog() != true)
             return;
 
-        var aspectRatio = CoverArtService.TryReadCoverAspectRatio(dialog.FileName);
-        if (!aspectRatio.HasValue)
+        var importedCover = _coverArtService.ImportLocalCoverToCache(dialog.FileName, _coverCacheKey);
+        if (string.IsNullOrWhiteSpace(importedCover?.CachedPath) || !importedCover.AspectRatio.HasValue)
         {
             CoverStatusText = TranslationService.Instance["Meta_CoverInvalidFile"];
             return;
         }
 
         SetCoverFields(
-            path: dialog.FileName,
+            path: importedCover.CachedPath,
             url: null,
-            aspectRatio: aspectRatio,
+            aspectRatio: importedCover.AspectRatio,
             statusText: TranslationService.Instance["Meta_CoverSelectedLocal"]);
     }
 
@@ -467,18 +467,30 @@ public partial class MetadataViewModel : ObservableObject
         _suppressCoverFieldSync = false;
 
         _editCoverAspectRatio = aspectRatio;
-        RefreshCoverPreview();
+        RefreshCoverPreview(forceNotify: true);
         CoverStatusText = statusText;
     }
 
-    private void RefreshCoverPreview()
+    private void RefreshCoverPreview(bool forceNotify = false)
     {
         var coverPath = EditCoverImagePath.Trim();
         var coverUrl = EditCoverImageUrl.Trim();
 
-        CoverPreviewSource = !string.IsNullOrWhiteSpace(coverPath) && File.Exists(coverPath)
+        var nextPreviewSource = !string.IsNullOrWhiteSpace(coverPath) && File.Exists(coverPath)
             ? coverPath
             : coverUrl;
+
+        if (string.Equals(CoverPreviewSource, nextPreviewSource, StringComparison.Ordinal))
+        {
+            if (forceNotify)
+            {
+                OnPropertyChanged(nameof(CoverPreviewSource));
+            }
+
+            return;
+        }
+
+        CoverPreviewSource = nextPreviewSource;
     }
 
     private static string? NullIfWhiteSpace(string? value)

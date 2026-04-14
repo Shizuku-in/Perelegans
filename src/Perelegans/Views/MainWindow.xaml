@@ -29,6 +29,7 @@
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
         <converters:CoverAspectRatioToHeightConverter x:Key="CoverAspectRatioToHeightConverter"/>
         <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
+        <converters:StatusIconConverter x:Key="StatusIconConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style x:Key="SelectedPrimaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
@@ -36,24 +37,6 @@
                 <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
                 </DataTrigger>
-            </Style.Triggers>
-        </Style>
-        <Style x:Key="RunningTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
-                    <Setter Property="Foreground" Value="#E37F7F"/>
-                </DataTrigger>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
-                </DataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding IsDetectedRunning}" Value="True"/>
-                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Foreground" Value="#E37F7F"/>
-                </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="PlaytimeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -305,7 +288,8 @@
                     <ItemsPanelTemplate>
                         <controls:MasonryPanel IsItemsHost="True"
                                                ColumnWidth="224"
-                                               ItemSpacing="8"/>
+                                               ItemSpacing="8"
+                                               Padding="10"/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
@@ -315,7 +299,10 @@
 
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:Game}">
-                        <Border Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        <Border x:Name="GameCardBorder"
+                                Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
                                 HorizontalAlignment="Stretch"
                                 SnapsToDevicePixels="True">
                             <Border.ContextMenu>
@@ -389,6 +376,28 @@
                                        SnapsToDevicePixels="True"
                                        RenderOptions.BitmapScalingMode="HighQuality"/>
 
+                                <Border Width="24"
+                                        Height="24"
+                                        Margin="10"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
+                                        CornerRadius="12"
+                                        SnapsToDevicePixels="True">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="8"
+                                                          ShadowDepth="0"
+                                                          Opacity="0.24"
+                                                          Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
+                                    </Border.Effect>
+                                    <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
+                                                                Width="14"
+                                                                Height="14"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
+                                </Border>
+
                                 <StackPanel VerticalAlignment="Bottom"
                                             HorizontalAlignment="Left"
                                             Margin="12,0,12,14">
@@ -420,6 +429,12 @@
                                 </StackPanel>
                             </Grid>
                         </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
+                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="#FFBFCA"/>
+                                <Setter TargetName="GameCardBorder" Property="BorderThickness" Value="3"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
