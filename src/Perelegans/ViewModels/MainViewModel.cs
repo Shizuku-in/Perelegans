@@ -34,6 +34,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool _isAboutOverlayVisible;
 
+
     public string TotalPlaytimeText
     {
         get
@@ -631,6 +632,7 @@ public partial class MainViewModel : ObservableObject
     }
 
 }
+
 
 
 

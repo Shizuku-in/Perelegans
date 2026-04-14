@@ -48,7 +48,7 @@ public class ThemeService
     private static readonly ThemePalette LightPalette = new(
         ThemeBackground: "#FDFCF8",
         ThemeForeground: "#1E1E1E",
-        WindowBackground: "#F7F3EC",
+        WindowBackground: "#FDFCF8",
         PanelBackground: "#F5F3EE",
         StatsChartPanelBackgroundColor: "#FDFCF8",
         StatsChartPanelBorderColor: "#D8D1C6",
@@ -57,14 +57,14 @@ public class ThemeService
         StatsChartHighlightBackgroundColor: "#FFF0F0",
         StatsChartHighlightBorderColor: "#E37F7F",
         AccentColor: "#F48FB1",
-        AccentHoverColor: "#F2A3B9",
+        AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
         ForegroundColor: "#1E1E1E",
-        SubtleForegroundColor: "#706A61",
-        PlaytimeForegroundColor: "#FFFFFF",
+        SubtleForegroundColor: "#757575",
+        PlaytimeForegroundColor: "#000000",
         StatusBarValueForegroundColor: "#1E1E1E",
         DataGridSelectedPrimaryForegroundColor: "#FFC0CB",
-        StatusIconColor: "#D16488",
+        StatusIconColor: "#FFD2DB",
         CoverStatusBadgeBackgroundColor: "#FDFCF8",
         CoverStatusBadgeShadowColor: "#2D2D30",
         GlassPanelBackgroundColor: "#CCFFFDF8",
@@ -83,8 +83,8 @@ public class ThemeService
     private static readonly ThemePalette DarkPalette = new(
         ThemeBackground: "#252526",
         ThemeForeground: "#DCDCDC",
-        WindowBackground: "#161B22",
-        PanelBackground: "#222830",
+        WindowBackground: "#252526",
+        PanelBackground: "#2D2D30",
         StatsChartPanelBackgroundColor: "#252526",
         StatsChartPanelBorderColor: "#3A3A3C",
         StatsChartMetricBackgroundColor: "#303033",
@@ -92,15 +92,15 @@ public class ThemeService
         StatsChartHighlightBackgroundColor: "#3A2E31",
         StatsChartHighlightBorderColor: "#E37F7F",
         AccentColor: "#F48FB1",
-        AccentHoverColor: "#F7A8C4",
+        AccentHoverColor: "#F48FB1",
         MahAppsAccentColor: "#FFC0CB",
-        ForegroundColor: "#F2F4F8",
-        SubtleForegroundColor: "#B0BAC7",
-        PlaytimeForegroundColor: "#FFFFFF",
-        StatusBarValueForegroundColor: "#E3E7EE",
+        ForegroundColor: "#DCDCDC",
+        SubtleForegroundColor: "#9E9E9E",
+        PlaytimeForegroundColor: "#DCDCDC",
+        StatusBarValueForegroundColor: "#C8C8C8",
         DataGridSelectedPrimaryForegroundColor: "#000000",
         StatusIconColor: "#FFD2DB",
-        CoverStatusBadgeBackgroundColor: "#222830",
+        CoverStatusBadgeBackgroundColor: "#2D2D30",
         CoverStatusBadgeShadowColor: "#FDFCF8",
         GlassPanelBackgroundColor: "#99202832",
         GlassPanelBorderColor: "#44FFFFFF",
@@ -225,5 +225,7 @@ public class ThemeService
         SystemEvents.UserPreferenceChanged -= OnSystemThemeChanged;
     }
 }
+
+
 
 

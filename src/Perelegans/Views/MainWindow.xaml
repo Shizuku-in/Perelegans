@@ -23,9 +23,6 @@
         ShowMaxRestoreButton="False"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource Perelegans.WindowBackground}"
-        FontFamily="Segoe UI Variable Display"
-        UseLayoutRounding="True"
-        SnapsToDevicePixels="True"
         mah:DialogParticipation.Register="{Binding}">
 
     <mah:MetroWindow.Resources>
@@ -67,178 +64,157 @@
 
     <DockPanel LastChildFill="True">
 
-        <Border DockPanel.Dock="Top"
-                Margin="10,10,10,0"
-                CornerRadius="14"
-                Background="{DynamicResource Perelegans.GlassPanelBackground}"
-                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
-                BorderThickness="1">
-            <Grid Height="34"
-                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <Grid DockPanel.Dock="Top" Height="30"
+              Background="{DynamicResource Perelegans.PanelBackground}"
+              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal"
-                            VerticalAlignment="Center" Margin="12,0,0,0">
-                    <iconPacks:PackIconMaterial Kind="GamepadVariantOutline"
-                                                Width="15" Height="15"
-                                                Foreground="{DynamicResource Perelegans.AccentBrush}"
-                                                VerticalAlignment="Center"/>
-                    <TextBlock Text="Perelegans" FontSize="12.5" FontWeight="SemiBold"
-                               Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                               Margin="8,0,0,0" VerticalAlignment="Center"/>
-                </StackPanel>
+            <StackPanel Grid.Column="0" Orientation="Horizontal"
+                        VerticalAlignment="Center" Margin="8,0,0,0">
+                <iconPacks:PackIconMaterial Kind="GamepadVariantOutline"
+                                            Width="14" Height="14"
+                                            Foreground="{DynamicResource Perelegans.AccentBrush}"
+                                            VerticalAlignment="Center"/>
+                <TextBlock Text="Perelegans" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                           Margin="6,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
 
-                <StackPanel Grid.Column="2" Orientation="Horizontal"
-                            VerticalAlignment="Stretch">
-                    <Button x:Name="BtnSettings" Click="BtnSettings_Click"
-                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                            ToolTip="Settings">
-                        <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
-                    </Button>
-                    <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
-                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                            ToolTip="Minimize">
-                        <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
-                    </Button>
-                    <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
-                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                            ToolTip="Maximize">
-                        <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
-                                                    x:Name="MaximizeIcon"/>
-                    </Button>
-                    <Button x:Name="BtnClose" Click="BtnClose_Click"
-                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                            Style="{DynamicResource Perelegans.CloseButtonStyle}"
-                            ToolTip="Close">
-                        <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
+            <StackPanel Grid.Column="2" Orientation="Horizontal"
+                        VerticalAlignment="Stretch">
+                <Button x:Name="BtnSettings" Click="BtnSettings_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                        ToolTip="Settings">
+                    <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
+                </Button>
+                <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                        ToolTip="Minimize">
+                    <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
+                </Button>
+                <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                        ToolTip="Maximize">
+                    <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
+                                                x:Name="MaximizeIcon"/>
+                </Button>
+                <Button x:Name="BtnClose" Click="BtnClose_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource Perelegans.CloseButtonStyle}"
+                        ToolTip="Close">
+                    <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
+                </Button>
+            </StackPanel>
+        </Grid>
 
-        <Border DockPanel.Dock="Top"
-                Margin="10,8,10,0"
-                CornerRadius="14"
-                Background="{DynamicResource Perelegans.GlassPanelBackground}"
-                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
-                BorderThickness="1">
-            <Menu Height="34"
-                  Background="Transparent"
-                  Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                  FontSize="12.5" Padding="6,0">
-                <MenuItem Header="{i18n:Translate Menu_File}">
-                    <MenuItem Header="{i18n:Translate Menu_AddFromProcess}" Command="{Binding AddFromProcessCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}" Command="{Binding AddFromWebsiteCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem Header="{i18n:Translate Menu_SaveBackup}" Command="{Binding SaveBackupCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{i18n:Translate Menu_RestoreBackup}" Command="{Binding RestoreBackupCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="Restore" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <Separator/>
-                    <MenuItem Header="{i18n:Translate Menu_Exit}" Command="{Binding ExitAppCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="ExitToApp" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
+        <Menu DockPanel.Dock="Top" Height="28"
+              Background="{DynamicResource Perelegans.PanelBackground}"
+              Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+              FontSize="12" Padding="4,0">
+            <MenuItem Header="{i18n:Translate Menu_File}">
+                <MenuItem Header="{i18n:Translate Menu_AddFromProcess}" Command="{Binding AddFromProcessCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
                 </MenuItem>
-
-                <MenuItem Header="{i18n:Translate Menu_Tool}">
-                    <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="Check" Width="14" Height="14"
-                                Visibility="{Binding IsMonitorEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                    <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}" Command="{Binding AddFromWebsiteCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
+                    </MenuItem.Icon>
                 </MenuItem>
-
-                <MenuItem Header="{i18n:Translate Menu_Help}">
-                    <MenuItem Header="{i18n:Translate Menu_About}" Command="{Binding ShowAboutCommand}">
-                        <MenuItem.Icon>
-                            <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14"/>
-                        </MenuItem.Icon>
-                    </MenuItem>
-                </MenuItem>
-            </Menu>
-        </Border>
-
-        <Border DockPanel.Dock="Bottom"
-                Margin="10,0,10,10"
-                CornerRadius="14"
-                Background="{DynamicResource Perelegans.GlassPanelBackground}"
-                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
-                BorderThickness="1">
-            <StatusBar Height="26"
-                       Background="Transparent"
-                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
-                       FontSize="11.5" Padding="8,0">
-                <StatusBarItem>
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="ClockOutline" Width="11" Height="11"
-                                                    VerticalAlignment="Center" Margin="0,0,4,0"
-                                                    Foreground="{DynamicResource Perelegans.AccentBrush}"/>
-                        <TextBlock VerticalAlignment="Center">
-                            <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
-                            <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
-                                 Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
-                        </TextBlock>
-                    </StackPanel>
-                </StatusBarItem>
                 <Separator/>
-                <StatusBarItem>
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="CheckCircleOutline" Width="11" Height="11"
-                                                    VerticalAlignment="Center" Margin="0,0,4,0"
-                                                    Foreground="{DynamicResource Perelegans.AccentBrush}"/>
-                        <TextBlock VerticalAlignment="Center">
-                            <Run Text="{i18n:Translate Status_Completed}"/>
-                            <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
-                                 Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
-                        </TextBlock>
-                    </StackPanel>
-                </StatusBarItem>
-            </StatusBar>
-        </Border>
+                <MenuItem Header="{i18n:Translate Menu_SaveBackup}" Command="{Binding SaveBackupCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_RestoreBackup}" Command="{Binding RestoreBackupCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Restore" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="{i18n:Translate Menu_Exit}" Command="{Binding ExitAppCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ExitToApp" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
 
-        <Grid Background="{DynamicResource Perelegans.WindowBackground}">
+            <MenuItem Header="{i18n:Translate Menu_Tool}">
+                <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="Check" Width="14" Height="14"
+                            Visibility="{Binding IsMonitorEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+
+            <MenuItem Header="{i18n:Translate Menu_Help}">
+                <MenuItem Header="{i18n:Translate Menu_About}" Command="{Binding ShowAboutCommand}">
+                    <MenuItem.Icon>
+                        <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <StatusBar DockPanel.Dock="Bottom" Height="22"
+                   Background="{DynamicResource Perelegans.StatusBarBackground}"
+                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                   FontSize="11" Padding="8,0">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconMaterial Kind="ClockOutline" Width="11" Height="11"
+                                                VerticalAlignment="Center" Margin="0,0,4,0"
+                                                Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                    <TextBlock VerticalAlignment="Center">
+                        <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
+                        <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
+                    </TextBlock>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconMaterial Kind="CheckCircleOutline" Width="11" Height="11"
+                                                VerticalAlignment="Center" Margin="0,0,4,0"
+                                                Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                    <TextBlock VerticalAlignment="Center">
+                        <Run Text="{i18n:Translate Status_Completed}"/>
+                        <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
+                    </TextBlock>
+                </StackPanel>
+            </StatusBarItem>
+        </StatusBar>
+<Grid Background="{DynamicResource Perelegans.WindowBackground}">
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
-                   Opacity="0.1"
+                   Opacity="0.12"
                    HorizontalAlignment="Right"
                    VerticalAlignment="Bottom"
-                   MaxHeight="540"
-                   MaxWidth="380"
-                   Margin="0,0,14,12"
+                   MaxHeight="500"
+                   MaxWidth="350"
+                   Margin="0,0,10,10"
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
@@ -408,8 +384,17 @@
                                         Margin="12"
                                         Padding="8,3"
                                         CornerRadius="12"
-                                        Background="#CCF48FB1"
                                         Visibility="{Binding IsDetectedRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
                                     <TextBlock Text="Running"
                                                FontSize="10.5"
                                                FontWeight="SemiBold"
@@ -481,6 +466,10 @@
 
     </DockPanel>
 </mah:MetroWindow>
+
+
+
+
 
 
 

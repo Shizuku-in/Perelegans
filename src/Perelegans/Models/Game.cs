@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -163,6 +163,7 @@ public class Game : INotifyPropertyChanged
     // Navigation property
     public List<PlaySession> PlaySessions { get; set; } = new();
 
+
     [NotMapped]
     public bool IsDetectedRunning
     {
@@ -200,3 +201,4 @@ public class Game : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
+
