@@ -34,6 +34,8 @@ public class ThemeService
         string StatusBarValueForegroundColor,
         string DataGridSelectedPrimaryForegroundColor,
         string StatusIconColor,
+        string CoverStatusBadgeBackgroundColor,
+        string CoverStatusBadgeShadowColor,
         string BorderColor,
         string ButtonBorderColor,
         string DataGridAltRowColor,
@@ -63,6 +65,8 @@ public class ThemeService
         StatusBarValueForegroundColor: "#1E1E1E",
         DataGridSelectedPrimaryForegroundColor: "#FFC0CB",
         StatusIconColor: "#FFD2DB",
+        CoverStatusBadgeBackgroundColor: "#FDFCF8",
+        CoverStatusBadgeShadowColor: "#2D2D30",
         BorderColor: "#E0DDD5",
         ButtonBorderColor: "#FFFFFF",
         DataGridAltRowColor: "#F8F6F1",
@@ -92,6 +96,8 @@ public class ThemeService
         StatusBarValueForegroundColor: "#C8C8C8",
         DataGridSelectedPrimaryForegroundColor: "#000000",
         StatusIconColor: "#FFD2DB",
+        CoverStatusBadgeBackgroundColor: "#2D2D30",
+        CoverStatusBadgeShadowColor: "#FDFCF8",
         BorderColor: "#3F3F46",
         ButtonBorderColor: "#3F3F46",
         DataGridAltRowColor: "#2A2A2E",
@@ -185,6 +191,8 @@ public class ThemeService
         resources["Perelegans.StatusBarValueForegroundBrush"] = CreateBrush(palette.StatusBarValueForegroundColor);
         resources["Perelegans.DataGridSelectedPrimaryForegroundBrush"] = CreateBrush(palette.DataGridSelectedPrimaryForegroundColor);
         resources["Perelegans.StatusIconBrush"] = CreateBrush(palette.StatusIconColor);
+        resources["Perelegans.CoverStatusBadgeBackgroundBrush"] = CreateBrush(palette.CoverStatusBadgeBackgroundColor);
+        resources["Perelegans.CoverStatusBadgeShadowColor"] = ParseColor(palette.CoverStatusBadgeShadowColor);
         resources["Perelegans.BorderBrush"] = CreateBrush(palette.BorderColor);
         resources["Perelegans.ButtonBorderBrush"] = CreateBrush(palette.ButtonBorderColor);
         resources["Perelegans.DataGridAltRowBrush"] = CreateBrush(palette.DataGridAltRowColor);

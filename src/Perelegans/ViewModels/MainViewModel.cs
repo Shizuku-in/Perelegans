@@ -97,6 +97,7 @@ public partial class MainViewModel : ObservableObject
         {
             game.Playtime += elapsed;
             game.AccessedDate = DateTime.Now;
+            SortGamesForDisplay();
             RefreshStats();
         }
     }
@@ -107,6 +108,7 @@ public partial class MainViewModel : ObservableObject
         if (game != null)
         {
             game.IsDetectedRunning = isDetectedRunning;
+            SortGamesForDisplay();
         }
     }
 
@@ -136,11 +138,60 @@ public partial class MainViewModel : ObservableObject
     private void ReplaceGames(IEnumerable<Game> games)
     {
         Games.CollectionChanged -= OnGamesCollectionChanged;
-        Games = new ObservableCollection<Game>(games);
+        Games = new ObservableCollection<Game>(OrderGamesForDisplay(games));
         AttachGamesCollection(Games);
         SelectedGame = null;
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private void SortGamesForDisplay()
+    {
+        if (Games.Count <= 1)
+            return;
+
+        var orderedGames = OrderGamesForDisplay(Games).ToList();
+        var requiresReorder = false;
+
+        for (var index = 0; index < orderedGames.Count; index++)
+        {
+            if (!ReferenceEquals(Games[index], orderedGames[index]))
+            {
+                requiresReorder = true;
+                break;
+            }
+        }
+
+        if (!requiresReorder)
+            return;
+
+        Games.CollectionChanged -= OnGamesCollectionChanged;
+        try
+        {
+            for (var targetIndex = 0; targetIndex < orderedGames.Count; targetIndex++)
+            {
+                var currentIndex = Games.IndexOf(orderedGames[targetIndex]);
+                if (currentIndex >= 0 && currentIndex != targetIndex)
+                {
+                    Games.Move(currentIndex, targetIndex);
+                }
+            }
+        }
+        finally
+        {
+            AttachGamesCollection(Games);
+        }
+
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private static IEnumerable<Game> OrderGamesForDisplay(IEnumerable<Game> games)
+    {
+        return games
+            .OrderByDescending(game => game.IsDetectedRunning)
+            .ThenByDescending(game => game.AccessedDate)
+            .ThenByDescending(game => game.Id);
     }
 
     private void HandleMetadataSaved(Game? game)
