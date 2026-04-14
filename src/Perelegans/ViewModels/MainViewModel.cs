@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -77,9 +77,10 @@ public partial class MainViewModel : ObservableObject
     {
         await _dbService.EnsureDatabaseCreatedAsync();
 
-        var games = await _dbService.GetAllGamesAsync();
+        var games = (await _dbService.GetAllGamesAsync()).ToList();
+        InitializeCoverAspectRatios(games);
         ReplaceGames(games);
-        _ = PopulateMissingCoverImagesAsync(games.ToList());
+        _ = UpgradeLibraryCoverImagesAsync(games.ToList());
 
         // Start process monitor
         var settings = _settingsService.Settings;
@@ -194,6 +195,16 @@ public partial class MainViewModel : ObservableObject
             .ThenByDescending(game => game.Id);
     }
 
+    private static void InitializeCoverAspectRatios(IEnumerable<Game> games)
+    {
+        foreach (var game in games)
+        {
+            if (!game.CoverAspectRatio.HasValue)
+            {
+                game.CoverAspectRatio = CoverArtService.TryReadCoverAspectRatio(game.CoverImagePath);
+            }
+        }
+    }
     private void HandleMetadataSaved(Game? game)
     {
         if (game == null)
@@ -205,15 +216,17 @@ public partial class MainViewModel : ObservableObject
         _processMonitor.UpdateMonitoredGames(Games);
     }
 
-    private async Task PopulateMissingCoverImagesAsync(IEnumerable<Game> games)
+    private async Task UpgradeLibraryCoverImagesAsync(IEnumerable<Game> games)
     {
         var coverArtService = new CoverArtService(_httpClient);
 
-        foreach (var game in games)
+        foreach (var game in games.Where(RequiresCoverRefresh))
         {
             var cachedPath = await coverArtService.ResolveAndCacheCoverAsync(game);
             if (string.IsNullOrWhiteSpace(cachedPath))
                 continue;
+
+            game.RefreshCoverBindings();
 
             try
             {
@@ -223,6 +236,18 @@ public partial class MainViewModel : ObservableObject
             {
             }
         }
+    }
+
+    private static bool RequiresCoverRefresh(Game game)
+    {
+        if (string.IsNullOrWhiteSpace(game.CoverDisplaySource))
+            return true;
+
+        if (string.IsNullOrWhiteSpace(game.VndbId))
+            return false;
+
+        return string.IsNullOrWhiteSpace(game.CoverImageUrl)
+            || !game.CoverImageUrl.Contains("t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase);
     }
 
     // ---- Menu Commands (File) ----
@@ -606,3 +631,6 @@ public partial class MainViewModel : ObservableObject
     }
 
 }
+
+
+

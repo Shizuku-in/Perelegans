@@ -1,12 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using HtmlAgilityPack;
 using Perelegans.Models;
 
 namespace Perelegans.Services;
@@ -26,6 +27,13 @@ public class CoverArtService
 
     public async Task<string?> ResolveCoverUrlAsync(Game game)
     {
+        if (!string.IsNullOrWhiteSpace(game.VndbId))
+        {
+            var vndbCover = await TryResolveVndbCoverAsync(game.VndbId);
+            if (!string.IsNullOrWhiteSpace(vndbCover))
+                return vndbCover;
+        }
+
         if (!string.IsNullOrWhiteSpace(game.BangumiId))
         {
             var bangumiCover = await TryResolveBangumiCoverAsync(game.BangumiId);
@@ -36,13 +44,6 @@ public class CoverArtService
         var bangumiSearchCover = await TryResolveBangumiCoverBySearchAsync(game.Title);
         if (!string.IsNullOrWhiteSpace(bangumiSearchCover))
             return bangumiSearchCover;
-
-        if (!string.IsNullOrWhiteSpace(game.VndbId))
-        {
-            var vndbCover = await TryResolveVndbCoverAsync(game.VndbId);
-            if (!string.IsNullOrWhiteSpace(vndbCover))
-                return vndbCover;
-        }
 
         var vndbSearchCover = await TryResolveVndbCoverBySearchAsync(game.Title);
         if (!string.IsNullOrWhiteSpace(vndbSearchCover))
@@ -151,6 +152,10 @@ public class CoverArtService
         if (string.IsNullOrWhiteSpace(normalizedId))
             return null;
 
+        var pageCover = await TryResolveVndbCoverFromPageAsync(normalizedId);
+        if (!string.IsNullOrWhiteSpace(pageCover))
+            return pageCover;
+
         try
         {
             var payload = new
@@ -191,6 +196,49 @@ public class CoverArtService
         return null;
     }
 
+    private async Task<string?> TryResolveVndbCoverFromPageAsync(string normalizedVndbId)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://vndb.org/{normalizedVndbId}");
+            request.Headers.Add("User-Agent", "Perelegans/0.2");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var html = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(html))
+                return null;
+
+            var document = new HtmlAgilityPack.HtmlDocument();
+            document.LoadHtml(html);
+
+            var ogImage = document.DocumentNode
+                .SelectSingleNode("//meta[@property='og:image']")
+                ?.GetAttributeValue("content", string.Empty);
+            var normalizedOgImage = NormalizeCoverUrl(ogImage);
+            if (!string.IsNullOrWhiteSpace(normalizedOgImage))
+                return normalizedOgImage;
+
+            var mainImage = document.DocumentNode
+                .SelectSingleNode("//main//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            var normalizedMainImage = NormalizeCoverUrl(mainImage);
+            if (!string.IsNullOrWhiteSpace(normalizedMainImage))
+                return normalizedMainImage;
+
+            var fallbackImage = document.DocumentNode
+                .SelectSingleNode("//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            return NormalizeCoverUrl(fallbackImage);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private async Task<string?> TryResolveVndbCoverBySearchAsync(string title)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -210,7 +258,13 @@ public class CoverArtService
 
     public async Task<string?> ResolveAndCacheCoverAsync(Game game)
     {
-        if (!string.IsNullOrWhiteSpace(game.CoverImagePath) && File.Exists(game.CoverImagePath))
+        var hasCanonicalVndbCover = !string.IsNullOrWhiteSpace(game.CoverImageUrl)
+            && game.CoverImageUrl.Contains("t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase);
+        var shouldRefreshExistingCover = !string.IsNullOrWhiteSpace(game.VndbId) && !hasCanonicalVndbCover;
+
+        if (!shouldRefreshExistingCover &&
+            !string.IsNullOrWhiteSpace(game.CoverImagePath) &&
+            File.Exists(game.CoverImagePath))
         {
             UpdateCoverMetadataFromFile(game, game.CoverImagePath);
             return game.CoverImagePath;
@@ -463,9 +517,17 @@ public class CoverArtService
             return null;
 
         var trimmed = coverUrl.Trim();
-        return trimmed.StartsWith("//", StringComparison.Ordinal)
+        var normalized = trimmed.StartsWith("//", StringComparison.Ordinal)
             ? $"https:{trimmed}"
             : trimmed;
+
+        normalized = normalized
+            .Replace("https://t.vndb.org/cv.t/", "https://t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase)
+            .Replace("https://t.vndb.org/cv.s/", "https://t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase)
+            .Replace("https://t.vndb.org/ch.t/", "https://t.vndb.org/ch/", StringComparison.OrdinalIgnoreCase)
+            .Replace("https://t.vndb.org/ch.s/", "https://t.vndb.org/ch/", StringComparison.OrdinalIgnoreCase);
+
+        return normalized;
     }
 
     private static string SanitizeCacheKey(string cacheKey)
@@ -486,3 +548,7 @@ public class CoverArtService
 }
 
 public sealed record CoverArtFetchResult(string CoverUrl, string? CachedPath, double? AspectRatio);
+
+
+
+

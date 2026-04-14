@@ -23,29 +23,27 @@
         ShowMaxRestoreButton="False"
         ResizeMode="CanResizeWithGrip"
         Background="{DynamicResource Perelegans.WindowBackground}"
+        FontFamily="Segoe UI Variable Display"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         mah:DialogParticipation.Register="{Binding}">
 
     <mah:MetroWindow.Resources>
         <converters:PlaytimeConverter x:Key="PlaytimeConverter"/>
         <converters:CoverAspectRatioToHeightConverter x:Key="CoverAspectRatioToHeightConverter"/>
         <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
+        <converters:CoverAspectRatioToStretchConverter x:Key="CoverAspectRatioToStretchConverter"/>
         <converters:StatusIconConverter x:Key="StatusIconConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <Style x:Key="SelectedPrimaryTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="{DynamicResource Perelegans.ForegroundBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
+        <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
-        <Style x:Key="PlaytimeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="{DynamicResource Perelegans.PlaytimeForegroundBrush}"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                    <Setter Property="Foreground" Value="{DynamicResource Perelegans.DataGridSelectedPrimaryForegroundBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
+        <Style x:Key="CardMetaTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="Foreground" Value="#F3F4F6"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
         <Style x:Key="GameCardListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Margin" Value="0"/>
@@ -58,219 +56,193 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
-                        <Border x:Name="CardRoot"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="0"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.PanelBackground}"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="CardRoot" Property="Background" Value="{DynamicResource Perelegans.MenuHoverBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
+                        <ContentPresenter/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
             <EventSetter Event="PreviewMouseRightButtonDown" Handler="GameCard_PreviewMouseRightButtonDown"/>
             <EventSetter Event="MouseDoubleClick" Handler="GameCard_MouseDoubleClick"/>
         </Style>
-        <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="TextWrapping" Value="Wrap"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
-        <Style x:Key="CardMetaTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-            <Setter Property="Foreground" Value="#E8E8E8"/>
-            <Setter Property="TextWrapping" Value="NoWrap"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
     </mah:MetroWindow.Resources>
 
     <DockPanel LastChildFill="True">
 
-        <!-- ==================== 1. CUSTOM TITLE BAR ==================== -->
-        <Grid DockPanel.Dock="Top" Height="30"
-              Background="{DynamicResource Perelegans.PanelBackground}"
-              MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+        <Border DockPanel.Dock="Top"
+                Margin="10,10,10,0"
+                CornerRadius="14"
+                Background="{DynamicResource Perelegans.GlassPanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
+                BorderThickness="1">
+            <Grid Height="34"
+                  MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Left: Icon + Title -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal"
-                        VerticalAlignment="Center" Margin="8,0,0,0">
-                <iconPacks:PackIconMaterial Kind="GamepadVariantOutline"
-                                            Width="14" Height="14"
-                                            Foreground="{DynamicResource Perelegans.AccentBrush}"
-                                            VerticalAlignment="Center"/>
-                <TextBlock Text="Perelegans" FontSize="12" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-                           Margin="6,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <!-- Right: Settings / Min / Max / Close buttons -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal"
-                        VerticalAlignment="Stretch">
-                <!-- Settings -->
-                <Button x:Name="BtnSettings" Click="BtnSettings_Click"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Settings">
-                    <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
-                </Button>
-                <!-- Minimize -->
-                <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Minimize">
-                    <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
-                </Button>
-                <!-- Maximize / Restore -->
-                <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Maximize">
-                    <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
-                                                x:Name="MaximizeIcon"/>
-                </Button>
-                <!-- Close -->
-                <Button x:Name="BtnClose" Click="BtnClose_Click"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource Perelegans.CloseButtonStyle}"
-                        ToolTip="Close">
-                    <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <!-- ==================== 2. MENU BAR ==================== -->
-        <Menu DockPanel.Dock="Top" Height="28"
-              Background="{DynamicResource Perelegans.PanelBackground}"
-              Foreground="{DynamicResource Perelegans.ForegroundBrush}"
-              FontSize="12" Padding="4,0">
-
-            <!-- File -->
-            <MenuItem Header="{i18n:Translate Menu_File}">
-                <MenuItem Header="{i18n:Translate Menu_AddFromProcess}" Command="{Binding AddFromProcessCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}" Command="{Binding AddFromWebsiteCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator/>
-                <MenuItem Header="{i18n:Translate Menu_SaveBackup}" Command="{Binding SaveBackupCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{i18n:Translate Menu_RestoreBackup}" Command="{Binding RestoreBackupCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Restore" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <Separator/>
-                <MenuItem Header="{i18n:Translate Menu_Exit}" Command="{Binding ExitAppCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="ExitToApp" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-
-            <!-- Tool -->
-            <MenuItem Header="{i18n:Translate Menu_Tool}">
-                <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="Check" Width="14" Height="14"
-                            Visibility="{Binding IsMonitorEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-                <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-
-            <!-- Help -->
-            <MenuItem Header="{i18n:Translate Menu_Help}">
-                <MenuItem Header="{i18n:Translate Menu_About}" Command="{Binding ShowAboutCommand}">
-                    <MenuItem.Icon>
-                        <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14"/>
-                    </MenuItem.Icon>
-                </MenuItem>
-            </MenuItem>
-        </Menu>
-
-        <!-- ==================== 4. STATUS BAR ==================== -->
-        <StatusBar DockPanel.Dock="Bottom" Height="22"
-                   Background="{DynamicResource Perelegans.StatusBarBackground}"
-                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
-                   FontSize="11" Padding="8,0">
-            <StatusBarItem>
-                <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial Kind="ClockOutline" Width="11" Height="11"
-                                                VerticalAlignment="Center" Margin="0,0,4,0"
-                                                Foreground="{DynamicResource Perelegans.AccentBrush}"/>
-                    <TextBlock VerticalAlignment="Center">
-                        <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
-                        <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
-                    </TextBlock>
+                <StackPanel Grid.Column="0" Orientation="Horizontal"
+                            VerticalAlignment="Center" Margin="12,0,0,0">
+                    <iconPacks:PackIconMaterial Kind="GamepadVariantOutline"
+                                                Width="15" Height="15"
+                                                Foreground="{DynamicResource Perelegans.AccentBrush}"
+                                                VerticalAlignment="Center"/>
+                    <TextBlock Text="Perelegans" FontSize="12.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                               Margin="8,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
-            </StatusBarItem>
-            <Separator/>
-            <StatusBarItem>
-                <StackPanel Orientation="Horizontal">
-                    <iconPacks:PackIconMaterial Kind="CheckCircleOutline" Width="11" Height="11"
-                                                VerticalAlignment="Center" Margin="0,0,4,0"
-                                                Foreground="{DynamicResource Perelegans.AccentBrush}"/>
-                    <TextBlock VerticalAlignment="Center">
-                        <Run Text="{i18n:Translate Status_Completed}"/>
-                        <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
-                    </TextBlock>
-                </StackPanel>
-            </StatusBarItem>
-        </StatusBar>
 
-        <!-- ==================== 3. CLIENT AREA ==================== -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal"
+                            VerticalAlignment="Stretch">
+                    <Button x:Name="BtnSettings" Click="BtnSettings_Click"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                            ToolTip="Settings">
+                        <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
+                    </Button>
+                    <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                            ToolTip="Minimize">
+                        <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
+                    </Button>
+                    <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                            ToolTip="Maximize">
+                        <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
+                                                    x:Name="MaximizeIcon"/>
+                    </Button>
+                    <Button x:Name="BtnClose" Click="BtnClose_Click"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource Perelegans.CloseButtonStyle}"
+                            ToolTip="Close">
+                        <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border DockPanel.Dock="Top"
+                Margin="10,8,10,0"
+                CornerRadius="14"
+                Background="{DynamicResource Perelegans.GlassPanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
+                BorderThickness="1">
+            <Menu Height="34"
+                  Background="Transparent"
+                  Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                  FontSize="12.5" Padding="6,0">
+                <MenuItem Header="{i18n:Translate Menu_File}">
+                    <MenuItem Header="{i18n:Translate Menu_AddFromProcess}" Command="{Binding AddFromProcessCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}" Command="{Binding AddFromWebsiteCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="{i18n:Translate Menu_SaveBackup}" Command="{Binding SaveBackupCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="ContentSaveOutline" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="{i18n:Translate Menu_RestoreBackup}" Command="{Binding RestoreBackupCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="Restore" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator/>
+                    <MenuItem Header="{i18n:Translate Menu_Exit}" Command="{Binding ExitAppCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="ExitToApp" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <MenuItem Header="{i18n:Translate Menu_Tool}">
+                    <MenuItem Header="{i18n:Translate Menu_MonitorProcess}" Command="{Binding MonitorProcessCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="Check" Width="14" Height="14"
+                                Visibility="{Binding IsMonitorEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="{i18n:Translate Menu_PlaytimeStats}" Command="{Binding PlaytimeStatisticsCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem Header="{i18n:Translate Menu_Recommendations}" Command="{Binding OpenRecommendationsCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+
+                <MenuItem Header="{i18n:Translate Menu_Help}">
+                    <MenuItem Header="{i18n:Translate Menu_About}" Command="{Binding ShowAboutCommand}">
+                        <MenuItem.Icon>
+                            <iconPacks:PackIconMaterial Kind="InformationOutline" Width="14" Height="14"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+            </Menu>
+        </Border>
+
+        <Border DockPanel.Dock="Bottom"
+                Margin="10,0,10,10"
+                CornerRadius="14"
+                Background="{DynamicResource Perelegans.GlassPanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.GlassPanelBorderBrush}"
+                BorderThickness="1">
+            <StatusBar Height="26"
+                       Background="Transparent"
+                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                       FontSize="11.5" Padding="8,0">
+                <StatusBarItem>
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="ClockOutline" Width="11" Height="11"
+                                                    VerticalAlignment="Center" Margin="0,0,4,0"
+                                                    Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                        <TextBlock VerticalAlignment="Center">
+                            <Run Text="{i18n:Translate Status_TotalPlaytime}"/>
+                            <Run Text="{Binding TotalPlaytimeText, Mode=OneWay}" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </StatusBarItem>
+                <Separator/>
+                <StatusBarItem>
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="CheckCircleOutline" Width="11" Height="11"
+                                                    VerticalAlignment="Center" Margin="0,0,4,0"
+                                                    Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                        <TextBlock VerticalAlignment="Center">
+                            <Run Text="{i18n:Translate Status_Completed}"/>
+                            <Run Text="{Binding CompletedCount, Mode=OneWay}" FontWeight="SemiBold"
+                                 Foreground="{DynamicResource Perelegans.StatusBarValueForegroundBrush}"/>
+                        </TextBlock>
+                    </StackPanel>
+                </StatusBarItem>
+            </StatusBar>
+        </Border>
+
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
-
-            <!-- Background Tachie Image -->
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
-                   Opacity="0.12"
+                   Opacity="0.1"
                    HorizontalAlignment="Right"
                    VerticalAlignment="Bottom"
-                   MaxHeight="500"
-                   MaxWidth="350"
-                   Margin="0,0,10,10"
+                   MaxHeight="540"
+                   MaxWidth="380"
+                   Margin="0,0,14,12"
                    Panel.ZIndex="0"
                    IsHitTestVisible="False"/>
 
-            <!-- Card Gallery -->
             <ListBox x:Name="GameCards"
-                     Grid.Row="0"
                      ItemsSource="{Binding Games}"
                      SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
                      SelectionMode="Single"
@@ -283,13 +255,11 @@
                      HorizontalContentAlignment="Stretch"
                      VerticalContentAlignment="Stretch"
                      Panel.ZIndex="1"
-                     Margin="4,4,4,8">
+                     Margin="10,12,10,14">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <controls:MasonryPanel IsItemsHost="True"
-                                               ColumnWidth="224"
-                                               ItemSpacing="8"
-                                               Padding="10"/>
+                        <WrapPanel IsItemsHost="True"
+                                   Orientation="Horizontal"/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
@@ -301,10 +271,24 @@
                     <DataTemplate DataType="{x:Type models:Game}">
                         <Border x:Name="GameCardBorder"
                                 Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                BorderBrush="Transparent"
-                                BorderThickness="0"
-                                HorizontalAlignment="Stretch"
-                                SnapsToDevicePixels="True">
+                                Background="{DynamicResource Perelegans.CardBackgroundBrush}"
+                                BorderBrush="#22FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="18"
+                                Width="196"
+                                Margin="0,0,14,14"
+                                HorizontalAlignment="Left"
+                                SnapsToDevicePixels="True"
+                                RenderTransformOrigin="0.5,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="1"/>
+                            </Border.RenderTransform>
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18"
+                                                  ShadowDepth="6"
+                                                  Opacity="0.18"
+                                                  Color="{DynamicResource Perelegans.CardShadowColor}"/>
+                            </Border.Effect>
                             <Border.ContextMenu>
                                 <ContextMenu>
                                     <MenuItem Header="{i18n:Translate Context_StartGame}"
@@ -361,28 +345,49 @@
                                 </ContextMenu>
                             </Border.ContextMenu>
 
-                            <Grid ClipToBounds="True">
-                                <Grid.Height>
-                                    <MultiBinding Converter="{StaticResource CoverAspectRatioToHeightConverter}">
-                                        <Binding RelativeSource="{RelativeSource Self}" Path="ActualWidth"/>
-                                        <Binding Path="CoverAspectRatio"/>
-                                    </MultiBinding>
-                                </Grid.Height>
+                            <Border CornerRadius="18">
+                                <Grid Height="278">
+                                <Grid.Clip>
+                                    <RectangleGeometry Rect="0,0,196,278" RadiusX="18" RadiusY="18"/>
+                                </Grid.Clip>
+
 
                                 <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
-                                       Stretch="Uniform"
+                                       Stretch="UniformToFill"
                                        HorizontalAlignment="Stretch"
                                        VerticalAlignment="Stretch"
+                                       Opacity="0.34"
                                        SnapsToDevicePixels="True"
                                        RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                                <Border Width="24"
-                                        Height="24"
-                                        Margin="10"
+                                <Border Background="#18000000"/>
+
+                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                       Stretch="{Binding CoverAspectRatio, Converter={StaticResource CoverAspectRatioToStretchConverter}}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="0"
+                                       SnapsToDevicePixels="True"
+                                       RenderOptions.BitmapScalingMode="Fant"/>
+
+                                <Border VerticalAlignment="Bottom"
+                                        Height="126">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                            <GradientStop Color="#00000000" Offset="0"/>
+                                            <GradientStop Color="#70000000" Offset="0.45"/>
+                                            <GradientStop Color="#E0000000" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <Border Width="26"
+                                        Height="26"
+                                        Margin="12"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Top"
                                         Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
-                                        CornerRadius="12"
+                                        CornerRadius="13"
                                         SnapsToDevicePixels="True">
                                     <Border.Effect>
                                         <DropShadowEffect BlurRadius="8"
@@ -398,41 +403,75 @@
                                                                 Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
                                 </Border>
 
+                                <Border HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Margin="12"
+                                        Padding="8,3"
+                                        CornerRadius="12"
+                                        Background="#CCF48FB1"
+                                        Visibility="{Binding IsDetectedRunning, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <TextBlock Text="Running"
+                                               FontSize="10.5"
+                                               FontWeight="SemiBold"
+                                               Foreground="White"/>
+                                </Border>
+
                                 <StackPanel VerticalAlignment="Bottom"
                                             HorizontalAlignment="Left"
                                             Margin="12,0,12,14">
                                     <StackPanel.Effect>
-                                        <DropShadowEffect BlurRadius="10"
+                                        <DropShadowEffect BlurRadius="12"
                                                           ShadowDepth="0"
                                                           Color="#E0000000"
                                                           Opacity="1"/>
                                     </StackPanel.Effect>
                                     <TextBlock Text="{Binding Title}"
                                                Style="{StaticResource CardTitleTextStyle}"
-                                               FontSize="13"
+                                               FontSize="12.5"
                                                FontWeight="SemiBold"
                                                TextWrapping="Wrap"
-                                               MaxHeight="42"/>
+                                               MaxHeight="40"/>
+                                    <TextBlock Text="{Binding Brand}"
+                                               Style="{StaticResource CardMetaTextStyle}"
+                                               FontSize="10"
+                                               Margin="0,3,0,0"
+                                               Opacity="0.92"/>
                                     <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
                                                Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="11.5"
+                                               FontSize="11"
                                                FontWeight="SemiBold"
                                                Margin="0,8,0,0"/>
                                     <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
                                                Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="10.5"
-                                               Margin="0,5,0,0"/>
-                                    <TextBlock Text="{Binding CreatedDate, StringFormat=Added {0:yyyy-MM-dd}}"
-                                               Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="10.5"
-                                               Margin="0,2,0,0"/>
+                                               FontSize="10"
+                                               Margin="0,4,0,0"/>
                                 </StackPanel>
                             </Grid>
+                            </Border>
                         </Border>
                         <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
+                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                <Setter TargetName="GameCardBorder" Property="RenderTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX="1.035" ScaleY="1.035"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter TargetName="GameCardBorder" Property="Effect">
+                                    <Setter.Value>
+                                        <DropShadowEffect BlurRadius="24"
+                                                          ShadowDepth="8"
+                                                          Opacity="0.28"
+                                                          Color="{DynamicResource Perelegans.CardShadowColor}"/>
+                                    </Setter.Value>
+                                </Setter>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
                                 <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="#FFBFCA"/>
-                                <Setter TargetName="GameCardBorder" Property="BorderThickness" Value="3"/>
+                                <Setter TargetName="GameCardBorder" Property="BorderThickness" Value="2"/>
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
@@ -442,3 +481,11 @@
 
     </DockPanel>
 </mah:MetroWindow>
+
+
+
+
+
+
+
+
