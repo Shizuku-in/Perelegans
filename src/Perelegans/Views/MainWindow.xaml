@@ -260,6 +260,10 @@
                                 HorizontalAlignment="Left"
                                 SnapsToDevicePixels="True"
                                 RenderTransformOrigin="0.5,0.5">
+                            <Border.CacheMode>
+                                <BitmapCache RenderAtScale="1.05"
+                                             EnableClearType="False"/>
+                            </Border.CacheMode>
                             <Border.RenderTransform>
                                 <ScaleTransform x:Name="GameCardScaleTransform"
                                                 ScaleX="1"
