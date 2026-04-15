@@ -133,4 +133,26 @@ public partial class MainWindow : MetroWindow
             vm.StartGameCommand.Execute(null);
         }
     }
+
+    private void GameCards_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.ListBox listBox || DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        if (e.OriginalSource is not DependencyObject source)
+        {
+            return;
+        }
+
+        if (ItemsControl.ContainerFromElement(listBox, source) is ListBoxItem)
+        {
+            return;
+        }
+
+        listBox.SelectedItem = null;
+        listBox.UnselectAll();
+        vm.SelectedGame = null;
+    }
 }
