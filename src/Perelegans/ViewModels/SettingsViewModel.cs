@@ -34,6 +34,9 @@ public partial class SettingsViewModel : ObservableObject
     private AppCloseBehavior _selectedCloseBehavior;
 
     [ObservableProperty]
+    private AiProvider _selectedAiProvider;
+
+    [ObservableProperty]
     private string _aiApiBaseUrl = string.Empty;
 
     [ObservableProperty]
@@ -49,6 +52,42 @@ public partial class SettingsViewModel : ObservableObject
         new(AppCloseBehavior.MinimizeToTray, TranslationService.Instance["Settings_CloseBehaviorTray"])
     ];
 
+    public IReadOnlyList<AiProviderOption> AiProviderOptions { get; } =
+    [
+        new(AiProvider.Auto, TranslationService.Instance["Settings_AiProvider_Auto"]),
+        new(AiProvider.OpenAI, TranslationService.Instance["Settings_AiProvider_OpenAI"]),
+        new(AiProvider.OpenRouter, TranslationService.Instance["Settings_AiProvider_OpenRouter"]),
+        new(AiProvider.Anthropic, TranslationService.Instance["Settings_AiProvider_Anthropic"])
+    ];
+
+    public string AiBaseUrlPlaceholder => SelectedAiProvider switch
+    {
+        AiProvider.Anthropic => "https://api.anthropic.com",
+        AiProvider.OpenRouter => "https://openrouter.ai/api/v1",
+        _ => "https://api.openai.com/v1"
+    };
+
+    public string AiApiKeyPlaceholder => SelectedAiProvider switch
+    {
+        AiProvider.Anthropic => "sk-ant-...",
+        _ => "sk-..."
+    };
+
+    public string AiModelPlaceholder => SelectedAiProvider switch
+    {
+        AiProvider.Anthropic => "claude-3-5-sonnet-latest",
+        AiProvider.OpenRouter => "anthropic/claude-3.5-sonnet",
+        _ => "gpt-4.1-mini"
+    };
+
+    public string AiProviderHint => SelectedAiProvider switch
+    {
+        AiProvider.Anthropic => TranslationService.Instance["Settings_AiProviderHint_Anthropic"],
+        AiProvider.OpenRouter => TranslationService.Instance["Settings_AiProviderHint_OpenRouter"],
+        AiProvider.OpenAI => TranslationService.Instance["Settings_AiProviderHint_OpenAI"],
+        _ => TranslationService.Instance["Settings_AiProviderHint_Auto"]
+    };
+
     public SettingsViewModel(
         ThemeService themeService,
         SettingsService settingsService,
@@ -58,7 +97,6 @@ public partial class SettingsViewModel : ObservableObject
         _settingsService = settingsService;
         _startupRegistrationService = startupRegistrationService;
 
-        // Load current settings
         var s = settingsService.Settings;
         _selectedTheme = s.Theme;
         _monitorIntervalSeconds = s.MonitorIntervalSeconds;
@@ -67,14 +105,20 @@ public partial class SettingsViewModel : ObservableObject
         _selectedLanguage = TranslationService.NormalizeLanguageCode(s.Language);
         _launchAtStartup = s.LaunchAtStartup;
         _selectedCloseBehavior = s.CloseBehavior;
+        _selectedAiProvider = s.AiProvider;
         _aiApiBaseUrl = s.AiApiBaseUrl;
         _aiApiKey = s.AiApiKey;
         _aiModel = s.AiModel;
     }
 
-    /// <summary>
-    /// Saves settings and applies changes.
-    /// </summary>
+    partial void OnSelectedAiProviderChanged(AiProvider value)
+    {
+        OnPropertyChanged(nameof(AiBaseUrlPlaceholder));
+        OnPropertyChanged(nameof(AiApiKeyPlaceholder));
+        OnPropertyChanged(nameof(AiModelPlaceholder));
+        OnPropertyChanged(nameof(AiProviderHint));
+    }
+
     [RelayCommand]
     private void Save()
     {
@@ -88,6 +132,7 @@ public partial class SettingsViewModel : ObservableObject
         s.Language = TranslationService.NormalizeLanguageCode(SelectedLanguage);
         s.LaunchAtStartup = LaunchAtStartup;
         s.CloseBehavior = SelectedCloseBehavior;
+        s.AiProvider = SelectedAiProvider;
         s.AiApiBaseUrl = AiApiBaseUrl.Trim();
         s.AiApiKey = AiApiKey.Trim();
         s.AiModel = AiModel.Trim();
@@ -97,9 +142,6 @@ public partial class SettingsViewModel : ObservableObject
         TranslationService.Instance.ChangeLanguage(s.Language);
     }
 
-    /// <summary>
-    /// Whether settings have been modified from saved values.
-    /// </summary>
     public bool HasChanges
     {
         get
@@ -112,6 +154,7 @@ public partial class SettingsViewModel : ObservableObject
                 || s.Language != SelectedLanguage
                 || s.LaunchAtStartup != LaunchAtStartup
                 || s.CloseBehavior != SelectedCloseBehavior
+                || s.AiProvider != SelectedAiProvider
                 || s.AiApiBaseUrl != AiApiBaseUrl
                 || s.AiApiKey != AiApiKey
                 || s.AiModel != AiModel;
@@ -122,5 +165,11 @@ public partial class SettingsViewModel : ObservableObject
 public sealed class AppCloseBehaviorOption(AppCloseBehavior value, string label)
 {
     public AppCloseBehavior Value { get; } = value;
+    public string Label { get; } = label;
+}
+
+public sealed class AiProviderOption(AiProvider value, string label)
+{
+    public AiProvider Value { get; } = value;
     public string Label { get; } = label;
 }

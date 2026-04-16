@@ -239,6 +239,53 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    private async Task AddImportedGameAsync(Game game, bool insertAtTop, bool selectAfterInsert = true)
+    {
+        await _dbService.AddGameAsync(game);
+        InsertImportedGameIntoCollection(game, insertAtTop, selectAfterInsert);
+        _ = AutoFetchCoverForImportedGameAsync(game);
+    }
+
+    private void InsertImportedGameIntoCollection(Game game, bool insertAtTop, bool selectAfterInsert = true)
+    {
+        if (insertAtTop)
+        {
+            Games.Insert(0, game);
+        }
+        else
+        {
+            Games.Add(game);
+        }
+
+        if (selectAfterInsert)
+        {
+            SelectedGame = game;
+        }
+
+        RefreshStats();
+        _processMonitor.UpdateMonitoredGames(Games);
+    }
+
+    private async Task AutoFetchCoverForImportedGameAsync(Game game)
+    {
+        try
+        {
+            if (!RequiresCoverRefresh(game))
+                return;
+
+            var coverArtService = new CoverArtService(_httpClient);
+            var cachedPath = await coverArtService.ResolveAndCacheCoverAsync(game);
+            if (string.IsNullOrWhiteSpace(cachedPath))
+                return;
+
+            game.RefreshCoverBindings();
+            await _dbService.UpdateGameAsync(game);
+        }
+        catch
+        {
+        }
+    }
+
     private static bool RequiresCoverRefresh(Game game)
     {
         if (string.IsNullOrWhiteSpace(game.CoverDisplaySource))
@@ -271,8 +318,7 @@ public partial class MainViewModel : ObservableObject
                 ProcessName = vm.SelectedProcess.ProcessName,
                 ExecutablePath = vm.SelectedProcess.ExecutablePath
             };
-            await _dbService.AddGameAsync(newGame);
-            Games.Add(newGame);
+            await AddImportedGameAsync(newGame, insertAtTop: false, selectAfterInsert: false);
         }
     }
 
@@ -289,9 +335,7 @@ public partial class MainViewModel : ObservableObject
 
         if (win.ShowDialog() == true)
         {
-            await _dbService.AddGameAsync(newGame);
-            Games.Insert(0, newGame);
-            SelectedGame = newGame;
+            await AddImportedGameAsync(newGame, insertAtTop: true);
         }
     }
 
@@ -410,12 +454,10 @@ public partial class MainViewModel : ObservableObject
             _settingsService,
             _httpClient,
             _dialogCoordinator,
-            importedGame =>
+            async importedGame =>
             {
-                Games.Insert(0, importedGame);
-                SelectedGame = importedGame;
-                RefreshStats();
-                _processMonitor.UpdateMonitoredGames(Games);
+                InsertImportedGameIntoCollection(importedGame, insertAtTop: true);
+                await AutoFetchCoverForImportedGameAsync(importedGame);
             });
 
         var win = new RecommendationWindow

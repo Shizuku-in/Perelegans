@@ -15,6 +15,8 @@ public class RecommendationService
     private const string VndbApiUrl = "https://api.vndb.org/kana/vn";
     private const string DetailFields = "id, title, alttitle, released, developers.name, tags.id, tags.name, tags.rating, extlinks.url, extlinks.label, extlinks.name";
     private const int CacheTtlDays = 7;
+    private const int CandidateSearchPageSize = 100;
+    private const int CandidateSearchMaxPages = 5;
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
     private readonly VndbRecommendationCacheService _cacheService;
@@ -70,6 +72,10 @@ public class RecommendationService
             .Where(candidate => candidate.RecommendationScore > 0)
             .OrderByDescending(candidate => candidate.RecommendationScore)
             .ThenByDescending(candidate => candidate.TagOverlapScore)
+            .ThenByDescending(candidate => candidate.DeveloperBonus)
+            .ThenByDescending(candidate => candidate.YearAffinity)
+            .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
+            .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
             .Take(24)
             .ToList();
 
@@ -158,27 +164,41 @@ public class RecommendationService
             clauses.Add(new object[] { "tag", "!=", negativeTagId });
 
         var filters = BuildCompoundFilter("and", clauses);
-        var responseJson = await PostToVndbAsync(filters, 100, DetailFields, "rating");
-        if (responseJson == null)
-            return [];
+        var visualNovelsById = new Dictionary<string, CachedVndbVisualNovel>(StringComparer.OrdinalIgnoreCase);
 
-        var visualNovels = ParseVisualNovels(responseJson);
-        foreach (var visualNovel in visualNovels)
-            cacheDocument.Entries[visualNovel.Id] = visualNovel;
+        for (var page = 1; page <= CandidateSearchMaxPages; page++)
+        {
+            var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating", page);
+            if (responseJson == null)
+                break;
+
+            var pageResults = ParseVisualNovels(responseJson);
+            if (pageResults.Count == 0)
+                break;
+
+            foreach (var visualNovel in pageResults)
+            {
+                visualNovelsById.TryAdd(visualNovel.Id, visualNovel);
+                cacheDocument.Entries[visualNovel.Id] = visualNovel;
+            }
+
+            if (pageResults.Count < CandidateSearchPageSize)
+                break;
+        }
 
         await _cacheService.SaveAsync(cacheDocument);
 
-        return visualNovels
+        return visualNovelsById.Values
             .Where(visualNovel => !existingIds.Contains(visualNovel.Id))
             .Select(visualNovel => BuildCandidate(visualNovel, profile, existingIds))
             .ToList();
     }
 
-    private async Task<string?> PostToVndbAsync(object filters, int results, string fields, string sort)
+    private async Task<string?> PostToVndbAsync(object filters, int results, string fields, string sort, int page = 1)
     {
         try
         {
-            var payload = new { filters, fields, results, sort, reverse = true };
+            var payload = new { filters, fields, results, sort, reverse = true, page };
             using var request = new HttpRequestMessage(HttpMethod.Post, VndbApiUrl);
             request.Headers.Add("User-Agent", "Perelegans/0.2");
             request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");

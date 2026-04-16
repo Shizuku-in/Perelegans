@@ -8,6 +8,14 @@ public enum AppCloseBehavior
     MinimizeToTray = 1
 }
 
+public enum AiProvider
+{
+    Auto = 0,
+    OpenAI = 1,
+    OpenRouter = 2,
+    Anthropic = 3
+}
+
 /// <summary>
 /// Application settings persisted as JSON.
 /// </summary>
@@ -46,12 +54,17 @@ public class AppSettings
     public AppCloseBehavior CloseBehavior { get; set; } = AppCloseBehavior.Exit;
 
     /// <summary>
-    /// OpenAI-compatible API base URL (e.g. https://api.openai.com/v1).
+    /// AI provider protocol.
+    /// </summary>
+    public AiProvider AiProvider { get; set; } = AiProvider.Auto;
+
+    /// <summary>
+    /// AI API base URL (e.g. https://api.openai.com/v1).
     /// </summary>
     public string AiApiBaseUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// OpenAI-compatible API key.
+    /// AI API key.
     /// </summary>
     public string AiApiKey { get; set; } = string.Empty;
 
