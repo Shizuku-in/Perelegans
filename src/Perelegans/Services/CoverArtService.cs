@@ -7,7 +7,9 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using HtmlAgilityPack;
+using HtmlDocument = HtmlAgilityPack.HtmlDocument;
+using HtmlNode = HtmlAgilityPack.HtmlNode;
+using HtmlNodeType = HtmlAgilityPack.HtmlNodeType;
 using Perelegans.Models;
 
 namespace Perelegans.Services;
