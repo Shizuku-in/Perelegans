@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Media;
 using ControlzEx.Theming;
@@ -8,10 +8,6 @@ using Application = System.Windows.Application;
 
 namespace Perelegans.Services;
 
-/// <summary>
-/// Manages application theming: detects Windows system theme and applies
-/// custom Light (off-white + pink) or Dark (gray + pink) themes.
-/// </summary>
 public class ThemeService
 {
     private readonly record struct ThemePalette(
@@ -36,6 +32,10 @@ public class ThemeService
         string StatusIconColor,
         string CoverStatusBadgeBackgroundColor,
         string CoverStatusBadgeShadowColor,
+        string GlassPanelBackgroundColor,
+        string GlassPanelBorderColor,
+        string CardBackgroundColor,
+        string CardShadowColor,
         string BorderColor,
         string ButtonBorderColor,
         string DataGridAltRowColor,
@@ -67,6 +67,10 @@ public class ThemeService
         StatusIconColor: "#FFD2DB",
         CoverStatusBadgeBackgroundColor: "#FDFCF8",
         CoverStatusBadgeShadowColor: "#2D2D30",
+        GlassPanelBackgroundColor: "#CCFFFDF8",
+        GlassPanelBorderColor: "#80FFFFFF",
+        CardBackgroundColor: "#14FFFFFF",
+        CardShadowColor: "#26000000",
         BorderColor: "#E0DDD5",
         ButtonBorderColor: "#FFFFFF",
         DataGridAltRowColor: "#F8F6F1",
@@ -98,6 +102,10 @@ public class ThemeService
         StatusIconColor: "#FFD2DB",
         CoverStatusBadgeBackgroundColor: "#2D2D30",
         CoverStatusBadgeShadowColor: "#FDFCF8",
+        GlassPanelBackgroundColor: "#99202832",
+        GlassPanelBorderColor: "#44FFFFFF",
+        CardBackgroundColor: "#18222832",
+        CardShadowColor: "#7A000000",
         BorderColor: "#3F3F46",
         ButtonBorderColor: "#3F3F46",
         DataGridAltRowColor: "#2A2A2E",
@@ -111,13 +119,9 @@ public class ThemeService
 
     public ThemeService()
     {
-        // Listen for Windows theme changes
         SystemEvents.UserPreferenceChanged += OnSystemThemeChanged;
     }
 
-    /// <summary>
-    /// Applies the specified theme mode.
-    /// </summary>
     public void ApplyTheme(ThemeMode mode)
     {
         _currentMode = mode;
@@ -131,17 +135,10 @@ public class ThemeService
         };
 
         string themeKey = isDark ? "Dark.Pink" : "Light.Pink";
-
-        // Apply MahApps base theme with Pink accent
         ThemeManager.Current.ChangeTheme(Application.Current, themeKey);
-
-        // Apply our custom overrides
         ApplyCustomOverrides(isDark);
     }
 
-    /// <summary>
-    /// Detects whether Windows is currently in dark mode.
-    /// </summary>
     public static bool IsSystemDarkMode()
     {
         try
@@ -149,7 +146,6 @@ public class ThemeService
             using var key = Registry.CurrentUser.OpenSubKey(
                 @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
             var value = key?.GetValue("AppsUseLightTheme");
-            // 0 = dark mode, 1 = light mode
             return value is int intValue && intValue == 0;
         }
         catch
@@ -158,9 +154,6 @@ public class ThemeService
         }
     }
 
-    /// <summary>
-    /// Applies custom color overrides (off-white/gray backgrounds, pink accents).
-    /// </summary>
     private void ApplyCustomOverrides(bool isDark)
     {
         ApplyPalette(Application.Current.Resources, isDark ? DarkPalette : LightPalette);
@@ -193,6 +186,10 @@ public class ThemeService
         resources["Perelegans.StatusIconBrush"] = CreateBrush(palette.StatusIconColor);
         resources["Perelegans.CoverStatusBadgeBackgroundBrush"] = CreateBrush(palette.CoverStatusBadgeBackgroundColor);
         resources["Perelegans.CoverStatusBadgeShadowColor"] = ParseColor(palette.CoverStatusBadgeShadowColor);
+        resources["Perelegans.GlassPanelBackground"] = CreateBrush(palette.GlassPanelBackgroundColor);
+        resources["Perelegans.GlassPanelBorderBrush"] = CreateBrush(palette.GlassPanelBorderColor);
+        resources["Perelegans.CardBackgroundBrush"] = CreateBrush(palette.CardBackgroundColor);
+        resources["Perelegans.CardShadowColor"] = ParseColor(palette.CardShadowColor);
         resources["Perelegans.BorderBrush"] = CreateBrush(palette.BorderColor);
         resources["Perelegans.ButtonBorderBrush"] = CreateBrush(palette.ButtonBorderColor);
         resources["Perelegans.DataGridAltRowBrush"] = CreateBrush(palette.DataGridAltRowColor);
@@ -228,3 +225,7 @@ public class ThemeService
         SystemEvents.UserPreferenceChanged -= OnSystemThemeChanged;
     }
 }
+
+
+
+
