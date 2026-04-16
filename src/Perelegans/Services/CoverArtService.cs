@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using HtmlAgilityPack;
 using Perelegans.Models;
 
 namespace Perelegans.Services;
@@ -151,6 +152,14 @@ public class CoverArtService
         if (string.IsNullOrWhiteSpace(normalizedId))
             return null;
 
+        var galleryCover = await TryResolveVndbCoverFromGalleryAsync(normalizedId);
+        if (!string.IsNullOrWhiteSpace(galleryCover))
+            return galleryCover;
+
+        var pageCover = await TryResolveVndbCoverFromPageAsync(normalizedId);
+        if (!string.IsNullOrWhiteSpace(pageCover))
+            return pageCover;
+
         try
         {
             var payload = new
@@ -186,6 +195,119 @@ public class CoverArtService
         }
         catch
         {
+        }
+
+        return null;
+    }
+
+    private async Task<string?> TryResolveVndbCoverFromGalleryAsync(string normalizedVndbId)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://vndb.org/{normalizedVndbId}/cv");
+            request.Headers.Add("User-Agent", "Perelegans/0.2");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var html = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(html))
+                return null;
+
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            var preferredSections = new[]
+            {
+                "Package (front)",
+                "Release Covers"
+            };
+
+            foreach (var section in preferredSections)
+            {
+                var sectionNode = document.DocumentNode.SelectSingleNode(
+                    $"//h3[contains(normalize-space(.), '{section}')] | //h2[contains(normalize-space(.), '{section}')]");
+                var sectionImage = ExtractFirstImageAfterNode(sectionNode);
+                if (!string.IsNullOrWhiteSpace(sectionImage))
+                    return sectionImage;
+            }
+
+            var earliestReleaseNode = document.DocumentNode.SelectSingleNode(
+                "//*[contains(normalize-space(.), 'earliest release')]");
+            var earliestReleaseImage = ExtractFirstImageAfterNode(earliestReleaseNode);
+            if (!string.IsNullOrWhiteSpace(earliestReleaseImage))
+                return earliestReleaseImage;
+
+            var firstGalleryImage = document.DocumentNode
+                .SelectSingleNode("//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            return NormalizeCoverUrl(firstGalleryImage);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<string?> TryResolveVndbCoverFromPageAsync(string normalizedVndbId)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"https://vndb.org/{normalizedVndbId}");
+            request.Headers.Add("User-Agent", "Perelegans/0.2");
+
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var html = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(html))
+                return null;
+
+            var document = new HtmlDocument();
+            document.LoadHtml(html);
+
+            var ogImage = document.DocumentNode
+                .SelectSingleNode("//meta[@property='og:image']")
+                ?.GetAttributeValue("content", string.Empty);
+            var normalizedOgImage = NormalizeCoverUrl(ogImage);
+            if (!string.IsNullOrWhiteSpace(normalizedOgImage))
+                return normalizedOgImage;
+
+            var mainImage = document.DocumentNode
+                .SelectSingleNode("//main//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            var normalizedMainImage = NormalizeCoverUrl(mainImage);
+            if (!string.IsNullOrWhiteSpace(normalizedMainImage))
+                return normalizedMainImage;
+
+            var fallbackImage = document.DocumentNode
+                .SelectSingleNode("//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            return NormalizeCoverUrl(fallbackImage);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string? ExtractFirstImageAfterNode(HtmlNode? node)
+    {
+        if (node == null)
+            return null;
+
+        for (var current = node.NextSibling; current != null; current = current.NextSibling)
+        {
+            if (current.NodeType != HtmlNodeType.Element)
+                continue;
+
+            var image = current.SelectSingleNode(".//img[@src]")
+                ?.GetAttributeValue("src", string.Empty);
+            var normalizedImage = NormalizeCoverUrl(image);
+            if (!string.IsNullOrWhiteSpace(normalizedImage))
+                return normalizedImage;
         }
 
         return null;

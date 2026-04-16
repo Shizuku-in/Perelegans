@@ -63,7 +63,7 @@
   <data name="Meta_Title" xml:space="preserve"><value>Metadata Management</value></data>
   <data name="Meta_SearchWatermark" xml:space="preserve"><value>Search game title...</value></data>
   <data name="Meta_SearchBtn" xml:space="preserve"><value>Search</value></data>
-  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ Apply</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>锟?Apply</value></data>
   <data name="Meta_ApplyHint" xml:space="preserve"><value>The selected entry will populate fields below.</value></data>
   <data name="Meta_FieldTitle" xml:space="preserve"><value>Title:</value></data>
   <data name="Meta_FieldBrand" xml:space="preserve"><value>Brand:</value></data>
@@ -193,4 +193,14 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="GameMgmt_TotalCount" xml:space="preserve"><value>Total:</value></data>
   <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>Selected:</value></data>
   <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>Filter by title...</value></data>
+  <data name="Settings_AiProvider" xml:space="preserve"><value>Provider:</value></data>
+  <data name="Settings_AiProvider_Auto" xml:space="preserve"><value>Auto Detect</value></data>
+  <data name="Settings_AiProvider_OpenAI" xml:space="preserve"><value>OpenAI Compatible</value></data>
+  <data name="Settings_AiProvider_OpenRouter" xml:space="preserve"><value>OpenRouter</value></data>
+  <data name="Settings_AiProvider_Anthropic" xml:space="preserve"><value>Anthropic Claude</value></data>
+  <data name="Settings_AiProviderHint_Auto" xml:space="preserve"><value>Detect protocol from the base URL. Anthropic URLs use /v1/messages; OpenAI and OpenRouter use /chat/completions.</value></data>
+  <data name="Settings_AiProviderHint_OpenAI" xml:space="preserve"><value>Use this for OpenAI or any OpenAI-compatible API. Base URL example: https://api.openai.com/v1</value></data>
+  <data name="Settings_AiProviderHint_OpenRouter" xml:space="preserve"><value>Use OpenRouter's OpenAI-compatible API. Base URL example: https://openrouter.ai/api/v1</value></data>
+  <data name="Settings_AiProviderHint_Anthropic" xml:space="preserve"><value>Use Anthropic's native Messages API. Base URL example: https://api.anthropic.com</value></data>
 </root>
+
