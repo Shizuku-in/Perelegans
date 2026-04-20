@@ -47,18 +47,18 @@ public class CoverArtImageSourceConverter : IValueConverter
     {
         try
         {
-            if (!TryResolveSourceUri(url, out var sourceUri, out var isLocalSource))
+            if (!TryResolveSourceUri(url, out var sourceUri, out _))
                 return null;
 
             var image = new BitmapImage();
             image.BeginInit();
             image.UriSource = sourceUri;
-            image.CacheOption = isLocalSource ? BitmapCacheOption.OnLoad : BitmapCacheOption.Default;
-            image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-            image.DecodePixelWidth = 1200;
+            image.CacheOption = BitmapCacheOption.OnLoad;
+            image.CreateOptions = BitmapCreateOptions.DelayCreation;
+            image.DecodePixelWidth = 320;
             image.EndInit();
 
-            if (isLocalSource && image.CanFreeze)
+            if (image.CanFreeze)
             {
                 image.Freeze();
             }

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,21 +20,38 @@ namespace Perelegans.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
+    private const int DefaultPageSize = 12;
+    private const int MaxVisibleCoverRefreshCount = 12;
     private readonly DatabaseService _dbService;
     private readonly SettingsService _settingsService;
     private readonly ThemeService _themeService;
     private readonly ProcessMonitorService _processMonitor;
     private HttpClient _httpClient;
     private readonly IDialogCoordinator _dialogCoordinator;
+    private int _loadedGameCount;
+    private int _materializedGameCount;
+    private int _visibleRefreshVersion;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
+
+    [ObservableProperty]
+    private ObservableCollection<ObservableCollection<Game>> _visibleRows = new();
 
     [ObservableProperty]
     private Game? _selectedGame;
 
     [ObservableProperty]
     private bool _isAboutOverlayVisible;
+
+    [ObservableProperty]
+    private int _currentPage = 1;
+
+    [ObservableProperty]
+    private int _pageSize = DefaultPageSize;
+
+    [ObservableProperty]
+    private int _columnCount = 4;
 
 
     public string TotalPlaytimeText
@@ -49,6 +68,8 @@ public partial class MainViewModel : ObservableObject
     }
 
     public int CompletedCount => Games.Count(g => g.Status == GameStatus.Completed);
+    public int TotalGameCount => Games.Count;
+    public bool CanLoadMoreGames => _materializedGameCount < Games.Count;
 
     public MainViewModel(
         DatabaseService dbService,
@@ -79,9 +100,7 @@ public partial class MainViewModel : ObservableObject
         await _dbService.EnsureDatabaseCreatedAsync();
 
         var games = (await _dbService.GetAllGamesAsync()).ToList();
-        InitializeCoverAspectRatios(games);
         ReplaceGames(games);
-        _ = UpgradeLibraryCoverImagesAsync(games.ToList());
 
         // Start process monitor
         var settings = _settingsService.Settings;
@@ -122,6 +141,7 @@ public partial class MainViewModel : ObservableObject
 
     private void OnGamesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        RebuildVisibleRows();
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
     }
@@ -130,6 +150,7 @@ public partial class MainViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(TotalPlaytimeText));
         OnPropertyChanged(nameof(CompletedCount));
+        OnPropertyChanged(nameof(TotalGameCount));
     }
 
     public void RefreshUi()
@@ -142,7 +163,12 @@ public partial class MainViewModel : ObservableObject
         Games.CollectionChanged -= OnGamesCollectionChanged;
         Games = new ObservableCollection<Game>(OrderGamesForDisplay(games));
         AttachGamesCollection(Games);
-        SelectedGame = null;
+        _loadedGameCount = Math.Min(Games.Count, Math.Max(PageSize, _loadedGameCount));
+        RebuildVisibleRows();
+        if (SelectedGame != null && !Games.Contains(SelectedGame))
+        {
+            SelectedGame = null;
+        }
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
     }
@@ -153,39 +179,10 @@ public partial class MainViewModel : ObservableObject
             return;
 
         var orderedGames = OrderGamesForDisplay(Games).ToList();
-        var requiresReorder = false;
-
-        for (var index = 0; index < orderedGames.Count; index++)
-        {
-            if (!ReferenceEquals(Games[index], orderedGames[index]))
-            {
-                requiresReorder = true;
-                break;
-            }
-        }
-
-        if (!requiresReorder)
+        if (Games.SequenceEqual(orderedGames))
             return;
 
-        Games.CollectionChanged -= OnGamesCollectionChanged;
-        try
-        {
-            for (var targetIndex = 0; targetIndex < orderedGames.Count; targetIndex++)
-            {
-                var currentIndex = Games.IndexOf(orderedGames[targetIndex]);
-                if (currentIndex >= 0 && currentIndex != targetIndex)
-                {
-                    Games.Move(currentIndex, targetIndex);
-                }
-            }
-        }
-        finally
-        {
-            AttachGamesCollection(Games);
-        }
-
-        RefreshStats();
-        _processMonitor.UpdateMonitoredGames(Games);
+        ReplaceGames(orderedGames);
     }
 
     private static IEnumerable<Game> OrderGamesForDisplay(IEnumerable<Game> games)
@@ -196,16 +193,6 @@ public partial class MainViewModel : ObservableObject
             .ThenByDescending(game => game.Id);
     }
 
-    private static void InitializeCoverAspectRatios(IEnumerable<Game> games)
-    {
-        foreach (var game in games)
-        {
-            if (!game.CoverAspectRatio.HasValue)
-            {
-                game.CoverAspectRatio = CoverArtService.TryReadCoverAspectRatio(game.CoverImagePath);
-            }
-        }
-    }
     private void HandleMetadataSaved(Game? game)
     {
         if (game == null)
@@ -217,11 +204,70 @@ public partial class MainViewModel : ObservableObject
         _processMonitor.UpdateMonitoredGames(Games);
     }
 
-    private async Task UpgradeLibraryCoverImagesAsync(IEnumerable<Game> games)
+    private void RebuildVisibleRows()
     {
+        var targetCount = Math.Min(Games.Count, Math.Max(PageSize, _loadedGameCount));
+        var version = Interlocked.Increment(ref _visibleRefreshVersion);
+        _loadedGameCount = targetCount;
+        VisibleRows.Clear();
+        _materializedGameCount = 0;
+
+        OnPropertyChanged(nameof(CanLoadMoreGames));
+        AppendVisibleGames(targetCount, version);
+    }
+
+    private void AppendVisibleGames(int targetCount, int version)
+    {
+        if (_materializedGameCount >= targetCount)
+            return;
+
+        ObservableCollection<Game>? currentRow = VisibleRows.LastOrDefault();
+        if (currentRow != null && currentRow.Count >= ColumnCount)
+        {
+            currentRow = null;
+        }
+
+        var appendedGames = new List<Game>();
+        foreach (var game in Games.Skip(_materializedGameCount).Take(targetCount - _materializedGameCount))
+        {
+            currentRow ??= AddRow();
+            currentRow.Add(game);
+            appendedGames.Add(game);
+            _materializedGameCount++;
+
+            if (currentRow.Count >= ColumnCount)
+            {
+                currentRow = null;
+            }
+        }
+
+        OnPropertyChanged(nameof(CanLoadMoreGames));
+        _ = PrimeVisibleGamesAsync(appendedGames, version);
+    }
+
+    private ObservableCollection<Game> AddRow()
+    {
+        var row = new ObservableCollection<Game>();
+        VisibleRows.Add(row);
+        return row;
+    }
+
+    private async Task PrimeVisibleGamesAsync(IReadOnlyList<Game> games, int version)
+    {
+        if (games.Count == 0)
+            return;
+
+        foreach (var game in games)
+        {
+            if (!game.CoverAspectRatio.HasValue)
+            {
+                game.CoverAspectRatio = CoverArtService.TryReadCoverAspectRatio(game.CoverImagePath);
+            }
+        }
+
         var coverArtService = new CoverArtService(_httpClient);
 
-        foreach (var game in games.Where(RequiresCoverRefresh))
+        foreach (var game in games.Where(RequiresCoverRefresh).Take(MaxVisibleCoverRefreshCount))
         {
             var cachedPath = await coverArtService.ResolveAndCacheCoverAsync(game);
             if (string.IsNullOrWhiteSpace(cachedPath))
@@ -236,6 +282,9 @@ public partial class MainViewModel : ObservableObject
             catch
             {
             }
+
+            if (version != _visibleRefreshVersion)
+                return;
         }
     }
 
@@ -248,22 +297,18 @@ public partial class MainViewModel : ObservableObject
 
     private void InsertImportedGameIntoCollection(Game game, bool insertAtTop, bool selectAfterInsert = true)
     {
-        if (insertAtTop)
+        Games.Add(game);
+        SortGamesForDisplay();
+
+        if (insertAtTop || selectAfterInsert)
         {
-            Games.Insert(0, game);
-        }
-        else
-        {
-            Games.Add(game);
+            _loadedGameCount = Math.Max(_loadedGameCount, PageSize);
         }
 
         if (selectAfterInsert)
         {
             SelectedGame = game;
         }
-
-        RefreshStats();
-        _processMonitor.UpdateMonitoredGames(Games);
     }
 
     private async Task AutoFetchCoverForImportedGameAsync(Game game)
@@ -296,6 +341,41 @@ public partial class MainViewModel : ObservableObject
 
         return string.IsNullOrWhiteSpace(game.CoverImageUrl)
             || !game.CoverImageUrl.Contains("t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void UpdatePageSize(double viewportWidth, double viewportHeight)
+    {
+        if (viewportWidth <= 0 || viewportHeight <= 0)
+            return;
+
+        var columns = Math.Max(1, (int)Math.Floor((viewportWidth + 14) / 210d));
+        var rows = Math.Max(1, (int)Math.Floor((viewportHeight + 14) / 292d));
+        var targetPageSize = Math.Clamp(columns * Math.Max(2, rows + 1), 8, 24);
+
+        if (targetPageSize == PageSize)
+            return;
+
+        var previousColumns = ColumnCount;
+        ColumnCount = columns;
+        PageSize = targetPageSize;
+        _loadedGameCount = Math.Max(_loadedGameCount, PageSize);
+        if (previousColumns != ColumnCount)
+        {
+            RebuildVisibleRows();
+        }
+        else
+        {
+            AppendVisibleGames(Math.Min(Games.Count, _loadedGameCount), _visibleRefreshVersion);
+        }
+    }
+
+    public void LoadMoreGames()
+    {
+        if (!CanLoadMoreGames)
+            return;
+
+        _loadedGameCount = Math.Min(Games.Count, _loadedGameCount + PageSize);
+        AppendVisibleGames(_loadedGameCount, _visibleRefreshVersion);
     }
 
     // ---- Menu Commands (File) ----
@@ -381,6 +461,7 @@ public partial class MainViewModel : ObservableObject
 
                 await _dbService.RestoreDatabaseAsync(dialog.FileName);
                 var games = await _dbService.GetAllGamesAsync();
+                _loadedGameCount = 0;
                 ReplaceGames(games);
                 await _dialogCoordinator.ShowMessageAsync(this, TranslationService.Instance["Msg_AppTitle"], TranslationService.Instance["Msg_RestoreSuccess"]);
             }
@@ -668,7 +749,6 @@ public partial class MainViewModel : ObservableObject
         {
             await _dbService.DeleteGameAsync(SelectedGame.Id);
             Games.Remove(SelectedGame);
-            _processMonitor.UpdateMonitoredGames(Games);
             SelectedGame = null;
         }
     }

@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Perelegans.Models;
 using MahApps.Metro.Controls;
@@ -21,6 +22,7 @@ public partial class MainWindow : MetroWindow
 
         Loaded += OnLoaded;
         Closed += OnClosed;
+        SizeChanged += OnWindowSizeChanged;
         _refreshTimer.Tick += OnRefreshTimerTick;
     }
 
@@ -81,6 +83,8 @@ public partial class MainWindow : MetroWindow
         {
             _refreshTimer.Start();
         }
+
+        RefreshPageSize();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -89,6 +93,7 @@ public partial class MainWindow : MetroWindow
         _refreshTimer.Tick -= OnRefreshTimerTick;
         Loaded -= OnLoaded;
         Closed -= OnClosed;
+        SizeChanged -= OnWindowSizeChanged;
     }
 
     private void OnRefreshTimerTick(object? sender, EventArgs e)
@@ -102,6 +107,26 @@ public partial class MainWindow : MetroWindow
         {
             vm.RefreshUi();
         }
+    }
+
+    private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        RefreshPageSize();
+    }
+
+    private void RefreshPageSize()
+    {
+        if (DataContext is not MainViewModel vm || GameCards.ActualWidth <= 0 || GameCards.ActualHeight <= 0)
+        {
+            return;
+        }
+
+        vm.UpdatePageSize(GameCards.ActualWidth, GameCards.ActualHeight);
     }
 
     private void GameCard_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -154,5 +179,57 @@ public partial class MainWindow : MetroWindow
         listBox.SelectedItem = null;
         listBox.UnselectAll();
         vm.SelectedGame = null;
+    }
+
+    private void GameCards_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (e.VerticalChange <= 0 || DataContext is not MainViewModel vm || !vm.CanLoadMoreGames)
+        {
+            return;
+        }
+
+        if (e.VerticalOffset + e.ViewportHeight < e.ExtentHeight - 180)
+        {
+            return;
+        }
+
+        vm.LoadMoreGames();
+    }
+
+    private void CardRow_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        var scrollViewer = FindDescendant<ScrollViewer>(GameCards);
+        if (scrollViewer == null)
+        {
+            return;
+        }
+
+        scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta);
+        e.Handled = true;
+    }
+
+    private static T? FindDescendant<T>(DependencyObject? root) where T : DependencyObject
+    {
+        if (root == null)
+        {
+            return null;
+        }
+
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T typedChild)
+            {
+                return typedChild;
+            }
+
+            var descendant = FindDescendant<T>(child);
+            if (descendant != null)
+            {
+                return descendant;
+            }
+        }
+
+        return null;
     }
 }
