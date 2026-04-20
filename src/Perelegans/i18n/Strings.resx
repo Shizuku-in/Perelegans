@@ -125,6 +125,7 @@
   <data name="Rec_TopTags" xml:space="preserve"><value>Top tags: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>Avoid tags: {0}</value></data>
   <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>Preferred developers: {0}</value></data>
+  <data name="Rec_ProfileDepth" xml:space="preserve"><value>Completion {0}, avg completed {1}h, avg dropped {2}h, profile style: {3}.</value></data>
   <data name="Rec_None" xml:space="preserve"><value>None</value></data>
   <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>Add or enrich at least 3 games with VNDB metadata to get recommendations.</value></data>
   <data name="Rec_EmptyNoResults" xml:space="preserve"><value>No matching recommendations are available right now.</value></data>
@@ -136,18 +137,26 @@
   <data name="Rec_ColBrand" xml:space="preserve"><value>Brand</value></data>
   <data name="Rec_ColDate" xml:space="preserve"><value>Release Date</value></data>
   <data name="Rec_ColScore" xml:space="preserve"><value>Score</value></data>
+  <data name="Rec_ColBreakdown" xml:space="preserve"><value>Breakdown</value></data>
   <data name="Rec_ColReason" xml:space="preserve"><value>Reason</value></data>
   <data name="Rec_ColActions" xml:space="preserve"><value>Actions</value></data>
   <data name="Rec_Import" xml:space="preserve"><value>Import</value></data>
   <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>Already in Library</value></data>
+  <data name="Rec_FeedbackLike" xml:space="preserve"><value>Like</value></data>
+  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>Liked</value></data>
+  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>Skip</value></data>
+  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>Skipped</value></data>
   <data name="Rec_OpenVndb" xml:space="preserve"><value>Open VNDB</value></data>
   <data name="Rec_ImportFailed" xml:space="preserve"><value>Failed to import recommendation: {0}</value></data>
   <data name="Rec_LocalReasonTags" xml:space="preserve"><value>Matches your preferred tags: {0}.</value></data>
   <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>From a developer you often enjoy: {0}.</value></data>
+  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>Feels close to titles in your library like: {0}.</value></data>
   <data name="Rec_LocalReasonYear" xml:space="preserve"><value>Released near your favorite era.</value></data>
+  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>Similar picks already received positive feedback from you.</value></data>
   <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>Strong overall match based on your library profile.</value></data>
   <data name="Rec_LocalCautionTags" xml:space="preserve"><value>May overlap with tags you often drop: {0}.</value></data>
   <data name="Rec_LocalCautionYear" xml:space="preserve"><value>The release period is farther from your usual picks.</value></data>
+  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>Similar recommendations previously drew negative feedback.</value></data>
 
   <data name="Log_Title" xml:space="preserve"><value>Play Session Logs</value></data>
   <data name="Log_ColSession" xml:space="preserve"><value>Session ID</value></data>

@@ -16,7 +16,8 @@ public class RecommendationService
     private const string DetailFields = "id, title, alttitle, released, developers.name, tags.id, tags.name, tags.rating, extlinks.url, extlinks.label, extlinks.name";
     private const int CacheTtlDays = 7;
     private const int CandidateSearchPageSize = 100;
-    private const int CandidateSearchMaxPages = 5;
+    private const int FinalRecommendationLimit = 24;
+    private const int MinimumFallbackResultCount = 12;
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
     private readonly VndbRecommendationCacheService _cacheService;
@@ -35,9 +36,28 @@ public class RecommendationService
         {
             ProfileSummary = new TasteProfileSummary
             {
-                TotalLibraryGames = games.Count
+                TotalLibraryGames = games.Count,
+                CompletedGames = games.Count(game => game.Status == GameStatus.Completed),
+                DroppedGames = games.Count(game => game.Status == GameStatus.Dropped)
             }
         };
+
+        result.ProfileSummary.CompletionRate = games.Count == 0
+            ? 0
+            : (double)result.ProfileSummary.CompletedGames / games.Count;
+        result.ProfileSummary.AveragePlaytimeHours = games.Count == 0
+            ? 0
+            : games.Average(game => game.Playtime.TotalHours);
+        result.ProfileSummary.AverageCompletedHours = games
+            .Where(game => game.Status == GameStatus.Completed)
+            .Select(game => game.Playtime.TotalHours)
+            .DefaultIfEmpty(0)
+            .Average();
+        result.ProfileSummary.AverageDroppedHours = games
+            .Where(game => game.Status == GameStatus.Dropped)
+            .Select(game => game.Playtime.TotalHours)
+            .DefaultIfEmpty(0)
+            .Average();
 
         var libraryIds = games
             .Select(game => VndbIdUtilities.Normalize(game.VndbId))
@@ -48,6 +68,7 @@ public class RecommendationService
 
         var cacheDocument = await _cacheService.LoadAsync();
         var metadataById = await GetVisualNovelsByIdsAsync(libraryIds, cacheDocument);
+        var feedbackById = await _dbService.GetRecommendationFeedbackMapAsync();
 
         var profiledGames = games
             .Select(game => new { Game = game, VndbId = VndbIdUtilities.Normalize(game.VndbId) })
@@ -59,25 +80,31 @@ public class RecommendationService
         if (profiledGames.Count < 3)
             return result;
 
-        var profile = BuildProfile(profiledGames);
-        result.ProfileSummary.TopPositiveTags = profile.TopPositiveTagNames;
-        result.ProfileSummary.NegativeTags = profile.NegativeTagNames;
-        result.ProfileSummary.PreferredDevelopers = profile.PreferredDevelopers;
-        result.ProfileSummary.PreferredReleaseYear = profile.PreferredReleaseYear;
-
+        var profile = BuildProfile(profiledGames, feedbackById, result.ProfileSummary);
         if (profile.PositiveTagIds.Count == 0)
             return result;
 
-        result.Candidates = (await SearchCandidatesAsync(profile, libraryIds, cacheDocument))
-            .Where(candidate => candidate.RecommendationScore > 0)
+        var rankedCandidates = (await SearchCandidatesAsync(profile, libraryIds, feedbackById, cacheDocument))
             .OrderByDescending(candidate => candidate.RecommendationScore)
             .ThenByDescending(candidate => candidate.TagOverlapScore)
+            .ThenByDescending(candidate => candidate.FeedbackAffinity)
             .ThenByDescending(candidate => candidate.DeveloperBonus)
             .ThenByDescending(candidate => candidate.YearAffinity)
             .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
             .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
-            .Take(24)
             .ToList();
+
+        result.Candidates = rankedCandidates
+            .Where(candidate => candidate.RecommendationScore > 0)
+            .Take(FinalRecommendationLimit)
+            .ToList();
+
+        if (result.Candidates.Count == 0)
+        {
+            result.Candidates = rankedCandidates
+                .Take(MinimumFallbackResultCount)
+                .ToList();
+        }
 
         return result;
     }
@@ -151,47 +178,126 @@ public class RecommendationService
     private async Task<List<RecommendationCandidate>> SearchCandidatesAsync(
         RecommendationProfile profile,
         HashSet<string> existingIds,
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById,
         VndbRecommendationCacheDocument cacheDocument)
     {
-        var clauses = new List<object>
+        var recallPlans = new[]
         {
-            BuildCompoundFilter(
-                "or",
-                profile.PositiveTagIds.Select(tagId => (object)new object[] { "tag", "=", tagId }))
+            new RecallPlan(profile.PositiveTagIds.Take(6).ToList(), profile.NegativeTagIds.Take(3).ToList(), 5),
+            new RecallPlan(
+                profile.SecondaryPositiveTagIds.Count > 0 ? profile.SecondaryPositiveTagIds.Take(8).ToList() : profile.PositiveTagIds.Take(8).ToList(),
+                profile.NegativeTagIds.Take(1).ToList(),
+                3)
         };
 
-        foreach (var negativeTagId in profile.NegativeTagIds)
-            clauses.Add(new object[] { "tag", "!=", negativeTagId });
-
-        var filters = BuildCompoundFilter("and", clauses);
         var visualNovelsById = new Dictionary<string, CachedVndbVisualNovel>(StringComparer.OrdinalIgnoreCase);
 
-        for (var page = 1; page <= CandidateSearchMaxPages; page++)
+        foreach (var recallPlan in recallPlans.Where(plan => plan.PositiveTagIds.Count > 0))
         {
-            var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating", page);
-            if (responseJson == null)
-                break;
-
-            var pageResults = ParseVisualNovels(responseJson);
-            if (pageResults.Count == 0)
-                break;
-
-            foreach (var visualNovel in pageResults)
+            var clauses = new List<object>
             {
-                visualNovelsById.TryAdd(visualNovel.Id, visualNovel);
-                cacheDocument.Entries[visualNovel.Id] = visualNovel;
-            }
+                BuildCompoundFilter(
+                    "or",
+                    recallPlan.PositiveTagIds.Select(tagId => (object)new object[] { "tag", "=", tagId }))
+            };
 
-            if (pageResults.Count < CandidateSearchPageSize)
-                break;
+            foreach (var negativeTagId in recallPlan.NegativeTagIds)
+                clauses.Add(new object[] { "tag", "!=", negativeTagId });
+
+            var filters = BuildCompoundFilter("and", clauses);
+
+            for (var page = 1; page <= recallPlan.MaxPages; page++)
+            {
+                var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating", page);
+                if (responseJson == null)
+                    break;
+
+                var pageResults = ParseVisualNovels(responseJson);
+                if (pageResults.Count == 0)
+                    break;
+
+                foreach (var visualNovel in pageResults)
+                {
+                    visualNovelsById.TryAdd(visualNovel.Id, visualNovel);
+                    cacheDocument.Entries[visualNovel.Id] = visualNovel;
+                }
+
+                if (pageResults.Count < CandidateSearchPageSize)
+                    break;
+            }
+        }
+        if (visualNovelsById.Count < MinimumFallbackResultCount)
+        {
+            var broadFallback = await SearchBroadFallbackCandidatesAsync(profile, cacheDocument);
+            foreach (var visualNovel in broadFallback)
+            {
+                if (!existingIds.Contains(visualNovel.Id))
+                    visualNovelsById.TryAdd(visualNovel.Id, visualNovel);
+            }
+        }
+
+        if (visualNovelsById.Count < MinimumFallbackResultCount)
+        {
+            var genericFallback = await SearchGenericFallbackCandidatesAsync(cacheDocument);
+            foreach (var visualNovel in genericFallback)
+            {
+                if (!existingIds.Contains(visualNovel.Id))
+                    visualNovelsById.TryAdd(visualNovel.Id, visualNovel);
+            }
         }
 
         await _cacheService.SaveAsync(cacheDocument);
 
         return visualNovelsById.Values
             .Where(visualNovel => !existingIds.Contains(visualNovel.Id))
-            .Select(visualNovel => BuildCandidate(visualNovel, profile, existingIds))
+            .Select(visualNovel => BuildCandidate(visualNovel, profile, feedbackById))
             .ToList();
+    }
+
+    private async Task<List<CachedVndbVisualNovel>> SearchBroadFallbackCandidatesAsync(
+        RecommendationProfile profile,
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var fallbackTags = profile.PositiveTagIds
+            .Concat(profile.SecondaryPositiveTagIds)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(12)
+            .ToList();
+
+        if (fallbackTags.Count == 0)
+            return [];
+
+        var filters = BuildCompoundFilter(
+            "or",
+            fallbackTags.Select(tagId => (object)new object[] { "tag", "=", tagId }));
+        var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating");
+        if (responseJson == null)
+            return [];
+
+        var fallbackResults = ParseVisualNovels(responseJson);
+        foreach (var visualNovel in fallbackResults)
+            cacheDocument.Entries[visualNovel.Id] = visualNovel;
+
+        return fallbackResults;
+    }
+
+    private async Task<List<CachedVndbVisualNovel>> SearchGenericFallbackCandidatesAsync(
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var responseJson = await PostToVndbAsync(
+            new object[] { "id", "!=", "v0" },
+            CandidateSearchPageSize,
+            DetailFields,
+            "rating");
+
+        if (responseJson == null)
+            return [];
+
+        var fallbackResults = ParseVisualNovels(responseJson);
+        foreach (var visualNovel in fallbackResults)
+            cacheDocument.Entries[visualNovel.Id] = visualNovel;
+
+        return fallbackResults;
     }
 
     private async Task<string?> PostToVndbAsync(object filters, int results, string fields, string sort, int page = 1)
@@ -298,11 +404,17 @@ public class RecommendationService
         return results;
     }
 
-    private static RecommendationProfile BuildProfile(IReadOnlyCollection<(Game Game, CachedVndbVisualNovel Metadata)> sourceGames)
+    private static RecommendationProfile BuildProfile(
+        IReadOnlyCollection<(Game Game, CachedVndbVisualNovel Metadata)> sourceGames,
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById,
+        TasteProfileSummary summary)
     {
         var tagScores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var recentTagScores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var hardNegativeScores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
         var tagNames = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var developerScores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        var sourceProfiles = new List<SourceGameProfile>();
         double weightedYearSum = 0;
         double weightedYearTotal = 0;
 
@@ -312,68 +424,171 @@ public class RecommendationService
             if (Math.Abs(weight) < 0.001)
                 continue;
 
+            var recentBias = ComputeRecentBias(game.AccessedDate);
+            var sourcePositiveTags = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
             foreach (var tag in metadata.Tags)
             {
-                tagScores[tag.Id] = tagScores.TryGetValue(tag.Id, out var current) ? current + weight * tag.Rating : weight * tag.Rating;
+                var score = weight * tag.Rating;
+                tagScores[tag.Id] = tagScores.TryGetValue(tag.Id, out var current) ? current + score : score;
                 tagNames[tag.Id] = tag.Name;
+
+                if (weight > 0)
+                {
+                    sourcePositiveTags[tag.Id] = sourcePositiveTags.TryGetValue(tag.Id, out var positiveCurrent)
+                        ? positiveCurrent + score
+                        : score;
+                    recentTagScores[tag.Id] = recentTagScores.TryGetValue(tag.Id, out var recentCurrent)
+                        ? recentCurrent + score * recentBias
+                        : score * recentBias;
+                }
+                else if (IsHardNegative(game))
+                {
+                    hardNegativeScores[tag.Id] = hardNegativeScores.TryGetValue(tag.Id, out var negativeCurrent)
+                        ? negativeCurrent + Math.Abs(score)
+                        : Math.Abs(score);
+                }
             }
 
             if (weight > 0)
             {
                 foreach (var developer in metadata.Developers)
                 {
-                    developerScores[developer] = developerScores.TryGetValue(developer, out var current) ? current + weight : weight;
+                    developerScores[developer] = developerScores.TryGetValue(developer, out var current)
+                        ? current + weight * recentBias
+                        : weight * recentBias;
                 }
 
                 if (metadata.ReleaseDate.HasValue)
                 {
-                    weightedYearSum += metadata.ReleaseDate.Value.Year * weight;
-                    weightedYearTotal += weight;
+                    weightedYearSum += metadata.ReleaseDate.Value.Year * weight * recentBias;
+                    weightedYearTotal += weight * recentBias;
+                }
+
+                sourceProfiles.Add(new SourceGameProfile
+                {
+                    Title = !string.IsNullOrWhiteSpace(metadata.OriginalTitle) ? metadata.OriginalTitle : metadata.Title,
+                    Developers = metadata.Developers,
+                    ReleaseDate = metadata.ReleaseDate,
+                    PositiveTagScores = sourcePositiveTags,
+                    Weight = weight,
+                    RecentBias = recentBias
+                });
+            }
+        }
+
+        foreach (var (vndbId, feedback) in feedbackById)
+        {
+            var feedbackValue = feedback.PositiveSignal - feedback.NegativeSignal;
+            if (Math.Abs(feedbackValue) < 0.001)
+                continue;
+
+            if (feedbackValue < 0)
+            {
+                var sourceGame = sourceGames.FirstOrDefault(item =>
+                    string.Equals(VndbIdUtilities.Normalize(item.Game.VndbId), vndbId, StringComparison.OrdinalIgnoreCase));
+                if (sourceGame.Metadata == null)
+                    continue;
+
+                foreach (var tag in sourceGame.Metadata.Tags)
+                {
+                    hardNegativeScores[tag.Id] = hardNegativeScores.TryGetValue(tag.Id, out var current)
+                        ? current + Math.Abs(feedbackValue) * tag.Rating
+                        : Math.Abs(feedbackValue) * tag.Rating;
+                    tagNames[tag.Id] = tag.Name;
                 }
             }
         }
 
-        var positiveTags = tagScores.Where(item => item.Value > 0).OrderByDescending(item => item.Value).ToList();
-        var negativeTags = tagScores.Where(item => item.Value < 0).OrderBy(item => item.Value).ToList();
+        var positiveTags = tagScores
+            .Where(item => item.Value > 0)
+            .Where(item => !IsStructuralPreferenceTag(tagNames[item.Key]))
+            .OrderByDescending(item => item.Value)
+            .ToList();
+        if (positiveTags.Count == 0)
+        {
+            positiveTags = tagScores
+                .Where(item => item.Value > 0)
+                .OrderByDescending(item => item.Value)
+                .ToList();
+        }
+
+        var negativeTags = hardNegativeScores.OrderByDescending(item => item.Value).ToList();
+        var softNegativeTags = tagScores.Where(item => item.Value < 0).OrderBy(item => item.Value).ToList();
+        var topPositiveDevelopers = developerScores.Where(item => item.Value > 0).OrderByDescending(item => item.Value).ToList();
+
+        var developerConcentration = ComputeConcentration(topPositiveDevelopers.Select(item => item.Value));
+        var tagConcentration = ComputeConcentration(positiveTags.Take(8).Select(item => item.Value));
+        var developerPreferenceStrength = developerConcentration <= 0 ? 0 : developerConcentration / Math.Max(tagConcentration, 0.0001);
+
+        summary.TopPositiveTags = positiveTags.Take(6).Select(item => tagNames[item.Key]).ToList();
+        summary.SecondaryPositiveTags = positiveTags.Skip(6).Take(6).Select(item => tagNames[item.Key]).ToList();
+        summary.NegativeTags = negativeTags.Take(3).Select(item => tagNames[item.Key]).ToList();
+        summary.SoftNegativeTags = softNegativeTags.Take(3).Select(item => tagNames[item.Key]).ToList();
+        summary.PreferredDevelopers = topPositiveDevelopers.Take(3).Select(item => item.Key).ToList();
+        summary.PreferredReleaseYear = weightedYearTotal > 0 ? weightedYearSum / weightedYearTotal : null;
+        summary.PreferenceStyle = developerPreferenceStrength >= 1.15 ? "Developer-led" : "Tag-led";
 
         return new RecommendationProfile
         {
             TagScores = tagScores,
+            RecentTagScores = recentTagScores,
             PositiveTagIds = positiveTags.Take(6).Select(item => item.Key).ToList(),
+            SecondaryPositiveTagIds = positiveTags.Skip(6).Take(6).Select(item => item.Key).ToList(),
             NegativeTagIds = negativeTags.Take(3).Select(item => item.Key).ToList(),
-            TopPositiveTagNames = positiveTags.Take(6).Select(item => tagNames[item.Key]).ToList(),
-            NegativeTagNames = negativeTags.Take(3).Select(item => tagNames[item.Key]).ToList(),
+            SoftNegativeTagIds = softNegativeTags.Take(3).Select(item => item.Key).ToList(),
             DeveloperScores = developerScores,
-            PreferredDevelopers = developerScores.Where(item => item.Value > 0).OrderByDescending(item => item.Value).Take(3).Select(item => item.Key).ToList(),
-            PreferredReleaseYear = weightedYearTotal > 0 ? weightedYearSum / weightedYearTotal : null,
-            MaxPositiveOverlap = positiveTags.Take(6).Sum(item => item.Value * 3d)
+            PreferredDevelopers = summary.PreferredDevelopers,
+            PreferredReleaseYear = summary.PreferredReleaseYear,
+            MaxPositiveOverlap = positiveTags.Take(6).Sum(item => item.Value * 3d),
+            MaxRecentOverlap = recentTagScores.Values.Where(value => value > 0).OrderByDescending(value => value).Take(6).Sum(value => value * 3d),
+            SourceGames = sourceProfiles,
+            DeveloperPreferenceWeight = developerPreferenceStrength >= 1.15 ? 0.35 : 0.22
         };
     }
 
     private static RecommendationCandidate BuildCandidate(
         CachedVndbVisualNovel visualNovel,
         RecommendationProfile profile,
-        HashSet<string> existingIds)
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById)
     {
         var rawTagOverlap = 0d;
+        var rawRecentOverlap = 0d;
         var matchedTags = new List<(string Name, double Score)>();
         var conflictingTags = new List<(string Name, double Score)>();
 
         foreach (var tag in visualNovel.Tags)
         {
-            if (!profile.TagScores.TryGetValue(tag.Id, out var profileScore))
-                continue;
+            if (profile.TagScores.TryGetValue(tag.Id, out var profileScore))
+            {
+                rawTagOverlap += profileScore * tag.Rating;
+                if (profileScore > 0)
+                    matchedTags.Add((tag.Name, profileScore * tag.Rating));
+            }
 
-            rawTagOverlap += profileScore * tag.Rating;
-            if (profileScore > 0)
-                matchedTags.Add((tag.Name, profileScore * tag.Rating));
-            else if (profileScore < 0)
-                conflictingTags.Add((tag.Name, profileScore * tag.Rating));
+            if (profile.RecentTagScores.TryGetValue(tag.Id, out var recentScore))
+                rawRecentOverlap += recentScore * tag.Rating;
+
+            if (profile.SoftNegativeTagIds.Contains(tag.Id, StringComparer.OrdinalIgnoreCase) &&
+                profile.TagScores.TryGetValue(tag.Id, out var negativeScore) &&
+                negativeScore < 0)
+            {
+                conflictingTags.Add((tag.Name, negativeScore * tag.Rating));
+            }
         }
 
         var tagOverlapScore = profile.MaxPositiveOverlap <= 0 ? 0 : Math.Clamp(rawTagOverlap / profile.MaxPositiveOverlap, -1, 1);
+        var recentAlignment = profile.MaxRecentOverlap <= 0 ? 0 : Math.Clamp(rawRecentOverlap / profile.MaxRecentOverlap, 0, 1);
         var developerBonus = ComputeDeveloperBonus(visualNovel.Developers, profile.DeveloperScores);
         var yearAffinity = ComputeYearAffinity(visualNovel.ReleaseDate, profile.PreferredReleaseYear);
+        var feedbackAffinity = ComputeFeedbackAffinity(visualNovel.Id, feedbackById);
+        var sourceMatches = BuildSourceMatches(visualNovel, profile.SourceGames);
+
+        var recommendationScore = tagOverlapScore
+            + profile.DeveloperPreferenceWeight * developerBonus
+            + 0.12 * yearAffinity
+            + 0.18 * feedbackAffinity
+            + 0.12 * recentAlignment;
 
         return new RecommendationCandidate
         {
@@ -385,29 +600,101 @@ public class RecommendationService
             VndbUrl = VndbIdUtilities.ToWebUrl(visualNovel.Id),
             OfficialWebsite = SelectOfficialWebsite(visualNovel.ExternalLinks),
             Tags = TagUtilities.Normalize(visualNovel.Tags.Select(tag => tag.Name)),
-            MatchingTags = matchedTags.OrderByDescending(item => item.Score).Take(3).Select(item => item.Name).ToList(),
-            ConflictingTags = conflictingTags.OrderBy(item => item.Score).Take(2).Select(item => item.Name).ToList(),
-            MatchingDevelopers = visualNovel.Developers.Where(profile.DeveloperScores.ContainsKey).OrderByDescending(developer => profile.DeveloperScores[developer]).Take(2).ToList(),
-            RecommendationScore = tagOverlapScore + 0.25 * developerBonus + 0.10 * yearAffinity,
+            MatchingTags = matchedTags.OrderByDescending(item => item.Score).Take(4).Select(item => item.Name).ToList(),
+            ConflictingTags = conflictingTags.OrderBy(item => item.Score).Take(3).Select(item => item.Name).ToList(),
+            MatchingDevelopers = visualNovel.Developers
+                .Where(profile.DeveloperScores.ContainsKey)
+                .OrderByDescending(developer => profile.DeveloperScores[developer])
+                .Take(2)
+                .ToList(),
+            SourceMatches = sourceMatches,
+            RecommendationScore = recommendationScore,
             TagOverlapScore = tagOverlapScore,
             DeveloperBonus = developerBonus,
             YearAffinity = yearAffinity,
-            IsAlreadyInLibrary = existingIds.Contains(visualNovel.Id)
+            FeedbackAffinity = feedbackAffinity,
+            RecencyAlignment = recentAlignment,
+            ScoreBreakdown = BuildScoreBreakdown(tagOverlapScore, developerBonus, yearAffinity, feedbackAffinity, recentAlignment),
+            SourceMatchSummary = sourceMatches.Count == 0
+                ? string.Empty
+                : string.Join(", ", sourceMatches.Select(match => match.Title)),
+            IsAlreadyInLibrary = false
         };
+    }
+
+    private static string BuildScoreBreakdown(
+        double tagOverlapScore,
+        double developerBonus,
+        double yearAffinity,
+        double feedbackAffinity,
+        double recentAlignment)
+    {
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "Tags {0:F2} | Dev {1:F2} | Era {2:F2} | Feedback {3:F2} | Recent {4:F2}",
+            tagOverlapScore,
+            developerBonus,
+            yearAffinity,
+            feedbackAffinity,
+            recentAlignment);
+    }
+
+    private static List<RecommendationSourceMatch> BuildSourceMatches(
+        CachedVndbVisualNovel visualNovel,
+        IReadOnlyCollection<SourceGameProfile> sourceGames)
+    {
+        return sourceGames
+            .Select(source =>
+            {
+                var tagScore = visualNovel.Tags
+                    .Where(tag => source.PositiveTagScores.TryGetValue(tag.Id, out _))
+                    .Sum(tag => source.PositiveTagScores[tag.Id] * tag.Rating);
+                var developerScore = visualNovel.Developers
+                    .Intersect(source.Developers, StringComparer.OrdinalIgnoreCase)
+                    .Any() ? 0.8 : 0;
+                var yearScore = ComputeYearAffinity(visualNovel.ReleaseDate, source.ReleaseDate?.Year);
+                var score = tagScore + developerScore + 0.25 * yearScore + 0.15 * source.RecentBias;
+
+                return new RecommendationSourceMatch
+                {
+                    Title = source.Title,
+                    Score = score
+                };
+            })
+            .Where(match => match.Score > 0)
+            .OrderByDescending(match => match.Score)
+            .Take(3)
+            .ToList();
     }
 
     private static double GetGameWeight(Game game)
     {
+        var hours = game.Playtime.TotalHours;
         var statusWeight = game.Status switch
         {
-            GameStatus.Completed => 1.0,
-            GameStatus.Playing => 0.6,
-            GameStatus.Dropped => -0.8,
-            GameStatus.Planned => 0.0,
+            GameStatus.Completed => 1.15,
+            GameStatus.Playing => 0.7,
+            GameStatus.Dropped when hours < 2 => -1.15,
+            GameStatus.Dropped when hours < 12 => -0.7,
+            GameStatus.Dropped => -0.35,
+            GameStatus.Planned => 0.1,
             _ => 0.0
         };
 
-        return statusWeight * (1 + Math.Min(game.Playtime.TotalHours, 40) / 40d);
+        var engagementMultiplier = 1 + Math.Min(hours, 40) / 40d;
+        var recencyMultiplier = 0.6 + 0.7 * ComputeRecentBias(game.AccessedDate);
+        return statusWeight * engagementMultiplier * recencyMultiplier;
+    }
+
+    private static bool IsHardNegative(Game game)
+    {
+        return game.Status == GameStatus.Dropped && game.Playtime.TotalHours < 12;
+    }
+
+    private static double ComputeRecentBias(DateTime accessedDate)
+    {
+        var days = Math.Max((DateTime.Now - accessedDate).TotalDays, 0);
+        return Math.Exp(-days / 180d);
     }
 
     private static double ComputeDeveloperBonus(IReadOnlyCollection<string> developers, IReadOnlyDictionary<string, double> scores)
@@ -419,7 +706,11 @@ public class RecommendationService
         if (maxScore <= 0)
             return 0;
 
-        var bestScore = developers.Where(developer => scores.TryGetValue(developer, out var score) && score > 0).Select(developer => scores[developer]).DefaultIfEmpty(0).Max();
+        var bestScore = developers
+            .Where(developer => scores.TryGetValue(developer, out var score) && score > 0)
+            .Select(developer => scores[developer])
+            .DefaultIfEmpty(0)
+            .Max();
         return bestScore <= 0 ? 0 : Math.Clamp(bestScore / maxScore, 0, 1);
     }
 
@@ -429,7 +720,58 @@ public class RecommendationService
             return 0;
 
         var yearDistance = Math.Abs(releaseDate.Value.Year - preferredReleaseYear.Value);
-        return Math.Clamp(1 - yearDistance / 20d, 0, 1);
+        return Math.Clamp(1 - yearDistance / 18d, 0, 1);
+    }
+
+    private static double ComputeYearAffinity(DateTime? releaseDate, int? preferredReleaseYear)
+    {
+        return preferredReleaseYear.HasValue
+            ? ComputeYearAffinity(releaseDate, (double?)preferredReleaseYear.Value)
+            : 0;
+    }
+
+    private static double ComputeFeedbackAffinity(
+        string vndbId,
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById)
+    {
+        if (!feedbackById.TryGetValue(vndbId, out var feedback))
+            return 0;
+
+        var net = feedback.PositiveSignal - feedback.NegativeSignal;
+        var total = feedback.PositiveSignal + feedback.NegativeSignal;
+        if (Math.Abs(net) < 0.001 || total <= 0)
+            return 0;
+
+        var recencyAnchor = feedback.LastPositiveAt ?? feedback.LastNegativeAt ?? feedback.UpdatedAt;
+        var recencyWeight = 0.7 + 0.3 * ComputeRecentBias(recencyAnchor);
+        return Math.Clamp((net / (total + 0.75)) * recencyWeight, -1, 1);
+    }
+
+    private static double ComputeConcentration(IEnumerable<double> values)
+    {
+        var entries = values.Where(value => value > 0).ToList();
+        if (entries.Count == 0)
+            return 0;
+
+        var total = entries.Sum();
+        if (total <= 0)
+            return 0;
+
+        return entries.Max() / total;
+    }
+
+    private static bool IsStructuralPreferenceTag(string tagName)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+            return true;
+
+        return tagName.Contains("Protagonist with", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("Playing Order", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("One True End", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("Route", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("Voice Acting", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("Heroine", StringComparison.OrdinalIgnoreCase)
+               || tagName.Contains("ADV", StringComparison.OrdinalIgnoreCase);
     }
 
     private static object BuildCompoundFilter(string operation, IEnumerable<object> clauses)
@@ -478,13 +820,34 @@ public class RecommendationService
     private sealed class RecommendationProfile
     {
         public Dictionary<string, double> TagScores { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, double> RecentTagScores { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public List<string> PositiveTagIds { get; init; } = [];
+        public List<string> SecondaryPositiveTagIds { get; init; } = [];
         public List<string> NegativeTagIds { get; init; } = [];
-        public List<string> TopPositiveTagNames { get; init; } = [];
-        public List<string> NegativeTagNames { get; init; } = [];
+        public List<string> SoftNegativeTagIds { get; init; } = [];
         public Dictionary<string, double> DeveloperScores { get; init; } = new(StringComparer.OrdinalIgnoreCase);
         public List<string> PreferredDevelopers { get; init; } = [];
         public double? PreferredReleaseYear { get; init; }
         public double MaxPositiveOverlap { get; init; }
+        public double MaxRecentOverlap { get; init; }
+        public List<SourceGameProfile> SourceGames { get; init; } = [];
+        public double DeveloperPreferenceWeight { get; init; }
+    }
+
+    private sealed class SourceGameProfile
+    {
+        public string Title { get; init; } = string.Empty;
+        public IReadOnlyCollection<string> Developers { get; init; } = [];
+        public DateTime? ReleaseDate { get; init; }
+        public Dictionary<string, double> PositiveTagScores { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+        public double Weight { get; init; }
+        public double RecentBias { get; init; }
+    }
+
+    private sealed class RecallPlan(List<string> positiveTagIds, List<string> negativeTagIds, int maxPages)
+    {
+        public List<string> PositiveTagIds { get; } = positiveTagIds;
+        public List<string> NegativeTagIds { get; } = negativeTagIds;
+        public int MaxPages { get; } = maxPages;
     }
 }

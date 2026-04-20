@@ -53,10 +53,19 @@ public class AiRecommendationService
                 {
                     totalGames = profileSummary.TotalLibraryGames,
                     eligibleGames = profileSummary.EligibleLibraryGames,
+                    completedGames = profileSummary.CompletedGames,
+                    droppedGames = profileSummary.DroppedGames,
+                    completionRate = profileSummary.CompletionRate,
+                    averagePlaytimeHours = profileSummary.AveragePlaytimeHours,
+                    averageCompletedHours = profileSummary.AverageCompletedHours,
+                    averageDroppedHours = profileSummary.AverageDroppedHours,
                     topTags = profileSummary.TopPositiveTags,
+                    secondaryTags = profileSummary.SecondaryPositiveTags,
                     avoidTags = profileSummary.NegativeTags,
+                    softAvoidTags = profileSummary.SoftNegativeTags,
                     preferredDevelopers = profileSummary.PreferredDevelopers,
-                    preferredReleaseYear = profileSummary.PreferredReleaseYear
+                    preferredReleaseYear = profileSummary.PreferredReleaseYear,
+                    preferenceStyle = profileSummary.PreferenceStyle
                 },
                 candidates = candidates.Select(candidate => new
                 {
@@ -67,7 +76,9 @@ public class AiRecommendationService
                     matchingTags = candidate.MatchingTags,
                     conflictingTags = candidate.ConflictingTags,
                     matchingDevelopers = candidate.MatchingDevelopers,
-                    yearAffinity = candidate.YearAffinity
+                    yearAffinity = candidate.YearAffinity,
+                    scoreBreakdown = candidate.ScoreBreakdown,
+                    similarLibraryTitles = candidate.SourceMatches.Select(match => match.Title).ToList()
                 })
             };
 
@@ -150,9 +161,10 @@ public class AiRecommendationService
         var apiKey = _settingsService.Settings.AiApiKey.Trim();
         var userPrompt =
             "Return a JSON object with an 'explanations' array. " +
-            "Each item must contain candidateId, reason, matchingTags, and caution. " +
+            "Each item must contain candidateId, reason, matchingTags, caution, and sellingPoint. " +
             "matchingTags must be an array of short strings already present in the candidate data. " +
             "reason should be one or two short sentences. caution can be empty. " +
+            "sellingPoint should be a short label like 'Tag match', 'Developer pick', 'Recent-taste fit', or 'Contrast pick'. " +
             $"Data: {JsonSerializer.Serialize(payload)}";
 
         if (provider == AiProvider.Anthropic)
@@ -369,6 +381,11 @@ public class AiRecommendationService
                     : string.Empty
             };
 
+            if (item.TryGetProperty("sellingPoint", out var sellingPointElement))
+            {
+                explanation.SellingPoint = sellingPointElement.GetString() ?? string.Empty;
+            }
+
             if (item.TryGetProperty("matchingTags", out var matchingTagsElement) &&
                 matchingTagsElement.ValueKind == JsonValueKind.Array)
             {
@@ -417,7 +434,8 @@ public class AiRecommendationService
             {
                 CandidateId = candidateId,
                 Reason = ExtractLooseJsonStringValue(block, "reason"),
-                Caution = ExtractLooseJsonStringValue(block, "caution")
+                Caution = ExtractLooseJsonStringValue(block, "caution"),
+                SellingPoint = ExtractLooseJsonStringValue(block, "sellingPoint")
             };
 
             explanation.MatchingTags = ExtractLooseStringArray(block, "matchingTags");
