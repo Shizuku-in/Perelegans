@@ -18,10 +18,15 @@ public partial class RecommendationCandidate : ObservableObject
     public List<string> MatchingTags { get; set; } = [];
     public List<string> ConflictingTags { get; set; } = [];
     public List<string> MatchingDevelopers { get; set; } = [];
+    public List<RecommendationSourceMatch> SourceMatches { get; set; } = [];
     public double RecommendationScore { get; set; }
     public double TagOverlapScore { get; set; }
     public double DeveloperBonus { get; set; }
     public double YearAffinity { get; set; }
+    public double FeedbackAffinity { get; set; }
+    public double RecencyAlignment { get; set; }
+    public string ScoreBreakdown { get; set; } = string.Empty;
+    public string SourceMatchSummary { get; set; } = string.Empty;
 
     [ObservableProperty]
     private string _reason = string.Empty;
@@ -32,20 +37,44 @@ public partial class RecommendationCandidate : ObservableObject
     [ObservableProperty]
     private bool _isAlreadyInLibrary;
 
+    [ObservableProperty]
+    private string _sellingPoint = string.Empty;
+
+    [ObservableProperty]
+    private int _feedbackVote;
+
     public string DisplayTitle =>
         string.IsNullOrWhiteSpace(OriginalTitle) ? Title : OriginalTitle;
 
     public string ImportTitle => DisplayTitle;
 
     public bool CanImport => !IsAlreadyInLibrary;
+    public bool CanLike => FeedbackVote <= 0;
+    public bool CanDislike => FeedbackVote >= 0;
 
     public string ImportButtonText => IsAlreadyInLibrary
         ? TranslationService.Instance["Rec_AlreadyInLibrary"]
         : TranslationService.Instance["Rec_Import"];
 
+    public string LikeButtonText => FeedbackVote > 0
+        ? TranslationService.Instance["Rec_FeedbackLiked"]
+        : TranslationService.Instance["Rec_FeedbackLike"];
+
+    public string DislikeButtonText => FeedbackVote < 0
+        ? TranslationService.Instance["Rec_FeedbackDisliked"]
+        : TranslationService.Instance["Rec_FeedbackDislike"];
+
     partial void OnIsAlreadyInLibraryChanged(bool value)
     {
         OnPropertyChanged(nameof(CanImport));
         OnPropertyChanged(nameof(ImportButtonText));
+    }
+
+    partial void OnFeedbackVoteChanged(int value)
+    {
+        OnPropertyChanged(nameof(CanLike));
+        OnPropertyChanged(nameof(CanDislike));
+        OnPropertyChanged(nameof(LikeButtonText));
+        OnPropertyChanged(nameof(DislikeButtonText));
     }
 }

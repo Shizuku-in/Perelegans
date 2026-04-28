@@ -62,6 +62,20 @@
             <EventSetter Event="PreviewMouseRightButtonDown" Handler="GameCard_PreviewMouseRightButtonDown"/>
             <EventSetter Event="MouseDoubleClick" Handler="GameCard_MouseDoubleClick"/>
         </Style>
+        <Style x:Key="CardRowListBoxItemStyle" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </mah:MetroWindow.Resources>
 
     <DockPanel LastChildFill="True">
@@ -221,271 +235,285 @@
                    IsHitTestVisible="False"/>
 
             <ListBox x:Name="GameCards"
-                     ItemsSource="{Binding Games}"
-                     SelectedItem="{Binding SelectedGame, Mode=TwoWay}"
-                     SelectionMode="Single"
-                     PreviewMouseLeftButtonDown="GameCards_PreviewMouseLeftButtonDown"
+                     ItemsSource="{Binding VisibleRows}"
+                     ScrollViewer.ScrollChanged="GameCards_ScrollChanged"
                      Background="Transparent"
                      BorderThickness="0"
                      Foreground="{DynamicResource Perelegans.ForegroundBrush}"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                     ScrollViewer.CanContentScroll="False"
+                     ScrollViewer.CanContentScroll="True"
+                     VirtualizingPanel.IsVirtualizing="True"
+                     VirtualizingPanel.VirtualizationMode="Recycling"
+                     VirtualizingPanel.ScrollUnit="Pixel"
+                     VirtualizingPanel.CacheLength="1"
+                     VirtualizingPanel.CacheLengthUnit="Page"
                      HorizontalContentAlignment="Stretch"
                      VerticalContentAlignment="Stretch"
                      Panel.ZIndex="1"
                      Margin="10,12,10,14">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel IsItemsHost="True"
-                                   Margin="8,8,0,0"
-                                   Orientation="Horizontal"/>
+                        <VirtualizingStackPanel IsItemsHost="True" Orientation="Vertical"/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemContainerStyle>
-                    <StaticResource ResourceKey="GameCardListBoxItemStyle"/>
+                    <StaticResource ResourceKey="CardRowListBoxItemStyle"/>
                 </ListBox.ItemContainerStyle>
 
                 <ListBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:Game}">
-                        <Border x:Name="GameCardBorder"
-                                Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=ListBox}}"
-                                Background="{DynamicResource Perelegans.CardBackgroundBrush}"
-                                BorderBrush="#22FFFFFF"
-                                BorderThickness="1"
-                                CornerRadius="0"
-                                Width="196"
-                                Margin="0"
-                                HorizontalAlignment="Left"
-                                SnapsToDevicePixels="True"
-                                RenderTransformOrigin="0.5,0.5">
-                            <Border.CacheMode>
-                                <BitmapCache RenderAtScale="1.05"
-                                             EnableClearType="False"/>
-                            </Border.CacheMode>
-                            <Border.RenderTransform>
-                                <ScaleTransform x:Name="GameCardScaleTransform"
-                                                ScaleX="1"
-                                                ScaleY="1"/>
-                            </Border.RenderTransform>
-                            <Border.Effect>
-                                <DropShadowEffect BlurRadius="18"
-                                                  ShadowDepth="6"
-                                                  Opacity="0.18"
-                                                  Color="{DynamicResource Perelegans.CardShadowColor}"/>
-                            </Border.Effect>
-                            <Border.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="{i18n:Translate Context_StartGame}"
-                                              Command="{Binding PlacementTarget.Tag.StartGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                        <MenuItem.Icon>
-                                            <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Header="{i18n:Translate Context_Metadata}">
-                                        <MenuItem.Icon>
-                                            <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
-                                        </MenuItem.Icon>
-                                        <MenuItem Header="{i18n:Translate Context_FetchMetadata}"
-                                                  Command="{Binding PlacementTarget.Tag.FetchMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="{i18n:Translate Context_EditMetadata}"
-                                                  Command="{Binding PlacementTarget.Tag.EditMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    </MenuItem>
-                                    <MenuItem Header="{i18n:Translate Context_Open}">
-                                        <MenuItem.Icon>
-                                            <iconPacks:PackIconMaterial Kind="FolderOpenOutline" Width="14" Height="14"/>
-                                        </MenuItem.Icon>
-                                        <MenuItem Header="{i18n:Translate Context_OpenFolder}"
-                                                  Command="{Binding PlacementTarget.Tag.OpenGameFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
-                                            <MenuItem Header="VNDB"
-                                                      Command="{Binding PlacementTarget.Tag.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                            <MenuItem Header="ErogameSpace"
-                                                      Command="{Binding PlacementTarget.Tag.OpenErogameSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                            <MenuItem Header="Bangumi"
-                                                      Command="{Binding PlacementTarget.Tag.OpenBangumiCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                            <MenuItem Header="Official Site"
-                                                      Command="{Binding PlacementTarget.Tag.OpenOfficialSiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        </MenuItem>
-                                        <MenuItem Header="{i18n:Translate Context_OpenGameStats}"
-                                                  Command="{Binding PlacementTarget.Tag.OpenGamePlaytimeStatsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    </MenuItem>
-                                    <MenuItem Header="{i18n:Translate Context_Copy}">
-                                        <MenuItem.Icon>
-                                            <iconPacks:PackIconMaterial Kind="ContentCopy" Width="14" Height="14"/>
-                                        </MenuItem.Icon>
-                                        <MenuItem Header="{i18n:Translate Context_CopyTitle}"
-                                                  Command="{Binding PlacementTarget.Tag.CopyTitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                        <MenuItem Header="{i18n:Translate Context_CopyBrand}"
-                                                  Command="{Binding PlacementTarget.Tag.CopyBrandCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                    </MenuItem>
-                                    <Separator/>
-                                    <MenuItem Header="{i18n:Translate Context_Delete}"
-                                              Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                        <MenuItem.Icon>
-                                            <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
-                                                                        Foreground="#E53935"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                </ContextMenu>
-                            </Border.ContextMenu>
-
-                            <Border CornerRadius="0">
-                                <Grid Height="278">
-                                <Grid.Clip>
-                                    <RectangleGeometry Rect="0,0,196,278" RadiusX="0" RadiusY="0"/>
-                                </Grid.Clip>
-
-
-                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
-                                       Stretch="UniformToFill"
-                                       HorizontalAlignment="Stretch"
-                                       VerticalAlignment="Stretch"
-                                       Opacity="0.34"
-                                       SnapsToDevicePixels="True"
-                                       RenderOptions.BitmapScalingMode="HighQuality"/>
-
-                                <Border Background="#18000000"/>
-
-                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
-                                       Stretch="{Binding CoverAspectRatio, Converter={StaticResource CoverAspectRatioToStretchConverter}}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Margin="0"
-                                       SnapsToDevicePixels="True"
-                                       RenderOptions.BitmapScalingMode="Fant"/>
-
-                                <Border VerticalAlignment="Bottom"
-                                        Height="126">
-                                    <Border.Background>
-                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                            <GradientStop Color="#00000000" Offset="0"/>
-                                            <GradientStop Color="#70000000" Offset="0.45"/>
-                                            <GradientStop Color="#E0000000" Offset="1"/>
-                                        </LinearGradientBrush>
-                                    </Border.Background>
-                                </Border>
-
-                                <Border Width="26"
-                                        Height="26"
-                                        Margin="12"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
-                                        CornerRadius="13"
-                                        SnapsToDevicePixels="True">
-                                    <Border.Effect>
-                                        <DropShadowEffect BlurRadius="8"
-                                                          ShadowDepth="0"
-                                                          Opacity="0.24"
-                                                          Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
-                                    </Border.Effect>
-                                    <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
-                                                                Width="14"
-                                                                Height="14"
-                                                                HorizontalAlignment="Center"
-                                                                VerticalAlignment="Center"
-                                                                Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
-                                </Border>
-
-                                <StackPanel VerticalAlignment="Bottom"
+                    <DataTemplate>
+                        <ListBox ItemsSource="{Binding}"
+                                 SelectedItem="{Binding DataContext.SelectedGame, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}, Mode=TwoWay}"
+                                 SelectionMode="Single"
+                                 PreviewMouseLeftButtonDown="GameCards_PreviewMouseLeftButtonDown"
+                                 PreviewMouseWheel="CardRow_PreviewMouseWheel"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                 ScrollViewer.CanContentScroll="False">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="8,8,0,0"/>
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <ListBox.ItemContainerStyle>
+                                <StaticResource ResourceKey="GameCardListBoxItemStyle"/>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:Game}">
+                                    <Border x:Name="GameCardBorder"
+                                            Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}"
+                                            Background="{DynamicResource Perelegans.CardBackgroundBrush}"
+                                            BorderBrush="#22FFFFFF"
+                                            BorderThickness="1"
+                                            CornerRadius="0"
+                                            Width="196"
+                                            Margin="0"
                                             HorizontalAlignment="Left"
-                                            Margin="12,0,12,14">
-                                    <StackPanel.Effect>
-                                        <DropShadowEffect BlurRadius="12"
-                                                          ShadowDepth="0"
-                                                          Color="#E0000000"
-                                                          Opacity="1"/>
-                                    </StackPanel.Effect>
-                                    <TextBlock Text="{Binding Title}"
-                                               Style="{StaticResource CardTitleTextStyle}"
-                                               FontSize="12.5"
-                                               FontWeight="SemiBold"
-                                               TextWrapping="Wrap"
-                                               MaxHeight="40"/>
-                                    <TextBlock Text="{Binding Brand}"
-                                               Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="10"
-                                               Margin="0,3,0,0"
-                                               Opacity="0.92"/>
-                                    <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
-                                               Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="11"
-                                               FontWeight="SemiBold"
-                                               Margin="0,8,0,0"/>
-                                    <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
-                                               Style="{StaticResource CardMetaTextStyle}"
-                                               FontSize="10"
-                                               Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </Grid>
-                            </Border>
-                        </Border>
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
-                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
-                                <Setter TargetName="GameCardBorder" Property="Effect">
-                                    <Setter.Value>
-                                        <DropShadowEffect BlurRadius="24"
-                                                          ShadowDepth="8"
-                                                          Opacity="0.28"
-                                                          Color="{DynamicResource Perelegans.CardShadowColor}"/>
-                                    </Setter.Value>
-                                </Setter>
-                                <DataTrigger.EnterActions>
-                                    <BeginStoryboard>
-                                        <Storyboard FillBehavior="HoldEnd">
-                                            <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
-                                                             Storyboard.TargetProperty="ScaleX"
-                                                             To="1.018"
-                                                             Duration="0:0:0.18">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
-                                                             Storyboard.TargetProperty="ScaleY"
-                                                             To="1.018"
-                                                             Duration="0:0:0.18">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.EnterActions>
-                                <DataTrigger.ExitActions>
-                                    <BeginStoryboard>
-                                        <Storyboard FillBehavior="HoldEnd">
-                                            <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
-                                                             Storyboard.TargetProperty="ScaleX"
-                                                             To="1"
-                                                             Duration="0:0:0.18">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                            <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
-                                                             Storyboard.TargetProperty="ScaleY"
-                                                             To="1"
-                                                             Duration="0:0:0.18">
-                                                <DoubleAnimation.EasingFunction>
-                                                    <QuadraticEase EasingMode="EaseOut"/>
-                                                </DoubleAnimation.EasingFunction>
-                                            </DoubleAnimation>
-                                        </Storyboard>
-                                    </BeginStoryboard>
-                                </DataTrigger.ExitActions>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
-                                <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="#FFBFCA"/>
-                                <Setter TargetName="GameCardBorder" Property="BorderThickness" Value="2"/>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
+                                            SnapsToDevicePixels="True"
+                                            RenderTransformOrigin="0.5,0.5">
+                                        <Border.RenderTransform>
+                                            <ScaleTransform x:Name="GameCardScaleTransform"
+                                                            ScaleX="1"
+                                                            ScaleY="1"/>
+                                        </Border.RenderTransform>
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="18"
+                                                              ShadowDepth="6"
+                                                              Opacity="0.18"
+                                                              Color="{DynamicResource Perelegans.CardShadowColor}"/>
+                                        </Border.Effect>
+                                        <Border.ContextMenu>
+                                            <ContextMenu>
+                                                <MenuItem Header="{i18n:Translate Context_StartGame}"
+                                                          Command="{Binding PlacementTarget.Tag.StartGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                    <MenuItem.Icon>
+                                                        <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Header="{i18n:Translate Context_Metadata}">
+                                                    <MenuItem.Icon>
+                                                        <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
+                                                    </MenuItem.Icon>
+                                                    <MenuItem Header="{i18n:Translate Context_FetchMetadata}"
+                                                              Command="{Binding PlacementTarget.Tag.FetchMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    <MenuItem Header="{i18n:Translate Context_EditMetadata}"
+                                                              Command="{Binding PlacementTarget.Tag.EditMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                </MenuItem>
+                                                <MenuItem Header="{i18n:Translate Context_Open}">
+                                                    <MenuItem.Icon>
+                                                        <iconPacks:PackIconMaterial Kind="FolderOpenOutline" Width="14" Height="14"/>
+                                                    </MenuItem.Icon>
+                                                    <MenuItem Header="{i18n:Translate Context_OpenFolder}"
+                                                              Command="{Binding PlacementTarget.Tag.OpenGameFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
+                                                        <MenuItem Header="VNDB"
+                                                                  Command="{Binding PlacementTarget.Tag.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="ErogameSpace"
+                                                                  Command="{Binding PlacementTarget.Tag.OpenErogameSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="Bangumi"
+                                                                  Command="{Binding PlacementTarget.Tag.OpenBangumiCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                        <MenuItem Header="Official Site"
+                                                                  Command="{Binding PlacementTarget.Tag.OpenOfficialSiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    </MenuItem>
+                                                    <MenuItem Header="{i18n:Translate Context_OpenGameStats}"
+                                                              Command="{Binding PlacementTarget.Tag.OpenGamePlaytimeStatsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                </MenuItem>
+                                                <MenuItem Header="{i18n:Translate Context_Copy}">
+                                                    <MenuItem.Icon>
+                                                        <iconPacks:PackIconMaterial Kind="ContentCopy" Width="14" Height="14"/>
+                                                    </MenuItem.Icon>
+                                                    <MenuItem Header="{i18n:Translate Context_CopyTitle}"
+                                                              Command="{Binding PlacementTarget.Tag.CopyTitleCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                    <MenuItem Header="{i18n:Translate Context_CopyBrand}"
+                                                              Command="{Binding PlacementTarget.Tag.CopyBrandCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                </MenuItem>
+                                                <Separator/>
+                                                <MenuItem Header="{i18n:Translate Context_Delete}"
+                                                          Command="{Binding PlacementTarget.Tag.DeleteGameCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                    <MenuItem.Icon>
+                                                        <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="14" Height="14"
+                                                                                    Foreground="#E53935"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </ContextMenu>
+                                        </Border.ContextMenu>
+
+                                        <Border CornerRadius="0">
+                                            <Grid Height="278">
+                                                <Grid.Clip>
+                                                    <RectangleGeometry Rect="0,0,196,278" RadiusX="0" RadiusY="0"/>
+                                                </Grid.Clip>
+
+                                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                                       Stretch="UniformToFill"
+                                                       HorizontalAlignment="Stretch"
+                                                       VerticalAlignment="Stretch"
+                                                       Opacity="0.34"
+                                                       SnapsToDevicePixels="True"
+                                                       RenderOptions.BitmapScalingMode="LowQuality"/>
+
+                                                <Border Background="#18000000"/>
+
+                                                <Image Source="{Binding CoverDisplaySource, Converter={StaticResource CoverArtImageSourceConverter}}"
+                                                       Stretch="{Binding CoverAspectRatio, Converter={StaticResource CoverAspectRatioToStretchConverter}}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0"
+                                                       SnapsToDevicePixels="True"
+                                                       RenderOptions.BitmapScalingMode="LowQuality">
+                                                    <Image.OpacityMask>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                                                            <GradientStop Color="#FFFFFFFF" Offset="0.16"/>
+                                                            <GradientStop Color="#FFFFFFFF" Offset="0.80"/>
+                                                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Image.OpacityMask>
+                                                </Image>
+
+                                                <Border VerticalAlignment="Bottom"
+                                                        Height="126">
+                                                    <Border.Background>
+                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                                            <GradientStop Color="#00000000" Offset="0"/>
+                                                            <GradientStop Color="#70000000" Offset="0.45"/>
+                                                            <GradientStop Color="#E0000000" Offset="1"/>
+                                                        </LinearGradientBrush>
+                                                    </Border.Background>
+                                                </Border>
+
+                                                <Border Width="26"
+                                                        Height="26"
+                                                        Margin="12"
+                                                        HorizontalAlignment="Left"
+                                                        VerticalAlignment="Top"
+                                                        Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
+                                                        CornerRadius="13"
+                                                        SnapsToDevicePixels="True">
+                                                    <Border.Effect>
+                                                        <DropShadowEffect BlurRadius="8"
+                                                                          ShadowDepth="0"
+                                                                          Opacity="0.24"
+                                                                          Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
+                                                    </Border.Effect>
+                                                    <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
+                                                                                Width="14"
+                                                                                Height="14"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"
+                                                                                Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
+                                                </Border>
+
+                                                <StackPanel VerticalAlignment="Bottom"
+                                                            HorizontalAlignment="Left"
+                                                            Margin="12,0,12,14">
+                                                    <TextBlock Text="{Binding Title}"
+                                                               Style="{StaticResource CardTitleTextStyle}"
+                                                               FontSize="12.5"
+                                                               FontWeight="SemiBold"
+                                                               TextWrapping="Wrap"
+                                                               MaxHeight="40"/>
+                                                    <TextBlock Text="{Binding Brand}"
+                                                               Style="{StaticResource CardMetaTextStyle}"
+                                                               FontSize="10"
+                                                               Margin="0,3,0,0"
+                                                               Opacity="0.92"/>
+                                                    <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
+                                                               Style="{StaticResource CardMetaTextStyle}"
+                                                               FontSize="11"
+                                                               FontWeight="SemiBold"
+                                                               Margin="0,8,0,0"/>
+                                                    <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
+                                                               Style="{StaticResource CardMetaTextStyle}"
+                                                               FontSize="10"
+                                                               Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsMouseOver}" Value="True">
+                                            <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                            <DataTrigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard FillBehavior="HoldEnd">
+                                                        <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
+                                                                         Storyboard.TargetProperty="ScaleX"
+                                                                         To="1.018"
+                                                                         Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
+                                                                         Storyboard.TargetProperty="ScaleY"
+                                                                         To="1.018"
+                                                                         Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.EnterActions>
+                                            <DataTrigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard FillBehavior="HoldEnd">
+                                                        <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
+                                                                         Storyboard.TargetProperty="ScaleX"
+                                                                         To="1"
+                                                                         Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                        <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
+                                                                         Storyboard.TargetProperty="ScaleY"
+                                                                         To="1"
+                                                                         Duration="0:0:0.18">
+                                                            <DoubleAnimation.EasingFunction>
+                                                                <QuadraticEase EasingMode="EaseOut"/>
+                                                            </DoubleAnimation.EasingFunction>
+                                                        </DoubleAnimation>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </DataTrigger.ExitActions>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                            <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="{DynamicResource Perelegans.AccentBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsDetectedRunning}" Value="True">
+                                            <Setter TargetName="GameCardBorder" Property="BorderBrush" Value="#FFBFCA"/>
+                                            <Setter TargetName="GameCardBorder" Property="BorderThickness" Value="2"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
