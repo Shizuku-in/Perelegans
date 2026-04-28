@@ -16,5 +16,8 @@ public class MetadataResult
     public DateTime? ReleaseDate { get; set; }
     public string? ImageUrl { get; set; }
     public string? WebUrl { get; set; }
+    public double? Rating { get; set; }
+    public int? Rank { get; set; }
+    public int? VoteCount { get; set; }
     public List<string> Tags { get; set; } = [];
 }

@@ -119,9 +119,9 @@
   <data name="Stats_ColPlaytime" xml:space="preserve"><value>Playtime</value></data>
   <data name="Stats_ColSessions" xml:space="preserve"><value>Sessions</value></data>
 
-  <data name="Rec_Title" xml:space="preserve"><value>VN Recommendations</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>Game Recommendations</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>Refresh</value></data>
-  <data name="Rec_ProfileSummary" xml:space="preserve"><value>Using {0} of {1} library games with VNDB metadata.</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>Using {0} of {1} library games with VNDB/Bangumi metadata.</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>Top tags: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>Avoid tags: {0}</value></data>
   <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>Preferred developers: {0}</value></data>
@@ -147,6 +147,7 @@
   <data name="Rec_FeedbackDislike" xml:space="preserve"><value>Skip</value></data>
   <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>Skipped</value></data>
   <data name="Rec_OpenVndb" xml:space="preserve"><value>Open VNDB</value></data>
+  <data name="Rec_OpenBangumi" xml:space="preserve"><value>Open Bangumi</value></data>
   <data name="Rec_ImportFailed" xml:space="preserve"><value>Failed to import recommendation: {0}</value></data>
   <data name="Rec_LocalReasonTags" xml:space="preserve"><value>Matches your preferred tags: {0}.</value></data>
   <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>From a developer you often enjoy: {0}.</value></data>
@@ -157,6 +158,9 @@
   <data name="Rec_LocalCautionTags" xml:space="preserve"><value>May overlap with tags you often drop: {0}.</value></data>
   <data name="Rec_LocalCautionYear" xml:space="preserve"><value>The release period is farther from your usual picks.</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>Similar recommendations previously drew negative feedback.</value></data>
+  <data name="Rec_SortLabel" xml:space="preserve"><value>Sort</value></data>
+  <data name="Rec_SortSmart" xml:space="preserve"><value>Smart</value></data>
+  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>Comprehensive Rank</value></data>
 
   <data name="Log_Title" xml:space="preserve"><value>Play Session Logs</value></data>
   <data name="Log_ColSession" xml:space="preserve"><value>Session ID</value></data>
@@ -211,5 +215,12 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Settings_AiProviderHint_OpenAI" xml:space="preserve"><value>Use this for OpenAI or any OpenAI-compatible API. Base URL example: https://api.openai.com/v1</value></data>
   <data name="Settings_AiProviderHint_OpenRouter" xml:space="preserve"><value>Use OpenRouter's OpenAI-compatible API. Base URL example: https://openrouter.ai/api/v1</value></data>
   <data name="Settings_AiProviderHint_Anthropic" xml:space="preserve"><value>Use Anthropic's native Messages API. Base URL example: https://api.anthropic.com</value></data>
+  <data name="Settings_AiTestButton" xml:space="preserve"><value>Test</value></data>
+  <data name="Settings_AiTestRunning" xml:space="preserve"><value>Testing AI connection...</value></data>
+  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI test succeeded. Response: {0}</value></data>
+  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI test failed: {0}</value></data>
+  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>Please fill API base URL, API key, and model first.</value></data>
+  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API base URL is invalid.</value></data>
+  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI test failed: response did not contain readable text.</value></data>
 </root>
 

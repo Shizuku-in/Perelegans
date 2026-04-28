@@ -20,15 +20,28 @@ public partial class RecommendationViewModel : ObservableObject
     private readonly AiRecommendationService _aiRecommendationService;
     private readonly IDialogCoordinator _dialogCoordinator;
     private readonly Action<Game>? _onGameImported;
+    private List<RecommendationCandidate> _currentCandidates = [];
+
+    public IReadOnlyList<RecommendationSortModeOption> SortModeOptions { get; } =
+    [
+        new(RecommendationSortMode.Smart, TranslationService.Instance["Rec_SortSmart"]),
+        new(RecommendationSortMode.ComprehensiveRank, TranslationService.Instance["Rec_SortComprehensiveRank"])
+    ];
 
     [ObservableProperty]
     private ObservableCollection<RecommendationCandidate> _recommendations = new();
+
+    [ObservableProperty]
+    private RecommendationSortMode _sortMode = RecommendationSortMode.Smart;
 
     [ObservableProperty]
     private bool _isLoading;
 
     [ObservableProperty]
     private string _aiStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _aiProfileText = string.Empty;
 
     [ObservableProperty]
     private string _profileSummaryText = string.Empty;
@@ -71,6 +84,8 @@ public partial class RecommendationViewModel : ObservableObject
         IsLoading = true;
         EmptyStateText = string.Empty;
         AiStatusText = string.Empty;
+        AiProfileText = string.Empty;
+        _currentCandidates = [];
         Recommendations.Clear();
         HasRecommendations = false;
 
@@ -101,23 +116,33 @@ public partial class RecommendationViewModel : ObservableObject
             {
                 candidate.Reason = BuildFallbackReason(candidate);
                 candidate.Caution = BuildFallbackCaution(candidate);
-                Recommendations.Add(candidate);
             }
 
-            HasRecommendations = Recommendations.Count > 0;
+            _currentCandidates = result.Candidates.ToList();
+            ApplySort();
             AiStatusText = _aiRecommendationService.IsConfigured
                 ? TranslationService.Instance["Rec_AiStatusEnabled"]
                 : TranslationService.Instance["Rec_AiStatusDisabled"];
 
+            var bangumiEnrichmentTask = _recommendationService.EnrichCandidatesWithBangumiRatingsAsync(_currentCandidates);
+
             if (!_aiRecommendationService.IsConfigured)
+            {
+                await bangumiEnrichmentTask;
+                ApplySort();
                 return;
+            }
+
+            await bangumiEnrichmentTask;
+            ApplySort();
 
             var aiResult = await _aiRecommendationService.ExplainAsync(
                 result.ProfileSummary,
-                Recommendations.Take(12).ToList());
+                SelectCandidatesForAiRerank());
 
             if (!aiResult.HasExplanations)
             {
+                AiProfileText = aiResult.UserProfileSummary;
                 AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
                     ? TranslationService.Instance["Rec_AiStatusFallback"]
                     : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
@@ -126,7 +151,7 @@ public partial class RecommendationViewModel : ObservableObject
 
             foreach (var explanation in aiResult.Explanations)
             {
-                var candidate = Recommendations.FirstOrDefault(item =>
+                var candidate = _currentCandidates.FirstOrDefault(item =>
                     string.Equals(item.VndbId, explanation.CandidateId, StringComparison.OrdinalIgnoreCase));
                 if (candidate == null)
                     continue;
@@ -139,7 +164,12 @@ public partial class RecommendationViewModel : ObservableObject
                     candidate.MatchingTags = TagUtilities.Normalize(explanation.MatchingTags);
                 if (!string.IsNullOrWhiteSpace(explanation.SellingPoint))
                     candidate.SellingPoint = explanation.SellingPoint.Trim();
+                if (explanation.AffinityScore.HasValue)
+                    candidate.AiAffinityScore = explanation.AffinityScore.Value;
             }
+
+            AiProfileText = aiResult.UserProfileSummary;
+            ApplySort();
         }
         catch (Exception ex)
         {
@@ -151,6 +181,96 @@ public partial class RecommendationViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    partial void OnSortModeChanged(RecommendationSortMode value)
+    {
+        ApplySort();
+    }
+
+    public void ApplySort()
+    {
+        IEnumerable<RecommendationCandidate> sorted = SortMode switch
+        {
+            RecommendationSortMode.ComprehensiveRank => _currentCandidates
+                .OrderByDescending(ComputeComprehensiveRankScore)
+                .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
+                .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
+                .ThenByDescending(candidate => (candidate.BangumiVoteCount ?? 0) + (candidate.VndbVoteCount ?? 0))
+                .ThenByDescending(candidate => candidate.RecommendationScore)
+                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase),
+            _ => _currentCandidates
+                .OrderByDescending(ComputeSmartScore)
+                .ThenByDescending(ComputeComprehensiveRankScore)
+                .ThenByDescending(candidate => candidate.TagOverlapScore)
+                .ThenByDescending(candidate => candidate.FeedbackAffinity)
+                .ThenByDescending(candidate => candidate.DeveloperBonus)
+                .ThenByDescending(candidate => candidate.YearAffinity)
+                .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
+                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
+        };
+
+        Recommendations.Clear();
+        foreach (var candidate in sorted)
+            Recommendations.Add(candidate);
+
+        HasRecommendations = Recommendations.Count > 0;
+    }
+
+    private static double ComputeComprehensiveRankScore(RecommendationCandidate candidate)
+    {
+        return candidate.ExternalRatingScore
+               ?? NormalizeRating(candidate.BangumiRating)
+               ?? NormalizeRating(candidate.VndbRating)
+               ?? 0.0;
+    }
+
+    private static double ComputeSmartScore(RecommendationCandidate candidate)
+    {
+        var externalScore = ComputeComprehensiveRankScore(candidate);
+
+        if (!candidate.AiAffinityScore.HasValue)
+        {
+            return candidate.RecommendationScore * 0.78
+                   + externalScore * 0.22;
+        }
+
+        return candidate.RecommendationScore * 0.55
+               + candidate.AiAffinityScore.Value * 0.25
+               + externalScore * 0.20;
+    }
+
+    private List<RecommendationCandidate> SelectCandidatesForAiRerank()
+    {
+        var selected = new Dictionary<string, RecommendationCandidate>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var candidate in _currentCandidates
+                     .OrderByDescending(candidate => candidate.RecommendationScore)
+                     .ThenByDescending(candidate => candidate.TagOverlapScore)
+                     .Take(18))
+        {
+            selected[candidate.VndbId] = candidate;
+        }
+
+        foreach (var candidate in _currentCandidates
+                     .OrderByDescending(ComputeComprehensiveRankScore)
+                     .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
+                     .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
+                     .Take(6))
+        {
+            selected.TryAdd(candidate.VndbId, candidate);
+        }
+
+        return selected.Values.ToList();
+    }
+
+    private static double? NormalizeRating(double? rating)
+    {
+        if (!rating.HasValue || rating.Value <= 0)
+            return null;
+
+        var value = rating.Value > 10 ? rating.Value / 100d : rating.Value / 10d;
+        return Math.Clamp(value, 0, 1);
     }
 
     [RelayCommand]
@@ -179,6 +299,7 @@ public partial class RecommendationViewModel : ObservableObject
                 ReleaseDate = candidate.ReleaseDate,
                 Status = GameStatus.Planned,
                 VndbId = candidate.VndbId,
+                BangumiId = candidate.BangumiId,
                 OfficialWebsite = candidate.OfficialWebsite,
                 Tags = TagUtilities.Serialize(candidate.Tags),
                 ProcessName = string.Empty,
@@ -231,6 +352,28 @@ public partial class RecommendationViewModel : ObservableObject
             Process.Start(new ProcessStartInfo
             {
                 FileName = candidate.VndbUrl,
+                UseShellExecute = true
+            });
+
+            await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, positiveDelta: 0.2);
+        }
+        catch
+        {
+            // Ignore launch failures.
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenBangumiAsync(RecommendationCandidate? candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate?.BangumiId))
+            return;
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = $"https://bgm.tv/subject/{candidate.BangumiId.Trim()}",
                 UseShellExecute = true
             });
 
@@ -335,4 +478,10 @@ public partial class RecommendationViewModel : ObservableObject
 
         return string.Join(" ", cautions);
     }
+}
+
+public sealed class RecommendationSortModeOption(RecommendationSortMode value, string label)
+{
+    public RecommendationSortMode Value { get; } = value;
+    public string Label { get; } = label;
 }

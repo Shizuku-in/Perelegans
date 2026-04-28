@@ -1,4 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Perelegans.Models;
@@ -11,6 +17,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ThemeService _themeService;
     private readonly SettingsService _settingsService;
     private readonly StartupRegistrationService _startupRegistrationService;
+    private const string AnthropicVersion = "2023-06-01";
 
     [ObservableProperty]
     private ThemeMode _selectedTheme;
@@ -44,6 +51,12 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string _aiModel = string.Empty;
+
+    [ObservableProperty]
+    private string _aiTestStatusText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isTestingAi;
 
     public string[] LanguageOptions { get; } = ["zh-Hans", "en-US", "ja-JP"];
     public IReadOnlyList<AppCloseBehaviorOption> CloseBehaviorOptions { get; } =
@@ -120,6 +133,73 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task TestAiAsync()
+    {
+        if (IsTestingAi)
+            return;
+
+        AiTestStatusText = string.Empty;
+        if (string.IsNullOrWhiteSpace(AiApiBaseUrl) ||
+            string.IsNullOrWhiteSpace(AiApiKey) ||
+            string.IsNullOrWhiteSpace(AiModel))
+        {
+            AiTestStatusText = TranslationService.Instance["Settings_AiTestMissingConfig"];
+            return;
+        }
+
+        if (!Uri.TryCreate(AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+        {
+            AiTestStatusText = TranslationService.Instance["Settings_AiTestInvalidUrl"];
+            return;
+        }
+
+        IsTestingAi = true;
+        AiTestStatusText = TranslationService.Instance["Settings_AiTestRunning"];
+
+        try
+        {
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var provider = ResolveAiProvider(baseUri);
+            using var request = BuildAiTestRequest(provider, baseUri);
+            using var response = await httpClient.SendAsync(request);
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                AiTestStatusText = string.Format(
+                    TranslationService.Instance["Settings_AiTestFailed"],
+                    $"{(int)response.StatusCode} {response.ReasonPhrase}: {TruncateForDisplay(responseBody)}");
+                return;
+            }
+
+            var content = ExtractAiTestContent(responseBody, provider);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                AiTestStatusText = TranslationService.Instance["Settings_AiTestNoContent"];
+                return;
+            }
+
+            AiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_AiTestSuccess"],
+                TruncateForDisplay(content));
+        }
+        catch (System.Exception ex)
+        {
+            AiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_AiTestFailed"],
+                ex.Message);
+        }
+        finally
+        {
+            IsTestingAi = false;
+        }
+    }
+
+    [RelayCommand]
     private void Save()
     {
         _startupRegistrationService.SetEnabled(LaunchAtStartup);
@@ -159,6 +239,167 @@ public partial class SettingsViewModel : ObservableObject
                 || s.AiApiKey != AiApiKey
                 || s.AiModel != AiModel;
         }
+    }
+
+    private AiProvider ResolveAiProvider(Uri baseUri)
+    {
+        if (SelectedAiProvider != AiProvider.Auto)
+            return SelectedAiProvider;
+
+        var host = baseUri.Host.ToLowerInvariant();
+        if (host.Contains("anthropic"))
+            return AiProvider.Anthropic;
+        if (host.Contains("openrouter"))
+            return AiProvider.OpenRouter;
+
+        return AiProvider.OpenAI;
+    }
+
+    private HttpRequestMessage BuildAiTestRequest(AiProvider provider, Uri baseUri)
+    {
+        var normalizedBase = baseUri.AbsoluteUri.EndsWith("/", System.StringComparison.Ordinal)
+            ? baseUri
+            : new Uri(baseUri.AbsoluteUri + "/", UriKind.Absolute);
+        var endpoint = provider == AiProvider.Anthropic
+            ? new Uri(normalizedBase, "v1/messages")
+            : new Uri(normalizedBase, "chat/completions");
+
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        request.Headers.Add("User-Agent", "Perelegans/0.2");
+
+        if (provider == AiProvider.Anthropic)
+        {
+            request.Headers.Add("x-api-key", AiApiKey.Trim());
+            request.Headers.Add("anthropic-version", AnthropicVersion);
+            request.Content = new StringContent(
+                JsonSerializer.Serialize(new
+                {
+                    model = AiModel.Trim(),
+                    max_tokens = 16,
+                    temperature = 0,
+                    messages = new object[]
+                    {
+                        new
+                        {
+                            role = "user",
+                            content = "test"
+                        }
+                    }
+                }),
+                Encoding.UTF8,
+                "application/json");
+            return request;
+        }
+
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", AiApiKey.Trim());
+        if (provider == AiProvider.OpenRouter)
+        {
+            request.Headers.Add("HTTP-Referer", "https://github.com/Shizuku-in/Perelegans");
+            request.Headers.Add("X-Title", "Perelegans");
+        }
+
+        request.Content = new StringContent(
+            JsonSerializer.Serialize(new
+            {
+                model = AiModel.Trim(),
+                temperature = 0,
+                max_tokens = 16,
+                messages = new object[]
+                {
+                    new
+                    {
+                        role = "user",
+                        content = "test"
+                    }
+                }
+            }),
+            Encoding.UTF8,
+            "application/json");
+        return request;
+    }
+
+    private static string ExtractAiTestContent(string responseJson, AiProvider provider)
+    {
+        using var document = JsonDocument.Parse(responseJson);
+        if (provider == AiProvider.Anthropic)
+        {
+            if (document.RootElement.TryGetProperty("content", out var contentArray) &&
+                contentArray.ValueKind == JsonValueKind.Array)
+            {
+                return ExtractTextFromContentArray(contentArray);
+            }
+
+            return string.Empty;
+        }
+
+        if (document.RootElement.TryGetProperty("choices", out var choices) &&
+            choices.ValueKind == JsonValueKind.Array &&
+            choices.GetArrayLength() > 0 &&
+            choices[0].TryGetProperty("message", out var message) &&
+            message.TryGetProperty("content", out var content))
+        {
+            return content.ValueKind == JsonValueKind.String
+                ? content.GetString() ?? string.Empty
+                : ExtractTextFromContentArray(content);
+        }
+
+        if (document.RootElement.TryGetProperty("output", out var output) &&
+            output.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in output.EnumerateArray())
+            {
+                if (item.TryGetProperty("content", out var contentArray) &&
+                    contentArray.ValueKind == JsonValueKind.Array)
+                {
+                    var text = ExtractTextFromContentArray(contentArray);
+                    if (!string.IsNullOrWhiteSpace(text))
+                        return text;
+                }
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ExtractTextFromContentArray(JsonElement content)
+    {
+        if (content.ValueKind == JsonValueKind.String)
+            return content.GetString() ?? string.Empty;
+
+        if (content.ValueKind != JsonValueKind.Array)
+            return string.Empty;
+
+        var parts = content.EnumerateArray()
+            .Select(item =>
+            {
+                if (item.ValueKind == JsonValueKind.String)
+                    return item.GetString();
+                if (item.ValueKind == JsonValueKind.Object &&
+                    item.TryGetProperty("text", out var text) &&
+                    text.ValueKind == JsonValueKind.String)
+                {
+                    return text.GetString();
+                }
+                if (item.ValueKind == JsonValueKind.Object &&
+                    item.TryGetProperty("output_text", out var outputText) &&
+                    outputText.ValueKind == JsonValueKind.String)
+                {
+                    return outputText.GetString();
+                }
+                return null;
+            })
+            .Where(part => !string.IsNullOrWhiteSpace(part));
+
+        return string.Join("\n", parts);
+    }
+
+    private static string TruncateForDisplay(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        var singleLine = value.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        return singleLine.Length <= 180 ? singleLine : $"{singleLine[..180]}...";
     }
 }
 

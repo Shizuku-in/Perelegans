@@ -64,6 +64,9 @@ public class CachedVndbVisualNovel
     public string Title { get; set; } = string.Empty;
     public string OriginalTitle { get; set; } = string.Empty;
     public DateTime? ReleaseDate { get; set; }
+    public int? Rank { get; set; }
+    public double? Rating { get; set; }
+    public int? VoteCount { get; set; }
     public List<string> Developers { get; set; } = [];
     public List<CachedVndbTag> Tags { get; set; } = [];
     public List<CachedVndbExternalLink> ExternalLinks { get; set; } = [];

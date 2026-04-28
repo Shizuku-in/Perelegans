@@ -151,9 +151,9 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 地址:</value></data>
   <data name="Settings_AiApiKey" xml:space="preserve"><value>API 密钥:</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>模型名:</value></data>
-  <data name="Rec_Title" xml:space="preserve"><value>VN 推荐</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>游戏推荐</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>刷新</value></data>
-  <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB 元数据的游戏生成画像。</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB/Bangumi 元数据的游戏生成画像。</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>偏好标签: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>回避标签: {0}</value></data>
   <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>偏好厂商: {0}</value></data>
@@ -173,6 +173,7 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_Import" xml:space="preserve"><value>导入</value></data>
   <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>已在库中</value></data>
   <data name="Rec_OpenVndb" xml:space="preserve"><value>打开 VNDB</value></data>
+  <data name="Rec_OpenBangumi" xml:space="preserve"><value>打开 Bangumi</value></data>
   <data name="Rec_ImportFailed" xml:space="preserve"><value>导入推荐失败: {0}</value></data>
   <data name="Rec_LocalReasonTags" xml:space="preserve"><value>命中你的偏好标签: {0}。</value></data>
   <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>来自你常喜欢的厂商: {0}。</value></data>
@@ -201,4 +202,14 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_LocalReasonSource" xml:space="preserve"><value>和你库里的这些作品比较接近：{0}。</value></data>
   <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>相近作品曾得到你的正向反馈。</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>相近推荐此前收到过你的负向反馈。</value></data>
+  <data name="Rec_SortLabel" xml:space="preserve"><value>排序</value></data>
+  <data name="Rec_SortSmart" xml:space="preserve"><value>智能推荐</value></data>
+  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>综合排名</value></data>
+  <data name="Settings_AiTestButton" xml:space="preserve"><value>测试</value></data>
+  <data name="Settings_AiTestRunning" xml:space="preserve"><value>正在测试 AI 连接...</value></data>
+  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI 测试成功。返回: {0}</value></data>
+  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI 测试失败: {0}</value></data>
+  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>请先填写 API 地址、API 密钥和模型名。</value></data>
+  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API 地址无效。</value></data>
+  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI 测试失败：响应中没有可读文本。</value></data>
 </root>

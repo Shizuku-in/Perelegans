@@ -208,6 +208,24 @@ public partial class MainWindow : MetroWindow
         e.Handled = true;
     }
 
+    private void StatusBadge_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button button || button.DataContext is not Game game || DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        vm.SelectedGame = game;
+        if (button.ContextMenu == null)
+        {
+            return;
+        }
+
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+        e.Handled = true;
+    }
+
     private static T? FindDescendant<T>(DependencyObject? root) where T : DependencyObject
     {
         if (root == null)

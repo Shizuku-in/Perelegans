@@ -5,6 +5,12 @@ using Perelegans.Services;
 
 namespace Perelegans.Models;
 
+public enum RecommendationSortMode
+{
+    Smart,
+    ComprehensiveRank
+}
+
 public partial class RecommendationCandidate : ObservableObject
 {
     public string VndbId { get; set; } = string.Empty;
@@ -27,6 +33,14 @@ public partial class RecommendationCandidate : ObservableObject
     public double RecencyAlignment { get; set; }
     public string ScoreBreakdown { get; set; } = string.Empty;
     public string SourceMatchSummary { get; set; } = string.Empty;
+    public int? VndbRank { get; set; }
+    public double? VndbRating { get; set; }
+    public int? VndbVoteCount { get; set; }
+    public double? AiAffinityScore { get; set; }
+    public double? BangumiRating { get; set; }
+    public int? BangumiRank { get; set; }
+    public int? BangumiVoteCount { get; set; }
+    public double? ExternalRatingScore { get; set; }
 
     [ObservableProperty]
     private string _reason = string.Empty;
@@ -43,6 +57,9 @@ public partial class RecommendationCandidate : ObservableObject
     [ObservableProperty]
     private int _feedbackVote;
 
+    [ObservableProperty]
+    private string? _bangumiId;
+
     public string DisplayTitle =>
         string.IsNullOrWhiteSpace(OriginalTitle) ? Title : OriginalTitle;
 
@@ -51,6 +68,7 @@ public partial class RecommendationCandidate : ObservableObject
     public bool CanImport => !IsAlreadyInLibrary;
     public bool CanLike => FeedbackVote <= 0;
     public bool CanDislike => FeedbackVote >= 0;
+    public bool HasBangumiUrl => !string.IsNullOrWhiteSpace(BangumiId);
 
     public string ImportButtonText => IsAlreadyInLibrary
         ? TranslationService.Instance["Rec_AlreadyInLibrary"]
@@ -76,5 +94,10 @@ public partial class RecommendationCandidate : ObservableObject
         OnPropertyChanged(nameof(CanDislike));
         OnPropertyChanged(nameof(LikeButtonText));
         OnPropertyChanged(nameof(DislikeButtonText));
+    }
+
+    partial void OnBangumiIdChanged(string? value)
+    {
+        OnPropertyChanged(nameof(HasBangumiUrl));
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -77,6 +78,15 @@ public class AiRecommendationService
                     conflictingTags = candidate.ConflictingTags,
                     matchingDevelopers = candidate.MatchingDevelopers,
                     yearAffinity = candidate.YearAffinity,
+                    localScore = candidate.RecommendationScore,
+                    vndbRank = candidate.VndbRank,
+                    vndbRating = candidate.VndbRating,
+                    vndbVoteCount = candidate.VndbVoteCount,
+                    bangumiId = candidate.BangumiId,
+                    bangumiRank = candidate.BangumiRank,
+                    bangumiRating = candidate.BangumiRating,
+                    bangumiVoteCount = candidate.BangumiVoteCount,
+                    externalRatingScore = candidate.ExternalRatingScore,
                     scoreBreakdown = candidate.ScoreBreakdown,
                     similarLibraryTitles = candidate.SourceMatches.Select(match => match.Title).ToList()
                 })
@@ -126,6 +136,7 @@ public class AiRecommendationService
                 explanationArray.ValueKind == JsonValueKind.Array)
             {
                 result.Explanations = ParseExplanations(explanationArray);
+                result.UserProfileSummary = ParseUserProfileSummary(document.RootElement);
                 if (!result.HasExplanations)
                     result.ErrorMessage = "AI JSON parsed successfully, but no matching explanations were returned.";
                 return result;
@@ -160,10 +171,12 @@ public class AiRecommendationService
         var model = _settingsService.Settings.AiModel.Trim();
         var apiKey = _settingsService.Settings.AiApiKey.Trim();
         var userPrompt =
-            "Return a JSON object with an 'explanations' array. " +
+            "Return a JSON object with a short 'userProfileSummary' string and an 'explanations' array. " +
             "Each item must contain candidateId, reason, matchingTags, caution, and sellingPoint. " +
+            "Each item may include affinityScore from 0.0 to 1.0, where 1.0 means very aligned with the generated user taste profile. Use the full range and make the scores discriminative, not clustered. " +
             "matchingTags must be an array of short strings already present in the candidate data. " +
             "reason should be one or two short sentences. caution can be empty. " +
+            "When Bangumi data exists, consider bangumiRating, bangumiRank, and externalRatingScore; externalRatingScore is Bangumi 75% and VNDB 25%. " +
             "sellingPoint should be a short label like 'Tag match', 'Developer pick', 'Recent-taste fit', or 'Contrast pick'. " +
             $"Data: {JsonSerializer.Serialize(payload)}";
 
@@ -386,6 +399,9 @@ public class AiRecommendationService
                 explanation.SellingPoint = sellingPointElement.GetString() ?? string.Empty;
             }
 
+            if (item.TryGetProperty("affinityScore", out var affinityElement))
+                explanation.AffinityScore = TryReadClampedScore(affinityElement);
+
             if (item.TryGetProperty("matchingTags", out var matchingTagsElement) &&
                 matchingTagsElement.ValueKind == JsonValueKind.Array)
             {
@@ -403,6 +419,38 @@ public class AiRecommendationService
         }
 
         return explanations;
+    }
+
+    private static string ParseUserProfileSummary(JsonElement root)
+    {
+        if (root.TryGetProperty("userProfileSummary", out var summaryElement) &&
+            summaryElement.ValueKind == JsonValueKind.String)
+        {
+            return summaryElement.GetString()?.Trim() ?? string.Empty;
+        }
+
+        if (root.TryGetProperty("profileSummary", out var profileElement) &&
+            profileElement.ValueKind == JsonValueKind.String)
+        {
+            return profileElement.GetString()?.Trim() ?? string.Empty;
+        }
+
+        return string.Empty;
+    }
+
+    private static double? TryReadClampedScore(JsonElement element)
+    {
+        double value;
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out value))
+            return Math.Clamp(value, 0, 1);
+
+        if (element.ValueKind == JsonValueKind.String &&
+            double.TryParse(element.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+        {
+            return Math.Clamp(value, 0, 1);
+        }
+
+        return null;
     }
 
     private static bool TryParseLooseExplanations(string content, out List<AiRecommendationExplanation> explanations)
