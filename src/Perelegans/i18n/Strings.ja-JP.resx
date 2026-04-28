@@ -151,9 +151,9 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API ベースURL:</value></data>
   <data name="Settings_AiApiKey" xml:space="preserve"><value>API キー:</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>モデル:</value></data>
-  <data name="Rec_Title" xml:space="preserve"><value>VN おすすめ</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>ゲームおすすめ</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>更新</value></data>
-  <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB メタデータ付きの {1} 件中 {0} 件を使って好みを分析しています。</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB/Bangumi メタデータ付きの {1} 件中 {0} 件を使って好みを分析しています。</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>好みのタグ: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>避けたいタグ: {0}</value></data>
   <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>好みのブランド: {0}</value></data>
@@ -173,6 +173,7 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_Import" xml:space="preserve"><value>追加</value></data>
   <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>登録済み</value></data>
   <data name="Rec_OpenVndb" xml:space="preserve"><value>VNDB を開く</value></data>
+  <data name="Rec_OpenBangumi" xml:space="preserve"><value>Bangumi を開く</value></data>
   <data name="Rec_ImportFailed" xml:space="preserve"><value>おすすめの追加に失敗しました: {0}</value></data>
   <data name="Rec_LocalReasonTags" xml:space="preserve"><value>好みのタグに一致: {0}。</value></data>
   <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>よく好むブランド: {0}。</value></data>
@@ -201,4 +202,14 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_LocalReasonSource" xml:space="preserve"><value>ライブラリ内の次の作品に近い候補です: {0}。</value></data>
   <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>近い候補はこれまで好意的な反応を受けています。</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>近い候補は以前に否定的な反応を受けています。</value></data>
+  <data name="Rec_SortLabel" xml:space="preserve"><value>並び替え</value></data>
+  <data name="Rec_SortSmart" xml:space="preserve"><value>スマート</value></data>
+  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>総合ランキング</value></data>
+  <data name="Settings_AiTestButton" xml:space="preserve"><value>テスト</value></data>
+  <data name="Settings_AiTestRunning" xml:space="preserve"><value>AI 接続をテストしています...</value></data>
+  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI テストに成功しました。応答: {0}</value></data>
+  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI テストに失敗しました: {0}</value></data>
+  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>API ベースURL、API キー、モデルを先に入力してください。</value></data>
+  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API ベースURLが無効です。</value></data>
+  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI テストに失敗しました: 応答に読み取れるテキストがありません。</value></data>
 </root>

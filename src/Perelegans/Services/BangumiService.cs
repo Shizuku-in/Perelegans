@@ -40,7 +40,12 @@ public class BangumiService
         _httpClient = httpClient;
     }
 
-    public async Task<List<MetadataResult>> SearchAsync(string query)
+    public Task<List<MetadataResult>> SearchAsync(string query)
+    {
+        return SearchAsync(query, includeDetails: true);
+    }
+
+    public async Task<List<MetadataResult>> SearchAsync(string query, bool includeDetails)
     {
         var results = new List<MetadataResult>();
 
@@ -95,7 +100,9 @@ public class BangumiService
                     result.ImageUrl = imgUrl.GetString();
                 }
 
-                if (!string.IsNullOrWhiteSpace(result.SourceId))
+                ApplyRating(item, result);
+
+                if (includeDetails && !string.IsNullOrWhiteSpace(result.SourceId))
                     await PopulateSubjectDetailsAsync(result);
 
                 results.Add(result);
@@ -169,6 +176,7 @@ public class BangumiService
             result.ImageUrl = imgUrl.GetString();
         }
 
+        ApplyRating(root, result);
         ApplySubjectDetails(root, result);
         return result;
     }
@@ -215,6 +223,60 @@ public class BangumiService
         }
 
         result.Tags = TagUtilities.Normalize(tagNames);
+    }
+
+    private static void ApplyRating(JsonElement root, MetadataResult result)
+    {
+        if (!root.TryGetProperty("rating", out var rating) || rating.ValueKind != JsonValueKind.Object)
+            return;
+
+        if (rating.TryGetProperty("score", out var scoreElement) &&
+            TryReadDouble(scoreElement, out var score))
+        {
+            result.Rating = score;
+        }
+
+        if (rating.TryGetProperty("rank", out var rankElement) &&
+            TryReadInt32(rankElement, out var rank))
+        {
+            result.Rank = rank;
+        }
+
+        if (rating.TryGetProperty("total", out var totalElement) &&
+            TryReadInt32(totalElement, out var total))
+        {
+            result.VoteCount = total;
+        }
+    }
+
+    private static bool TryReadDouble(JsonElement element, out double value)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetDouble(out value))
+            return true;
+
+        if (element.ValueKind == JsonValueKind.String &&
+            double.TryParse(element.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+        {
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    private static bool TryReadInt32(JsonElement element, out int value)
+    {
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out value))
+            return true;
+
+        if (element.ValueKind == JsonValueKind.String &&
+            int.TryParse(element.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+        {
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 
     private static bool TryParseFlexibleDate(string? value, out DateTime date)

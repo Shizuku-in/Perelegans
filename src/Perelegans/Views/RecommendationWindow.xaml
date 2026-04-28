@@ -37,16 +37,32 @@
                 <TextBlock Text="{Binding PreferredDevelopersText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
                 <TextBlock Text="{Binding ProfileDepthText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
                 <TextBlock Text="{Binding AiStatusText}" Margin="0,6,0,0" Foreground="{DynamicResource Perelegans.AccentBrush}"/>
+                <TextBlock Text="{Binding AiProfileText}" Margin="0,2,0,0"
+                           TextWrapping="Wrap"
+                           MaxWidth="860"
+                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
             </StackPanel>
 
-            <Button DockPanel.Dock="Right"
-                    Width="108" Height="30"
-                    Margin="12,0,0,0"
-                    VerticalAlignment="Top"
-                    BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                    Content="{i18n:Translate Rec_Refresh}"
-                    Command="{Binding RefreshCommand}"/>
+            <StackPanel DockPanel.Dock="Right"
+                        Orientation="Horizontal"
+                        Margin="12,0,0,0"
+                        VerticalAlignment="Top">
+                <TextBlock Text="{i18n:Translate Rec_SortLabel}"
+                           VerticalAlignment="Center"
+                           Margin="0,0,6,0"/>
+                <ComboBox Width="132"
+                          Height="30"
+                          Margin="0,0,8,0"
+                          ItemsSource="{Binding SortModeOptions}"
+                          DisplayMemberPath="Label"
+                          SelectedValuePath="Value"
+                          SelectedValue="{Binding SortMode, Mode=TwoWay}"/>
+                <Button Width="108" Height="30"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                        Content="{i18n:Translate Rec_Refresh}"
+                        Command="{Binding RefreshCommand}"/>
+            </StackPanel>
         </DockPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,8">
@@ -138,13 +154,23 @@
                                         Content="{Binding ImportButtonText}"
                                         Command="{Binding DataContext.ImportRecommendationCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"/>
-                                <Button Height="28"
-                                        Margin="0,6,0,0"
-                                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                                        Content="{i18n:Translate Rec_OpenVndb}"
-                                        Command="{Binding DataContext.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                        CommandParameter="{Binding}"/>
+                                <UniformGrid Columns="2" Margin="0,6,0,0">
+                                    <Button Height="28"
+                                            Margin="0,0,4,0"
+                                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                            Content="{i18n:Translate Rec_OpenVndb}"
+                                            Command="{Binding DataContext.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Height="28"
+                                            Margin="4,0,0,0"
+                                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                            IsEnabled="{Binding HasBangumiUrl}"
+                                            Content="{i18n:Translate Rec_OpenBangumi}"
+                                            Command="{Binding DataContext.OpenBangumiCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                </UniformGrid>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

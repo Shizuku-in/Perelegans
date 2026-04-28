@@ -724,6 +724,31 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task ChangeGameStatus(GameStatus status)
+    {
+        if (SelectedGame == null || SelectedGame.Status == status)
+            return;
+
+        var previousStatus = SelectedGame.Status;
+        SelectedGame.Status = status;
+
+        try
+        {
+            await _dbService.UpdateGameAsync(SelectedGame);
+            RefreshStats();
+            _processMonitor.UpdateMonitoredGames(Games);
+        }
+        catch (Exception ex)
+        {
+            SelectedGame.Status = previousStatus;
+            await _dialogCoordinator.ShowMessageAsync(
+                this,
+                TranslationService.Instance["Msg_ErrorTitle"],
+                ex.Message);
+        }
+    }
+
+    [RelayCommand]
     private void CopyTitle()
     {
         if (SelectedGame == null) return;

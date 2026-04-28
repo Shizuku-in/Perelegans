@@ -406,27 +406,60 @@
                                                     </Border.Background>
                                                 </Border>
 
-                                                <Border Width="26"
+                                                <Button Width="26"
                                                         Height="26"
                                                         Margin="12"
+                                                        Padding="0"
                                                         HorizontalAlignment="Left"
                                                         VerticalAlignment="Top"
-                                                        Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
-                                                        CornerRadius="13"
-                                                        SnapsToDevicePixels="True">
-                                                    <Border.Effect>
-                                                        <DropShadowEffect BlurRadius="8"
-                                                                          ShadowDepth="0"
-                                                                          Opacity="0.24"
-                                                                          Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
-                                                    </Border.Effect>
-                                                    <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
-                                                                                Width="14"
-                                                                                Height="14"
-                                                                                HorizontalAlignment="Center"
-                                                                                VerticalAlignment="Center"
-                                                                                Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
-                                                </Border>
+                                                        Background="Transparent"
+                                                        BorderThickness="0"
+                                                        Click="StatusBadge_Click"
+                                                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}">
+                                                    <Button.ContextMenu>
+                                                        <ContextMenu Placement="Bottom"
+                                                                     HorizontalOffset="-2"
+                                                                     VerticalOffset="2">
+                                                            <MenuItem Header="{i18n:Translate GameStatus_Planned}"
+                                                                      Command="{Binding PlacementTarget.Tag.ChangeGameStatusCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                      CommandParameter="{x:Static models:GameStatus.Planned}">
+                                                                <MenuItem.Icon>
+                                                                    <iconPacks:PackIconMaterial Kind="ClockOutline" Width="14" Height="14"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <MenuItem Header="{i18n:Translate GameStatus_Playing}"
+                                                                      Command="{Binding PlacementTarget.Tag.ChangeGameStatusCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                      CommandParameter="{x:Static models:GameStatus.Playing}">
+                                                                <MenuItem.Icon>
+                                                                    <iconPacks:PackIconMaterial Kind="PlayCircleOutline" Width="14" Height="14"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <MenuItem Header="{i18n:Translate GameStatus_Completed}"
+                                                                      Command="{Binding PlacementTarget.Tag.ChangeGameStatusCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                                      CommandParameter="{x:Static models:GameStatus.Completed}">
+                                                                <MenuItem.Icon>
+                                                                    <iconPacks:PackIconMaterial Kind="CheckCircleOutline" Width="14" Height="14"/>
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                        </ContextMenu>
+                                                    </Button.ContextMenu>
+                                                    <Border Background="{DynamicResource Perelegans.CoverStatusBadgeBackgroundBrush}"
+                                                            CornerRadius="13"
+                                                            SnapsToDevicePixels="True">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect BlurRadius="8"
+                                                                              ShadowDepth="0"
+                                                                              Opacity="0.24"
+                                                                              Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
+                                                        </Border.Effect>
+                                                        <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
+                                                                                    Width="14"
+                                                                                    Height="14"
+                                                                                    HorizontalAlignment="Center"
+                                                                                    VerticalAlignment="Center"
+                                                                                    Foreground="{DynamicResource Perelegans.StatusIconBrush}"/>
+                                                    </Border>
+                                                </Button>
 
                                                 <StackPanel VerticalAlignment="Bottom"
                                                             HorizontalAlignment="Left"

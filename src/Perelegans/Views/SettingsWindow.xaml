@@ -127,6 +127,10 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="6"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="4"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110"/>
@@ -164,6 +168,20 @@
                              VerticalContentAlignment="Center"
                              Text="{Binding AiModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              mah:TextBoxHelper.Watermark="{Binding AiModelPlaceholder}"/>
+
+                    <Button Grid.Row="10" Grid.Column="1"
+                            Width="96" Height="26"
+                            HorizontalAlignment="Left"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                            Content="{i18n:Translate Settings_AiTestButton}"
+                            Command="{Binding TestAiCommand}"/>
+
+                    <TextBlock Grid.Row="12" Grid.Column="1"
+                               Text="{Binding AiTestStatusText}"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                               FontSize="11"/>
                 </Grid>
             </GroupBox>
 

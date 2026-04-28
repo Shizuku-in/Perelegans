@@ -9,11 +9,13 @@ public class AiRecommendationExplanation
     public List<string> MatchingTags { get; set; } = [];
     public string Caution { get; set; } = string.Empty;
     public string SellingPoint { get; set; } = string.Empty;
+    public double? AffinityScore { get; set; }
 }
 
 public class AiRecommendationResult
 {
     public List<AiRecommendationExplanation> Explanations { get; set; } = [];
+    public string UserProfileSummary { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
 
     public bool HasExplanations => Explanations.Count > 0;
