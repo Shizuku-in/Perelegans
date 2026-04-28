@@ -128,7 +128,7 @@
   <data name="Msg_RestoreSuccess" xml:space="preserve"><value>バックアップを復元しました！</value></data>
   <data name="Msg_RestoreFailed" xml:space="preserve"><value>復元失敗: {0}</value></data>
   <data name="Msg_AboutTitle" xml:space="preserve"><value>Perelegans について</value></data>
-  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.1
+  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
 Game Playtime Tracker &amp; Manager
 
 Copyright 2026 gkouen. All Lolis Reserved</value></data>

@@ -163,7 +163,7 @@
   <data name="Msg_RestoreSuccess" xml:space="preserve"><value>Backup restored successfully!</value></data>
   <data name="Msg_RestoreFailed" xml:space="preserve"><value>Restore failed: {0}</value></data>
   <data name="Msg_AboutTitle" xml:space="preserve"><value>About Perelegans</value></data>
-  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.1
+  <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
 Game Playtime Tracker &amp; Manager
 
 Copyright 2026 gkouen. All Lolis Reserved</value></data>
