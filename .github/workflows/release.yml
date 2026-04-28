@@ -49,29 +49,43 @@ jobs:
       - name: Restore
         run: dotnet restore src/Perelegans/Perelegans.csproj
 
-      - name: Publish self-contained release
+      - name: Publish framework-dependent release
         run: >-
           dotnet publish src/Perelegans/Perelegans.csproj
           -c Release
           -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
+          --self-contained false
+          -p:DebugType=None
+          -p:DebugSymbols=false
           -o publish/${{ matrix.rid }}
 
-      - name: Create zip package
+      - name: Create 7z package
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
           $rid = "${{ matrix.rid }}"
-          $zipName = "Perelegans-$tag-$rid.zip"
-          Compress-Archive -Path "publish/$rid/*" -DestinationPath "publish/$zipName" -Force
+          $archiveName = "Perelegans-$tag-$rid.7z"
+          $sevenZip = "$env:ProgramFiles\7-Zip\7z.exe"
+          if (-not (Test-Path $sevenZip)) {
+            $sevenZip = "7z"
+          }
+          Remove-Item -Path "publish/$rid/*.pdb" -Force -ErrorAction SilentlyContinue
+          Push-Location "publish/$rid"
+          try {
+            & $sevenZip a -t7z -mx=9 "../$archiveName" "*"
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+          finally {
+            Pop-Location
+          }
 
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.rid }}
-          path: publish/Perelegans-${{ github.ref_name }}-${{ matrix.rid }}.zip
+          path: publish/Perelegans-${{ github.ref_name }}-${{ matrix.rid }}.7z
           if-no-files-found: error
 
   release:
@@ -95,4 +109,4 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            dist/*.zip
+            dist/*.7z
