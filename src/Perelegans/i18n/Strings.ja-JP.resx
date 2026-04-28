@@ -192,4 +192,13 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameMgmt_TotalCount" xml:space="preserve"><value>合計:</value></data>
   <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>選択:</value></data>
   <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>タイトルでフィルタ...</value></data>
+  <data name="Rec_ProfileDepth" xml:space="preserve"><value>完了率 {0}、完了作平均 {1} 時間、中断作平均 {2} 時間、プロファイル傾向: {3}。</value></data>
+  <data name="Rec_ColBreakdown" xml:space="preserve"><value>内訳</value></data>
+  <data name="Rec_FeedbackLike" xml:space="preserve"><value>好み</value></data>
+  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>好み済み</value></data>
+  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>見送り</value></data>
+  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>見送り済み</value></data>
+  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>ライブラリ内の次の作品に近い候補です: {0}。</value></data>
+  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>近い候補はこれまで好意的な反応を受けています。</value></data>
+  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>近い候補は以前に否定的な反応を受けています。</value></data>
 </root>

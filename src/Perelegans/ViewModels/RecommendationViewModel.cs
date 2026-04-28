@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -39,6 +41,9 @@ public partial class RecommendationViewModel : ObservableObject
 
     [ObservableProperty]
     private string _preferredDevelopersText = string.Empty;
+
+    [ObservableProperty]
+    private string _profileDepthText = string.Empty;
 
     [ObservableProperty]
     private string _emptyStateText = string.Empty;
@@ -109,7 +114,7 @@ public partial class RecommendationViewModel : ObservableObject
 
             var aiResult = await _aiRecommendationService.ExplainAsync(
                 result.ProfileSummary,
-                Recommendations.Take(10).ToList());
+                Recommendations.Take(12).ToList());
 
             if (!aiResult.HasExplanations)
             {
@@ -132,6 +137,8 @@ public partial class RecommendationViewModel : ObservableObject
                     candidate.Caution = explanation.Caution.Trim();
                 if (explanation.MatchingTags.Count > 0)
                     candidate.MatchingTags = TagUtilities.Normalize(explanation.MatchingTags);
+                if (!string.IsNullOrWhiteSpace(explanation.SellingPoint))
+                    candidate.SellingPoint = explanation.SellingPoint.Trim();
             }
         }
         catch (Exception ex)
@@ -179,7 +186,9 @@ public partial class RecommendationViewModel : ObservableObject
             };
 
             await _dbService.AddGameAsync(game);
+            await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, positiveDelta: 1.2);
             candidate.IsAlreadyInLibrary = true;
+            candidate.FeedbackVote = 1;
             _onGameImported?.Invoke(game);
         }
         catch (Exception ex)
@@ -192,7 +201,27 @@ public partial class RecommendationViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenVndb(RecommendationCandidate? candidate)
+    private async Task LikeRecommendationAsync(RecommendationCandidate? candidate)
+    {
+        if (candidate == null)
+            return;
+
+        await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, positiveDelta: 1.0);
+        candidate.FeedbackVote = 1;
+    }
+
+    [RelayCommand]
+    private async Task DislikeRecommendationAsync(RecommendationCandidate? candidate)
+    {
+        if (candidate == null)
+            return;
+
+        await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, negativeDelta: 1.0);
+        candidate.FeedbackVote = -1;
+    }
+
+    [RelayCommand]
+    private async Task OpenVndbAsync(RecommendationCandidate? candidate)
     {
         if (candidate?.VndbUrl == null)
             return;
@@ -204,6 +233,8 @@ public partial class RecommendationViewModel : ObservableObject
                 FileName = candidate.VndbUrl,
                 UseShellExecute = true
             });
+
+            await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, positiveDelta: 0.2);
         }
         catch
         {
@@ -220,17 +251,29 @@ public partial class RecommendationViewModel : ObservableObject
 
         TopTagsText = profileSummary.TopPositiveTags.Count == 0
             ? string.Format(TranslationService.Instance["Rec_TopTags"], TranslationService.Instance["Rec_None"])
-            : string.Format(TranslationService.Instance["Rec_TopTags"], string.Join(", ", profileSummary.TopPositiveTags));
+            : string.Format(
+                TranslationService.Instance["Rec_TopTags"],
+                string.Join(", ", profileSummary.TopPositiveTags));
 
         AvoidTagsText = profileSummary.NegativeTags.Count == 0
             ? string.Format(TranslationService.Instance["Rec_AvoidTags"], TranslationService.Instance["Rec_None"])
-            : string.Format(TranslationService.Instance["Rec_AvoidTags"], string.Join(", ", profileSummary.NegativeTags));
+            : string.Format(
+                TranslationService.Instance["Rec_AvoidTags"],
+                string.Join(", ", profileSummary.NegativeTags));
 
         PreferredDevelopersText = profileSummary.PreferredDevelopers.Count == 0
             ? string.Format(TranslationService.Instance["Rec_PreferredDevelopers"], TranslationService.Instance["Rec_None"])
             : string.Format(
                 TranslationService.Instance["Rec_PreferredDevelopers"],
                 string.Join(", ", profileSummary.PreferredDevelopers));
+
+        ProfileDepthText = string.Format(
+            CultureInfo.InvariantCulture,
+            TranslationService.Instance["Rec_ProfileDepth"],
+            profileSummary.CompletionRate.ToString("P0", CultureInfo.InvariantCulture),
+            profileSummary.AverageCompletedHours.ToString("F1", CultureInfo.InvariantCulture),
+            profileSummary.AverageDroppedHours.ToString("F1", CultureInfo.InvariantCulture),
+            profileSummary.PreferenceStyle);
     }
 
     private static string BuildFallbackReason(RecommendationCandidate candidate)
@@ -251,9 +294,21 @@ public partial class RecommendationViewModel : ObservableObject
                 string.Join(", ", candidate.MatchingDevelopers)));
         }
 
+        if (candidate.SourceMatches.Count > 0)
+        {
+            parts.Add(string.Format(
+                TranslationService.Instance["Rec_LocalReasonSource"],
+                string.Join(", ", candidate.SourceMatches.Select(match => match.Title))));
+        }
+
         if (candidate.YearAffinity >= 0.6)
         {
             parts.Add(TranslationService.Instance["Rec_LocalReasonYear"]);
+        }
+
+        if (candidate.FeedbackAffinity > 0.15)
+        {
+            parts.Add(TranslationService.Instance["Rec_LocalReasonFeedback"]);
         }
 
         return parts.Count == 0
@@ -263,15 +318,21 @@ public partial class RecommendationViewModel : ObservableObject
 
     private static string BuildFallbackCaution(RecommendationCandidate candidate)
     {
+        var cautions = new List<string>();
+
         if (candidate.ConflictingTags.Count > 0)
         {
-            return string.Format(
+            cautions.Add(string.Format(
                 TranslationService.Instance["Rec_LocalCautionTags"],
-                string.Join(", ", candidate.ConflictingTags));
+                string.Join(", ", candidate.ConflictingTags)));
         }
 
-        return candidate.YearAffinity > 0 && candidate.YearAffinity < 0.25
-            ? TranslationService.Instance["Rec_LocalCautionYear"]
-            : string.Empty;
+        if (candidate.YearAffinity > 0 && candidate.YearAffinity < 0.25)
+            cautions.Add(TranslationService.Instance["Rec_LocalCautionYear"]);
+
+        if (candidate.FeedbackAffinity < -0.2)
+            cautions.Add(TranslationService.Instance["Rec_LocalCautionFeedback"]);
+
+        return string.Join(" ", cautions);
     }
 }

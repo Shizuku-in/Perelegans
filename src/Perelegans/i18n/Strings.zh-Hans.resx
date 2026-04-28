@@ -192,4 +192,13 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="GameMgmt_TotalCount" xml:space="preserve"><value>总计:</value></data>
   <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>已选:</value></data>
   <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>按标题过滤...</value></data>
+  <data name="Rec_ProfileDepth" xml:space="preserve"><value>完成率 {0}，已通关平均 {1} 小时，弃坑平均 {2} 小时，画像风格：{3}。</value></data>
+  <data name="Rec_ColBreakdown" xml:space="preserve"><value>拆分</value></data>
+  <data name="Rec_FeedbackLike" xml:space="preserve"><value>喜欢</value></data>
+  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>已喜欢</value></data>
+  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>跳过</value></data>
+  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>已跳过</value></data>
+  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>和你库里的这些作品比较接近：{0}。</value></data>
+  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>相近作品曾得到你的正向反馈。</value></data>
+  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>相近推荐此前收到过你的负向反馈。</value></data>
 </root>

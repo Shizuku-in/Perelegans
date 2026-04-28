@@ -5,8 +5,8 @@
         xmlns:i18n="clr-namespace:Perelegans.i18n"
         Title="{i18n:Translate Rec_Title}"
         TitleCharacterCasing="Normal"
-        Height="640" Width="980"
-        MinHeight="520" MinWidth="760"
+        Height="760" Width="1220"
+        MinHeight="620" MinWidth="980"
         WindowStartupLocation="CenterOwner"
         ShowTitleBar="True"
         TitleBarHeight="28"
@@ -35,6 +35,7 @@
                 <TextBlock Text="{Binding TopTagsText}" Margin="0,3,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
                 <TextBlock Text="{Binding AvoidTagsText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
                 <TextBlock Text="{Binding PreferredDevelopersText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                <TextBlock Text="{Binding ProfileDepthText}" Margin="0,2,0,0" Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
                 <TextBlock Text="{Binding AiStatusText}" Margin="0,6,0,0" Foreground="{DynamicResource Perelegans.AccentBrush}"/>
             </StackPanel>
 
@@ -67,7 +68,7 @@
                   CanUserSortColumns="True"
                   IsReadOnly="True"
                   SelectionMode="Single"
-                  RowHeight="86"
+                  RowHeight="132"
                   ColumnHeaderHeight="28"
                   FontSize="12"
                   BorderThickness="1"
@@ -75,15 +76,31 @@
                   Background="Transparent"
                   Visibility="{Binding HasRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{i18n:Translate Rec_ColTitle}" Binding="{Binding DisplayTitle}" Width="2*"/>
-                <DataGridTextColumn Header="{i18n:Translate Rec_ColBrand}" Binding="{Binding Brand}" Width="1.3*"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColTitle}" Binding="{Binding DisplayTitle}" Width="1.6*"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColBrand}" Binding="{Binding Brand}" Width="1.2*"/>
                 <DataGridTextColumn Header="{i18n:Translate Rec_ColDate}" Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}" Width="110"/>
                 <DataGridTextColumn Header="{i18n:Translate Rec_ColScore}" Binding="{Binding RecommendationScore, StringFormat=F2}" Width="90"/>
-                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColReason}" Width="3*">
+                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColBreakdown}" Width="1.4*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="2,6">
+                                <TextBlock Text="{Binding ScoreBreakdown}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SellingPoint}" Margin="0,6,0,0"
+                                           Foreground="{DynamicResource Perelegans.AccentBrush}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColReason}" Width="2.5*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Margin="2,4">
                                 <TextBlock Text="{Binding Reason}" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding SourceMatchSummary, StringFormat={}{0}}"
+                                           Margin="0,6,0,0"
+                                           Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                           TextWrapping="Wrap"/>
                                 <TextBlock Text="{Binding Caution}" Margin="0,6,0,0"
                                            TextWrapping="Wrap"
                                            Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
@@ -91,12 +108,30 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColActions}" Width="160" CanUserSort="False">
+                <DataGridTemplateColumn Header="{i18n:Translate Rec_ColActions}" Width="182" CanUserSort="False">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
+                                <UniformGrid Columns="2" Margin="0,4,0,0">
+                                    <Button Height="28"
+                                            Margin="0,0,4,0"
+                                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                            IsEnabled="{Binding CanLike}"
+                                            Content="{Binding LikeButtonText}"
+                                            Command="{Binding DataContext.LikeRecommendationCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    <Button Height="28"
+                                            Margin="4,0,0,0"
+                                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                            Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                            IsEnabled="{Binding CanDislike}"
+                                            Content="{Binding DislikeButtonText}"
+                                            Command="{Binding DataContext.DislikeRecommendationCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                </UniformGrid>
                                 <Button Height="28"
-                                        Margin="0,4,0,0"
+                                        Margin="0,6,0,0"
                                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                                         Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
                                         IsEnabled="{Binding CanImport}"

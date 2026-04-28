@@ -9,6 +9,7 @@ public class PerelegansDbContext : DbContext
 {
     public DbSet<Game> Games => Set<Game>();
     public DbSet<PlaySession> PlaySessions => Set<PlaySession>();
+    public DbSet<RecommendationFeedback> RecommendationFeedback => Set<RecommendationFeedback>();
 
     private readonly string _dbPath;
 
@@ -79,6 +80,13 @@ public class PerelegansDbContext : DbContext
                   .HasConversion(
                       v => v.Ticks,
                       v => TimeSpan.FromTicks(v));
+        });
+
+        modelBuilder.Entity<RecommendationFeedback>(entity =>
+        {
+            entity.HasKey(f => f.Id);
+            entity.HasIndex(f => f.VndbId).IsUnique();
+            entity.Property(f => f.VndbId).IsRequired().HasMaxLength(50);
         });
     }
 }

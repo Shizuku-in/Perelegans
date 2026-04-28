@@ -2,6 +2,8 @@
 
 > 用于追踪视觉小说的游玩时间的 Windows 桌面应用。
 
+![演示](./images/image_01.png)
+
 ## ✨ 功能特性
 
 ### 🎮 游玩时间追踪
@@ -19,7 +21,7 @@
 集成三大数据源，一键补全游戏信息：
 - **[VNDB](https://vndb.org/)**
 - **[Bangumi](https://bangumi.tv/)**
-- **[ErogameSpace](https://erogamescape.org/)**
+- **[ErogameSpace](https://erogamescape.dyndns.org)**
 
 自动获取标题、品牌 / 开发商、发售日期、标签、官方网站等信息。
 

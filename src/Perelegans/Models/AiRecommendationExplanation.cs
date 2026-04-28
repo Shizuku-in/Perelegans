@@ -8,6 +8,7 @@ public class AiRecommendationExplanation
     public string Reason { get; set; } = string.Empty;
     public List<string> MatchingTags { get; set; } = [];
     public string Caution { get; set; } = string.Empty;
+    public string SellingPoint { get; set; } = string.Empty;
 }
 
 public class AiRecommendationResult

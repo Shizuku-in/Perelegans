@@ -26,6 +26,7 @@ public class DatabaseService
         await EnsureGamesTagsColumnAsync();
         await EnsureGamesCoverImageUrlColumnAsync();
         await EnsureGamesCoverImagePathColumnAsync();
+        await EnsureRecommendationFeedbackTableAsync();
     }
 
     // ---- Games ----
@@ -108,6 +109,50 @@ public class DatabaseService
         return await db.PlaySessions
             .OrderByDescending(s => s.StartTime)
             .ToListAsync();
+    }
+
+    public async Task<Dictionary<string, RecommendationFeedback>> GetRecommendationFeedbackMapAsync()
+    {
+        await using var db = new PerelegansDbContext();
+        return await db.RecommendationFeedback
+            .AsNoTracking()
+            .ToDictionaryAsync(item => item.VndbId, StringComparer.OrdinalIgnoreCase);
+    }
+
+    public async Task RecordRecommendationSignalAsync(string? vndbId, double positiveDelta = 0, double negativeDelta = 0)
+    {
+        var normalizedId = VndbIdUtilities.Normalize(vndbId);
+        if (string.IsNullOrWhiteSpace(normalizedId) || (positiveDelta <= 0 && negativeDelta <= 0))
+            return;
+
+        await using var db = new PerelegansDbContext();
+        var feedback = await db.RecommendationFeedback
+            .FirstOrDefaultAsync(item => item.VndbId == normalizedId);
+
+        if (feedback == null)
+        {
+            feedback = new RecommendationFeedback
+            {
+                VndbId = normalizedId,
+                CreatedAt = DateTime.Now
+            };
+            db.RecommendationFeedback.Add(feedback);
+        }
+
+        if (positiveDelta > 0)
+        {
+            feedback.PositiveSignal += positiveDelta;
+            feedback.LastPositiveAt = DateTime.Now;
+        }
+
+        if (negativeDelta > 0)
+        {
+            feedback.NegativeSignal += negativeDelta;
+            feedback.LastNegativeAt = DateTime.Now;
+        }
+
+        feedback.UpdatedAt = DateTime.Now;
+        await db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -251,5 +296,35 @@ public class DatabaseService
         await using var alterCommand = connection.CreateCommand();
         alterCommand.CommandText = "ALTER TABLE \"Games\" ADD COLUMN \"CoverImagePath\" TEXT NULL;";
         await alterCommand.ExecuteNonQueryAsync();
+    }
+
+    private async Task EnsureRecommendationFeedbackTableAsync()
+    {
+        await using var connection = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE TABLE IF NOT EXISTS "RecommendationFeedback" (
+                "Id" INTEGER NOT NULL CONSTRAINT "PK_RecommendationFeedback" PRIMARY KEY AUTOINCREMENT,
+                "VndbId" TEXT NOT NULL,
+                "PositiveSignal" REAL NOT NULL DEFAULT 0,
+                "NegativeSignal" REAL NOT NULL DEFAULT 0,
+                "CreatedAt" TEXT NOT NULL,
+                "UpdatedAt" TEXT NOT NULL,
+                "LastPositiveAt" TEXT NULL,
+                "LastNegativeAt" TEXT NULL
+            );
+            """;
+        await command.ExecuteNonQueryAsync();
+
+        await using var indexCommand = connection.CreateCommand();
+        indexCommand.CommandText =
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_RecommendationFeedback_VndbId"
+            ON "RecommendationFeedback" ("VndbId");
+            """;
+        await indexCommand.ExecuteNonQueryAsync();
     }
 }
