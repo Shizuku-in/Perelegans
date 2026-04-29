@@ -236,5 +236,28 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0}h {1}m</value></data>
   <data name="Playtime_Minutes" xml:space="preserve"><value>{0}m</value></data>
   <data name="Playtime_Zero" xml:space="preserve"><value>0m</value></data>
+  <data name="Workflow_Waiting" xml:space="preserve"><value>Waiting</value></data>
+  <data name="Workflow_Running" xml:space="preserve"><value>Running</value></data>
+  <data name="Workflow_Done" xml:space="preserve"><value>Done</value></data>
+  <data name="Workflow_Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Workflow_Fallback" xml:space="preserve"><value>Fallback</value></data>
+  <data name="Workflow_Skipped" xml:space="preserve"><value>Skipped</value></data>
+  <data name="Rec_StepProfile" xml:space="preserve"><value>Profile</value></data>
+  <data name="Rec_StepBangumi" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Rec_StepAi" xml:space="preserve"><value>AI Reason</value></data>
+  <data name="Meta_SourceStatusTitle" xml:space="preserve"><value>Source Status</value></data>
+  <data name="Meta_CoverStatusTitle" xml:space="preserve"><value>Cover Status</value></data>
+  <data name="Meta_SourceReady" xml:space="preserve"><value>{0} is ready.</value></data>
+  <data name="Meta_SearchingSource" xml:space="preserve"><value>Searching {0}...</value></data>
+  <data name="Meta_SearchComplete" xml:space="preserve"><value>{0} returned {1} result(s).</value></data>
+  <data name="Meta_SearchFailed" xml:space="preserve"><value>{0} search failed.</value></data>
+  <data name="Meta_SourceNoResults" xml:space="preserve"><value>No results</value></data>
+  <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} result(s)</value></data>
+  <data name="Meta_AppliedSource" xml:space="preserve"><value>Applied metadata from {0}.</value></data>
+  <data name="Toolbar_AddGame" xml:space="preserve"><value>Add Game</value></data>
+  <data name="Toolbar_Recommendations" xml:space="preserve"><value>Recommendations</value></data>
+  <data name="Toolbar_Stats" xml:space="preserve"><value>Stats</value></data>
+  <data name="Toolbar_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Toolbar_ManageGames" xml:space="preserve"><value>Manage Games</value></data>
 </root>
 

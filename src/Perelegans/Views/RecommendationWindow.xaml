@@ -66,6 +66,36 @@
         </DockPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,8">
+            <ItemsControl ItemsSource="{Binding WorkflowSteps}" Margin="0,0,0,8">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <UniformGrid Rows="1"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,8,0"
+                                Padding="10,6"
+                                Background="{DynamicResource Perelegans.PanelBackground}"
+                                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                BorderThickness="1">
+                            <DockPanel LastChildFill="True">
+                                <TextBlock DockPanel.Dock="Right"
+                                           Text="{Binding StatusText}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource Perelegans.AccentBrush}"
+                                           VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource Perelegans.ForegroundBrush}"
+                                           VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
             <ProgressBar Height="4"
                          IsIndeterminate="True"
                          Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>

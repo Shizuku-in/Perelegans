@@ -1,229 +1,252 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <data name="Menu_File" xml:space="preserve"><value>ファイル (_F)</value></data>
-  <data name="Menu_AddFromProcess" xml:space="preserve"><value>プロセスから追加 (_P)</value></data>
-  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>ウェブサイトから追加 (_W)</value></data>
-  <data name="Menu_SaveBackup" xml:space="preserve"><value>バックアップを保存 (_S)</value></data>
-  <data name="Menu_RestoreBackup" xml:space="preserve"><value>バックアップを復元 (_R)</value></data>
-  <data name="Menu_Exit" xml:space="preserve"><value>終了 (_X)</value></data>
+  <data name="Menu_File" xml:space="preserve"><value>銉曘偂銈ゃ儷 (_F)</value></data>
+  <data name="Menu_AddFromProcess" xml:space="preserve"><value>銉椼儹銈汇偣銇嬨倝杩藉姞 (_P)</value></data>
+  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>銈︺偋銉栥偟銈ゃ儓銇嬨倝杩藉姞 (_W)</value></data>
+  <data name="Menu_SaveBackup" xml:space="preserve"><value>銉愩儍銈偄銉冦儣銈掍繚瀛?(_S)</value></data>
+  <data name="Menu_RestoreBackup" xml:space="preserve"><value>銉愩儍銈偄銉冦儣銈掑京鍏?(_R)</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>绲備簡 (_X)</value></data>
 
-  <data name="Menu_Tool" xml:space="preserve"><value>ツール (_T)</value></data>
-  <data name="Menu_MonitorProcess" xml:space="preserve"><value>プロセス監視の設定 (_M)</value></data>
-  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>プレイ時間統計 (_T)</value></data>
-  <data name="Menu_Language" xml:space="preserve"><value>言語 (_L)</value></data>
+  <data name="Menu_Tool" xml:space="preserve"><value>銉勩兗銉?(_T)</value></data>
+  <data name="Menu_MonitorProcess" xml:space="preserve"><value>銉椼儹銈汇偣鐩ｈ銇ō瀹?(_M)</value></data>
+  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>銉椼儸銈ゆ檪闁撶当瑷?(_T)</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>瑷€瑾?(_L)</value></data>
   
-  <data name="Menu_Help" xml:space="preserve"><value>ヘルプ (_H)</value></data>
-  <data name="Menu_About" xml:space="preserve"><value>について (_A)</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>銉樸儷銉?(_H)</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>銇仱銇勩仸 (_A)</value></data>
 
-  <data name="Column_Title" xml:space="preserve"><value>タイトル</value></data>
-  <data name="Column_Brand" xml:space="preserve"><value>ブランド</value></data>
-  <data name="Column_ReleaseDate" xml:space="preserve"><value>発売日</value></data>
-  <data name="Column_Playtime" xml:space="preserve"><value>プレイ時間</value></data>
-  <data name="Column_Created" xml:space="preserve"><value>作成日</value></data>
-  <data name="Column_LastPlayed" xml:space="preserve"><value>最終プレイ</value></data>
+  <data name="Column_Title" xml:space="preserve"><value>銈裤偆銉堛儷</value></data>
+  <data name="Column_Brand" xml:space="preserve"><value>銉栥儵銉炽儔</value></data>
+  <data name="Column_ReleaseDate" xml:space="preserve"><value>鐧哄２鏃?/value></data>
+  <data name="Column_Playtime" xml:space="preserve"><value>銉椼儸銈ゆ檪闁?/value></data>
+  <data name="Column_Created" xml:space="preserve"><value>浣滄垚鏃?/value></data>
+  <data name="Column_LastPlayed" xml:space="preserve"><value>鏈€绲傘儣銉偆</value></data>
 
-  <data name="Status_TotalPlaytime" xml:space="preserve"><value>総プレイ時間: </value></data>
-  <data name="Status_Completed" xml:space="preserve"><value>完了: </value></data>
+  <data name="Status_TotalPlaytime" xml:space="preserve"><value>绶忋儣銉偆鏅傞枔: </value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>瀹屼簡: </value></data>
 
-  <data name="Context_StartGame" xml:space="preserve"><value>プレイ</value></data>
-  <data name="Context_Metadata" xml:space="preserve"><value>メタデータ</value></data>
-  <data name="Context_FetchMetadata" xml:space="preserve"><value>メタデータの取得</value></data>
-  <data name="Context_EditMetadata" xml:space="preserve"><value>メタデータの編集</value></data>
-  <data name="Context_Open" xml:space="preserve"><value>開く</value></data>
-  <data name="Context_OpenFolder" xml:space="preserve"><value>ゲームフォルダを開く</value></data>
-  <data name="Context_OpenWebsite" xml:space="preserve"><value>ウェブサイトを開く</value></data>
-  <data name="Context_OpenGameStats" xml:space="preserve"><value>プレイ履歴を開く</value></data>
-  <data name="Context_Copy" xml:space="preserve"><value>コピー</value></data>
-  <data name="Context_CopyTitle" xml:space="preserve"><value>タイトルをコピー</value></data>
-  <data name="Context_CopyBrand" xml:space="preserve"><value>ブランドをコピー</value></data>
-  <data name="Context_Delete" xml:space="preserve"><value>削除</value></data>
-  <data name="Settings_Appearance" xml:space="preserve"><value>外観設定</value></data>
-  <data name="Settings_ThemeMode" xml:space="preserve"><value>テーマモード:</value></data>
-  <data name="Settings_Language" xml:space="preserve"><value>言語:</value></data>
-  <data name="Settings_Monitor" xml:space="preserve"><value>プロセス監視機能</value></data>
-  <data name="Settings_Enabled" xml:space="preserve"><value>監視を有効化:</value></data>
-  <data name="Settings_Interval" xml:space="preserve"><value>同期周期 (秒):</value></data>
-  <data name="Settings_Network" xml:space="preserve"><value>ネットワーク設定</value></data>
-  <data name="Settings_Proxy" xml:space="preserve"><value>プロキシ:</value></data>
-  <data name="Settings_System" xml:space="preserve"><value>起動と終了</value></data>
-  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>起動時に自動実行:</value></data>
-  <data name="Settings_CloseBehavior" xml:space="preserve"><value>ウィンドウを閉じるとき:</value></data>
-  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>直接終了</value></data>
-  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>トレイへ最小化</value></data>
+  <data name="Context_StartGame" xml:space="preserve"><value>銉椼儸銈?/value></data>
+  <data name="Context_Metadata" xml:space="preserve"><value>銉°偪銉囥兗銈?/value></data>
+  <data name="Context_FetchMetadata" xml:space="preserve"><value>銉°偪銉囥兗銈裤伄鍙栧緱</value></data>
+  <data name="Context_EditMetadata" xml:space="preserve"><value>銉°偪銉囥兗銈裤伄绶ㄩ泦</value></data>
+  <data name="Context_Open" xml:space="preserve"><value>闁嬨亸</value></data>
+  <data name="Context_OpenFolder" xml:space="preserve"><value>銈层兗銉犮儠銈┿儷銉€銈掗枊銇?/value></data>
+  <data name="Context_OpenWebsite" xml:space="preserve"><value>銈︺偋銉栥偟銈ゃ儓銈掗枊銇?/value></data>
+  <data name="Context_OpenGameStats" xml:space="preserve"><value>銉椼儸銈ゅ饱姝淬倰闁嬨亸</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>銈炽償銉?/value></data>
+  <data name="Context_CopyTitle" xml:space="preserve"><value>銈裤偆銉堛儷銈掋偝銉斻兗</value></data>
+  <data name="Context_CopyBrand" xml:space="preserve"><value>銉栥儵銉炽儔銈掋偝銉斻兗</value></data>
+  <data name="Context_Delete" xml:space="preserve"><value>鍓婇櫎</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>澶栬Τ瑷畾</value></data>
+  <data name="Settings_ThemeMode" xml:space="preserve"><value>銉嗐兗銉炪儮銉笺儔:</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>瑷€瑾?</value></data>
+  <data name="Settings_Monitor" xml:space="preserve"><value>銉椼儹銈汇偣鐩ｈ姗熻兘</value></data>
+  <data name="Settings_Enabled" xml:space="preserve"><value>鐩ｈ銈掓湁鍔瑰寲:</value></data>
+  <data name="Settings_Interval" xml:space="preserve"><value>鍚屾湡鍛ㄦ湡 (绉?:</value></data>
+  <data name="Settings_Network" xml:space="preserve"><value>銉嶃儍銉堛儻銉笺偗瑷畾</value></data>
+  <data name="Settings_Proxy" xml:space="preserve"><value>銉椼儹銈偡:</value></data>
+  <data name="Settings_System" xml:space="preserve"><value>璧峰嫊銇ㄧ祩浜?/value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>璧峰嫊鏅傘伀鑷嫊瀹熻:</value></data>
+  <data name="Settings_CloseBehavior" xml:space="preserve"><value>銈︺偅銉炽儔銈︺倰闁夈仒銈嬨仺銇?</value></data>
+  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>鐩存帴绲備簡</value></data>
+  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>銉堛儸銈ゃ伕鏈€灏忓寲</value></data>
 
-  <data name="Btn_Save" xml:space="preserve"><value>保存</value></data>
-  <data name="Btn_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Btn_Save" xml:space="preserve"><value>淇濆瓨</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>銈儯銉炽偦銉?/value></data>
   <data name="Btn_Ok" xml:space="preserve"><value>OK</value></data>
 
-  <data name="Meta_Title" xml:space="preserve"><value>メタデータの管理</value></data>
-  <data name="Meta_SearchWatermark" xml:space="preserve"><value>タイトルで検索...</value></data>
-  <data name="Meta_SearchBtn" xml:space="preserve"><value>検索</value></data>
-  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ 適用</value></data>
-  <data name="Meta_ApplyHint" xml:space="preserve"><value>選択したデータは以下の欄に入力されます。</value></data>
-  <data name="Meta_FieldTitle" xml:space="preserve"><value>タイトル:</value></data>
-  <data name="Meta_FieldBrand" xml:space="preserve"><value>ブランド:</value></data>
-  <data name="Meta_FieldDate" xml:space="preserve"><value>発売日:</value></data>
-  <data name="Meta_FieldStatus" xml:space="preserve"><value>進行状況:</value></data>
-  <data name="Meta_FieldWebsite" xml:space="preserve"><value>公式サイト:</value></data>
-  <data name="Meta_FieldCover" xml:space="preserve"><value>表紙:</value></data>
-  <data name="Meta_FieldTags" xml:space="preserve"><value>タグ:</value></data>
-  <data name="Meta_FieldProcess" xml:space="preserve"><value>プロセス:</value></data>
-  <data name="Meta_FieldExec" xml:space="preserve"><value>実行パス:</value></data>
-  <data name="Meta_TagsWatermark" xml:space="preserve"><value>1 行に 1 つのタグ</value></data>
-  <data name="Meta_ColSource" xml:space="preserve"><value>ソース</value></data>
-  <data name="Meta_ColTitle" xml:space="preserve"><value>タイトル</value></data>
-  <data name="Meta_ColBrand" xml:space="preserve"><value>ブランド</value></data>
-  <data name="Meta_ColDate" xml:space="preserve"><value>日付</value></data>
-  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>表紙はまだ設定されていません。</value></data>
-  <data name="Meta_CoverFile" xml:space="preserve"><value>ローカル:</value></data>
-  <data name="Meta_CoverUrl" xml:space="preserve"><value>画像 URL:</value></data>
+  <data name="Meta_Title" xml:space="preserve"><value>銉°偪銉囥兗銈裤伄绠＄悊</value></data>
+  <data name="Meta_SearchWatermark" xml:space="preserve"><value>銈裤偆銉堛儷銇ф绱?..</value></data>
+  <data name="Meta_SearchBtn" xml:space="preserve"><value>妞滅储</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>鈫?閬╃敤</value></data>
+  <data name="Meta_ApplyHint" xml:space="preserve"><value>閬告姙銇椼仧銉囥兗銈裤伅浠ヤ笅銇瑒銇叆鍔涖仌銈屻伨銇欍€?/value></data>
+  <data name="Meta_FieldTitle" xml:space="preserve"><value>銈裤偆銉堛儷:</value></data>
+  <data name="Meta_FieldBrand" xml:space="preserve"><value>銉栥儵銉炽儔:</value></data>
+  <data name="Meta_FieldDate" xml:space="preserve"><value>鐧哄２鏃?</value></data>
+  <data name="Meta_FieldStatus" xml:space="preserve"><value>閫茶鐘舵硜:</value></data>
+  <data name="Meta_FieldWebsite" xml:space="preserve"><value>鍏紡銈点偆銉?</value></data>
+  <data name="Meta_FieldCover" xml:space="preserve"><value>琛ㄧ礄:</value></data>
+  <data name="Meta_FieldTags" xml:space="preserve"><value>銈裤偘:</value></data>
+  <data name="Meta_FieldProcess" xml:space="preserve"><value>銉椼儹銈汇偣:</value></data>
+  <data name="Meta_FieldExec" xml:space="preserve"><value>瀹熻銉戙偣:</value></data>
+  <data name="Meta_TagsWatermark" xml:space="preserve"><value>1 琛屻伀 1 銇ゃ伄銈裤偘</value></data>
+  <data name="Meta_ColSource" xml:space="preserve"><value>銈姐兗銈?/value></data>
+  <data name="Meta_ColTitle" xml:space="preserve"><value>銈裤偆銉堛儷</value></data>
+  <data name="Meta_ColBrand" xml:space="preserve"><value>銉栥儵銉炽儔</value></data>
+  <data name="Meta_ColDate" xml:space="preserve"><value>鏃ヤ粯</value></data>
+  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>琛ㄧ礄銇伨銇犺ō瀹氥仌銈屻仸銇勩伨銇涖倱銆?/value></data>
+  <data name="Meta_CoverFile" xml:space="preserve"><value>銉兗銈儷:</value></data>
+  <data name="Meta_CoverUrl" xml:space="preserve"><value>鐢诲儚 URL:</value></data>
   <data name="Meta_CoverPathWatermark" xml:space="preserve"><value>C:\Images\cover.jpg</value></data>
-  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>自動取得</value></data>
-  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>ローカルから取り込む</value></data>
-  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>表紙をクリア</value></data>
-  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>表紙画像を選択</value></data>
-  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>ローカル表紙を選択しました。</value></data>
-  <data name="Meta_CoverCleared" xml:space="preserve"><value>表紙をクリアしました。</value></data>
-  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>表紙取得の前にタイトルまたはメタデータ ID を入力してください。</value></data>
-  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>サイトから表紙を取得できませんでした。</value></data>
-  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>表紙を取得し、ローカルに保存しました。</value></data>
-  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>表紙 URL を取得しました。</value></data>
-  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>選択した表紙ファイルは有効な画像ではありません。</value></data>
-  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>表紙 URL は有効な絶対 URL である必要があります。</value></data>
-  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>選択したメタデータ結果から表紙 URL を適用しました。</value></data>
-  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>選択した表紙を適用しました。</value></data>
-  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>表紙を選択</value></data>
-  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>VNDB または Bangumi から取得した表紙を選んでください。</value></data>
-  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>表紙候補を取得しています...</value></data>
-  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>この表紙を使う</value></data>
+  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>鑷嫊鍙栧緱</value></data>
+  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>銉兗銈儷銇嬨倝鍙栥倞杈笺個</value></data>
+  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>琛ㄧ礄銈掋偗銉偄</value></data>
+  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>琛ㄧ礄鐢诲儚銈掗伕鎶?/value></data>
+  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>銉兗銈儷琛ㄧ礄銈掗伕鎶炪仐銇俱仐銇熴€?/value></data>
+  <data name="Meta_CoverCleared" xml:space="preserve"><value>琛ㄧ礄銈掋偗銉偄銇椼伨銇椼仧銆?/value></data>
+  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>琛ㄧ礄鍙栧緱銇墠銇偪銈ゃ儓銉伨銇熴伅銉°偪銉囥兗銈?ID 銈掑叆鍔涖仐銇︺亸銇犮仌銇勩€?/value></data>
+  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>銈点偆銉堛亱銈夎〃绱欍倰鍙栧緱銇с亶銇俱仜銈撱仹銇椼仧銆?/value></data>
+  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>琛ㄧ礄銈掑彇寰椼仐銆併儹銉笺偒銉伀淇濆瓨銇椼伨銇椼仧銆?/value></data>
+  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>琛ㄧ礄 URL 銈掑彇寰椼仐銇俱仐銇熴€?/value></data>
+  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>閬告姙銇椼仧琛ㄧ礄銉曘偂銈ゃ儷銇湁鍔广仾鐢诲儚銇с伅銇傘倞銇俱仜銈撱€?/value></data>
+  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>琛ㄧ礄 URL 銇湁鍔广仾绲跺 URL 銇с亗銈嬪繀瑕併亴銇傘倞銇俱仚銆?/value></data>
+  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>閬告姙銇椼仧銉°偪銉囥兗銈跨祼鏋溿亱銈夎〃绱?URL 銈掗仼鐢ㄣ仐銇俱仐銇熴€?/value></data>
+  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>閬告姙銇椼仧琛ㄧ礄銈掗仼鐢ㄣ仐銇俱仐銇熴€?/value></data>
+  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>琛ㄧ礄銈掗伕鎶?/value></data>
+  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>VNDB 銇俱仧銇?Bangumi 銇嬨倝鍙栧緱銇椼仧琛ㄧ礄銈掗伕銈撱仹銇忋仩銇曘亜銆?/value></data>
+  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>琛ㄧ礄鍊欒銈掑彇寰椼仐銇︺亜銇俱仚...</value></data>
+  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>銇撱伄琛ㄧ礄銈掍娇銇?/value></data>
 
-  <data name="AddProc_Title" xml:space="preserve"><value>稼働中のプロセスから追加</value></data>
-  <data name="AddProc_Refresh" xml:space="preserve"><value>更新</value></data>
-  <data name="AddProc_Hint" xml:space="preserve"><value>メインウィンドウを持つプロセスのみを表示します。</value></data>
-  <data name="AddProc_ColWindow" xml:space="preserve"><value>ウィンドウタイトル</value></data>
-  <data name="AddProc_ColProc" xml:space="preserve"><value>プロセス名</value></data>
-  <data name="AddProc_ColPath" xml:space="preserve"><value>実行パス</value></data>
+  <data name="AddProc_Title" xml:space="preserve"><value>绋煎儘涓伄銉椼儹銈汇偣銇嬨倝杩藉姞</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>鏇存柊</value></data>
+  <data name="AddProc_Hint" xml:space="preserve"><value>銉°偆銉炽偊銈ｃ兂銉夈偊銈掓寔銇ゃ儣銉偦銈广伄銇裤倰琛ㄧず銇椼伨銇欍€?/value></data>
+  <data name="AddProc_ColWindow" xml:space="preserve"><value>銈︺偅銉炽儔銈︺偪銈ゃ儓銉?/value></data>
+  <data name="AddProc_ColProc" xml:space="preserve"><value>銉椼儹銈汇偣鍚?/value></data>
+  <data name="AddProc_ColPath" xml:space="preserve"><value>瀹熻銉戙偣</value></data>
 
-  <data name="Stats_Title" xml:space="preserve"><value>プレイ時間統計</value></data>
-  <data name="Stats_Tab7Days" xml:space="preserve"><value>過去 7 日間</value></data>
-  <data name="Stats_TabWeekly" xml:space="preserve"><value>今週</value></data>
-  <data name="Stats_TabMonthly" xml:space="preserve"><value>今月</value></data>
-  <data name="Stats_TabYearly" xml:space="preserve"><value>今年</value></data>
-  <data name="Stats_ColGame" xml:space="preserve"><value>ゲーム</value></data>
-  <data name="Stats_ColPeriod" xml:space="preserve"><value>期間</value></data>
-  <data name="Stats_ColPlaytime" xml:space="preserve"><value>プレイ時間</value></data>
-  <data name="Stats_ColSessions" xml:space="preserve"><value>セッション数</value></data>
+  <data name="Stats_Title" xml:space="preserve"><value>銉椼儸銈ゆ檪闁撶当瑷?/value></data>
+  <data name="Stats_Tab7Days" xml:space="preserve"><value>閬庡幓 7 鏃ラ枔</value></data>
+  <data name="Stats_TabWeekly" xml:space="preserve"><value>浠婇€?/value></data>
+  <data name="Stats_TabMonthly" xml:space="preserve"><value>浠婃湀</value></data>
+  <data name="Stats_TabYearly" xml:space="preserve"><value>浠婂勾</value></data>
+  <data name="Stats_ColGame" xml:space="preserve"><value>銈层兗銉?/value></data>
+  <data name="Stats_ColPeriod" xml:space="preserve"><value>鏈熼枔</value></data>
+  <data name="Stats_ColPlaytime" xml:space="preserve"><value>銉椼儸銈ゆ檪闁?/value></data>
+  <data name="Stats_ColSessions" xml:space="preserve"><value>銈汇儍銈枫儳銉虫暟</value></data>
 
-  <data name="Log_Title" xml:space="preserve"><value>プレイ履歴</value></data>
-  <data name="Log_ColSession" xml:space="preserve"><value>セッションID</value></data>
-  <data name="Log_ColStart" xml:space="preserve"><value>開始時刻</value></data>
-  <data name="Log_ColEnd" xml:space="preserve"><value>終了時刻</value></data>
-  <data name="Log_ColDate" xml:space="preserve"><value>日付</value></data>
-  <data name="Log_ColTime" xml:space="preserve"><value>時間</value></data>
-  <data name="Log_ColDuration" xml:space="preserve"><value>継続時間</value></data>
+  <data name="Log_Title" xml:space="preserve"><value>銉椼儸銈ゅ饱姝?/value></data>
+  <data name="Log_ColSession" xml:space="preserve"><value>銈汇儍銈枫儳銉矷D</value></data>
+  <data name="Log_ColStart" xml:space="preserve"><value>闁嬪鏅傚埢</value></data>
+  <data name="Log_ColEnd" xml:space="preserve"><value>绲備簡鏅傚埢</value></data>
+  <data name="Log_ColDate" xml:space="preserve"><value>鏃ヤ粯</value></data>
+  <data name="Log_ColTime" xml:space="preserve"><value>鏅傞枔</value></data>
+  <data name="Log_ColDuration" xml:space="preserve"><value>缍欑稓鏅傞枔</value></data>
   <data name="Msg_AppTitle" xml:space="preserve"><value>Perelegans</value></data>
-  <data name="Msg_ErrorTitle" xml:space="preserve"><value>エラー</value></data>
-  <data name="Msg_BackupSuccess" xml:space="preserve"><value>バックアップを保存しました！</value></data>
-  <data name="Msg_BackupFailed" xml:space="preserve"><value>バックアップ失敗: {0}</value></data>
-  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>バックアップを復元しました！</value></data>
-  <data name="Msg_RestoreFailed" xml:space="preserve"><value>復元失敗: {0}</value></data>
-  <data name="Msg_AboutTitle" xml:space="preserve"><value>Perelegans について</value></data>
+  <data name="Msg_ErrorTitle" xml:space="preserve"><value>銈ㄣ儵銉?/value></data>
+  <data name="Msg_BackupSuccess" xml:space="preserve"><value>銉愩儍銈偄銉冦儣銈掍繚瀛樸仐銇俱仐銇燂紒</value></data>
+  <data name="Msg_BackupFailed" xml:space="preserve"><value>銉愩儍銈偄銉冦儣澶辨晽: {0}</value></data>
+  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>銉愩儍銈偄銉冦儣銈掑京鍏冦仐銇俱仐銇燂紒</value></data>
+  <data name="Msg_RestoreFailed" xml:space="preserve"><value>寰╁厓澶辨晽: {0}</value></data>
+  <data name="Msg_AboutTitle" xml:space="preserve"><value>Perelegans 銇仱銇勩仸</value></data>
   <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
 Game Playtime Tracker &amp; Manager
 
 Copyright 2026 gkouen. All Lolis Reserved</value></data>
-  <data name="Msg_NoExecPath" xml:space="preserve"><value>実行ファイルのパスが設定されていません。
-メタデータエディターで設定するとゲームを直接起動できます。</value></data>
-  <data name="Msg_GameStartFailed" xml:space="preserve"><value>ゲームの起動に失敗しました: {0}</value></data>
-  <data name="Msg_NoVndbId" xml:space="preserve"><value>VNDB ID が見つかりません。</value></data>
-  <data name="Msg_NoEgsId" xml:space="preserve"><value>ErogameSpace ID が見つかりません。</value></data>
-  <data name="Msg_NoBangumiId" xml:space="preserve"><value>Bangumi ID が見つかりません。</value></data>
-  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>削除の確認</value></data>
-  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>「{0}」を削除してもよろしいですか？</value></data>
-  <data name="Msg_SelectProcess" xml:space="preserve"><value>先にプロセスを選択してください。</value></data>
-  <data name="GameStatus_Playing" xml:space="preserve"><value>プレイ中</value></data>
-  <data name="GameStatus_Dropped" xml:space="preserve"><value>中断</value></data>
-  <data name="GameStatus_Completed" xml:space="preserve"><value>完了</value></data>
-  <data name="Tray_Show" xml:space="preserve"><value>表示</value></data>
-  <data name="Tray_Exit" xml:space="preserve"><value>終了</value></data>
-  <data name="Menu_Recommendations" xml:space="preserve"><value>おすすめ (_R)</value></data>
-  <data name="Settings_Ai" xml:space="preserve"><value>AI おすすめ</value></data>
-  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API ベースURL:</value></data>
-  <data name="Settings_AiApiKey" xml:space="preserve"><value>API キー:</value></data>
-  <data name="Settings_AiModel" xml:space="preserve"><value>モデル:</value></data>
-  <data name="Rec_Title" xml:space="preserve"><value>ゲームおすすめ</value></data>
-  <data name="Rec_Refresh" xml:space="preserve"><value>更新</value></data>
-  <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB/Bangumi メタデータ付きの {1} 件中 {0} 件を使って好みを分析しています。</value></data>
-  <data name="Rec_TopTags" xml:space="preserve"><value>好みのタグ: {0}</value></data>
-  <data name="Rec_AvoidTags" xml:space="preserve"><value>避けたいタグ: {0}</value></data>
-  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>好みのブランド: {0}</value></data>
-  <data name="Rec_None" xml:space="preserve"><value>なし</value></data>
-  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>少なくとも 3 本のゲームに VNDB メタデータを紐づけると、おすすめを生成できます。</value></data>
-  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>現在表示できるおすすめはありません。</value></data>
-  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>AI による推薦理由を表示しています。</value></data>
-  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>AI が未設定のため、ローカルの推薦理由のみ表示しています。</value></data>
-  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI の説明を取得できなかったため、ローカルの推薦理由のみ表示しています。</value></data>
-  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI の説明を取得できなかったため、ローカルの推薦理由のみ表示しています。原因: {0}</value></data>
-  <data name="Rec_ColTitle" xml:space="preserve"><value>タイトル</value></data>
-  <data name="Rec_ColBrand" xml:space="preserve"><value>ブランド</value></data>
-  <data name="Rec_ColDate" xml:space="preserve"><value>発売日</value></data>
-  <data name="Rec_ColScore" xml:space="preserve"><value>スコア</value></data>
-  <data name="Rec_ColReason" xml:space="preserve"><value>理由</value></data>
-  <data name="Rec_ColActions" xml:space="preserve"><value>操作</value></data>
-  <data name="Rec_Import" xml:space="preserve"><value>追加</value></data>
-  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>登録済み</value></data>
-  <data name="Rec_OpenVndb" xml:space="preserve"><value>VNDB を開く</value></data>
-  <data name="Rec_OpenBangumi" xml:space="preserve"><value>Bangumi を開く</value></data>
-  <data name="Rec_ImportFailed" xml:space="preserve"><value>おすすめの追加に失敗しました: {0}</value></data>
-  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>好みのタグに一致: {0}。</value></data>
-  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>よく好むブランド: {0}。</value></data>
-  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>好みの年代に近い作品です。</value></data>
-  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>ライブラリ傾向との総合相性が高い候補です。</value></data>
-  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>苦手な傾向のタグを含む可能性があります: {0}。</value></data>
-  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>発売時期が普段の好みからやや離れています。</value></data>
-  <data name="GameStatus_Planned" xml:space="preserve"><value>プレイ予定</value></data>
-  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>選択した {0} 本のゲームを削除してもよろしいですか？</value></data>
-  <data name="Msg_NoSelection" xml:space="preserve"><value>ゲームが選択されていません。</value></data>
-  <data name="Menu_GameManagement" xml:space="preserve"><value>ゲーム管理 (_G)</value></data>
-  <data name="GameMgmt_Title" xml:space="preserve"><value>ゲーム管理</value></data>
-  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>全選択</value></data>
-  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>全解除</value></data>
-  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>選択反転</value></data>
-  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>選択削除</value></data>
-  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>合計:</value></data>
-  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>選択:</value></data>
-  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>タイトルでフィルタ...</value></data>
-  <data name="Rec_ProfileDepth" xml:space="preserve"><value>完了率 {0}、完了作平均 {1} 時間、中断作平均 {2} 時間、プロファイル傾向: {3}。</value></data>
-  <data name="Rec_ColBreakdown" xml:space="preserve"><value>内訳</value></data>
-  <data name="Rec_FeedbackLike" xml:space="preserve"><value>好み</value></data>
-  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>好み済み</value></data>
-  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>見送り</value></data>
-  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>見送り済み</value></data>
-  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>ライブラリ内の次の作品に近い候補です: {0}。</value></data>
-  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>近い候補はこれまで好意的な反応を受けています。</value></data>
-  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>近い候補は以前に否定的な反応を受けています。</value></data>
-  <data name="Rec_SortLabel" xml:space="preserve"><value>並び替え</value></data>
-  <data name="Rec_SortSmart" xml:space="preserve"><value>スマート</value></data>
-  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>総合ランキング</value></data>
-  <data name="Settings_AiTestButton" xml:space="preserve"><value>テスト</value></data>
-  <data name="Settings_AiTestRunning" xml:space="preserve"><value>AI 接続をテストしています...</value></data>
-  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI テストに成功しました。応答: {0}</value></data>
-  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI テストに失敗しました: {0}</value></data>
-  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>API ベースURL、API キー、モデルを先に入力してください。</value></data>
-  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API ベースURLが無効です。</value></data>
-  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI テストに失敗しました: 応答に読み取れるテキストがありません。</value></data>
-  <data name="TitleBar_Settings" xml:space="preserve"><value>設定</value></data>
-  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
-  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
-  <data name="TitleBar_Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Msg_NoExecPath" xml:space="preserve"><value>瀹熻銉曘偂銈ゃ儷銇儜銈广亴瑷畾銇曘倢銇︺亜銇俱仜銈撱€?
+銉°偪銉囥兗銈裤偍銉囥偅銈裤兗銇цō瀹氥仚銈嬨仺銈层兗銉犮倰鐩存帴璧峰嫊銇с亶銇俱仚銆?/value></data>
+  <data name="Msg_GameStartFailed" xml:space="preserve"><value>銈层兗銉犮伄璧峰嫊銇け鏁椼仐銇俱仐銇? {0}</value></data>
+  <data name="Msg_NoVndbId" xml:space="preserve"><value>VNDB ID 銇岃銇ゃ亱銈娿伨銇涖倱銆?/value></data>
+  <data name="Msg_NoEgsId" xml:space="preserve"><value>ErogameSpace ID 銇岃銇ゃ亱銈娿伨銇涖倱銆?/value></data>
+  <data name="Msg_NoBangumiId" xml:space="preserve"><value>Bangumi ID 銇岃銇ゃ亱銈娿伨銇涖倱銆?/value></data>
+  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>鍓婇櫎銇⒑瑾?/value></data>
+  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>銆寋0}銆嶃倰鍓婇櫎銇椼仸銈傘倛銈嶃仐銇勩仹銇欍亱锛?/value></data>
+  <data name="Msg_SelectProcess" xml:space="preserve"><value>鍏堛伀銉椼儹銈汇偣銈掗伕鎶炪仐銇︺亸銇犮仌銇勩€?/value></data>
+  <data name="GameStatus_Playing" xml:space="preserve"><value>銉椼儸銈や腑</value></data>
+  <data name="GameStatus_Dropped" xml:space="preserve"><value>涓柇</value></data>
+  <data name="GameStatus_Completed" xml:space="preserve"><value>瀹屼簡</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>琛ㄧず</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>绲備簡</value></data>
+  <data name="Menu_Recommendations" xml:space="preserve"><value>銇娿仚銇欍倎 (_R)</value></data>
+  <data name="Settings_Ai" xml:space="preserve"><value>AI 銇娿仚銇欍倎</value></data>
+  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 銉欍兗銈筓RL:</value></data>
+  <data name="Settings_AiApiKey" xml:space="preserve"><value>API 銈兗:</value></data>
+  <data name="Settings_AiModel" xml:space="preserve"><value>銉儑銉?</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>銈层兗銉犮亰銇欍仚銈?/value></data>
+  <data name="Rec_Refresh" xml:space="preserve"><value>鏇存柊</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB/Bangumi 銉°偪銉囥兗銈夸粯銇嶃伄 {1} 浠朵腑 {0} 浠躲倰浣裤仯銇﹀ソ銇裤倰鍒嗘瀽銇椼仸銇勩伨銇欍€?/value></data>
+  <data name="Rec_TopTags" xml:space="preserve"><value>濂姐伩銇偪銈? {0}</value></data>
+  <data name="Rec_AvoidTags" xml:space="preserve"><value>閬裤亼銇熴亜銈裤偘: {0}</value></data>
+  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>濂姐伩銇儢銉┿兂銉? {0}</value></data>
+  <data name="Rec_None" xml:space="preserve"><value>銇仐</value></data>
+  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>灏戙仾銇忋仺銈?3 鏈伄銈层兗銉犮伀 VNDB 銉°偪銉囥兗銈裤倰绱愩仴銇戙倠銇ㄣ€併亰銇欍仚銈併倰鐢熸垚銇с亶銇俱仚銆?/value></data>
+  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>鐝惧湪琛ㄧず銇с亶銈嬨亰銇欍仚銈併伅銇傘倞銇俱仜銈撱€?/value></data>
+  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>AI 銇倛銈嬫帹钖︾悊鐢便倰琛ㄧず銇椼仸銇勩伨銇欍€?/value></data>
+  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>AI 銇屾湭瑷畾銇仧銈併€併儹銉笺偒銉伄鎺ㄨ枽鐞嗙敱銇伩琛ㄧず銇椼仸銇勩伨銇欍€?/value></data>
+  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI 銇鏄庛倰鍙栧緱銇с亶銇亱銇ｃ仧銇熴倎銆併儹銉笺偒銉伄鎺ㄨ枽鐞嗙敱銇伩琛ㄧず銇椼仸銇勩伨銇欍€?/value></data>
+  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI 銇鏄庛倰鍙栧緱銇с亶銇亱銇ｃ仧銇熴倎銆併儹銉笺偒銉伄鎺ㄨ枽鐞嗙敱銇伩琛ㄧず銇椼仸銇勩伨銇欍€傚師鍥? {0}</value></data>
+  <data name="Rec_ColTitle" xml:space="preserve"><value>銈裤偆銉堛儷</value></data>
+  <data name="Rec_ColBrand" xml:space="preserve"><value>銉栥儵銉炽儔</value></data>
+  <data name="Rec_ColDate" xml:space="preserve"><value>鐧哄２鏃?/value></data>
+  <data name="Rec_ColScore" xml:space="preserve"><value>銈广偝銈?/value></data>
+  <data name="Rec_ColReason" xml:space="preserve"><value>鐞嗙敱</value></data>
+  <data name="Rec_ColActions" xml:space="preserve"><value>鎿嶄綔</value></data>
+  <data name="Rec_Import" xml:space="preserve"><value>杩藉姞</value></data>
+  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>鐧婚尣娓堛伩</value></data>
+  <data name="Rec_OpenVndb" xml:space="preserve"><value>VNDB 銈掗枊銇?/value></data>
+  <data name="Rec_OpenBangumi" xml:space="preserve"><value>Bangumi 銈掗枊銇?/value></data>
+  <data name="Rec_ImportFailed" xml:space="preserve"><value>銇娿仚銇欍倎銇拷鍔犮伀澶辨晽銇椼伨銇椼仧: {0}</value></data>
+  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>濂姐伩銇偪銈般伀涓€鑷? {0}銆?/value></data>
+  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>銈堛亸濂姐個銉栥儵銉炽儔: {0}銆?/value></data>
+  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>濂姐伩銇勾浠ｃ伀杩戙亜浣滃搧銇с仚銆?/value></data>
+  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>銉┿偆銉栥儵銉偩鍚戙仺銇窂鍚堢浉鎬с亴楂樸亜鍊欒銇с仚銆?/value></data>
+  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>鑻︽墜銇偩鍚戙伄銈裤偘銈掑惈銈€鍙兘鎬с亴銇傘倞銇俱仚: {0}銆?/value></data>
+  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>鐧哄２鏅傛湡銇屾櫘娈点伄濂姐伩銇嬨倝銈勩倓闆倢銇︺亜銇俱仚銆?/value></data>
+  <data name="GameStatus_Planned" xml:space="preserve"><value>銉椼儸銈や簣瀹?/value></data>
+  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>閬告姙銇椼仧 {0} 鏈伄銈层兗銉犮倰鍓婇櫎銇椼仸銈傘倛銈嶃仐銇勩仹銇欍亱锛?/value></data>
+  <data name="Msg_NoSelection" xml:space="preserve"><value>銈层兗銉犮亴閬告姙銇曘倢銇︺亜銇俱仜銈撱€?/value></data>
+  <data name="Menu_GameManagement" xml:space="preserve"><value>銈层兗銉犵鐞?(_G)</value></data>
+  <data name="GameMgmt_Title" xml:space="preserve"><value>銈层兗銉犵鐞?/value></data>
+  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>鍏ㄩ伕鎶?/value></data>
+  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>鍏ㄨВ闄?/value></data>
+  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>閬告姙鍙嶈虎</value></data>
+  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>閬告姙鍓婇櫎</value></data>
+  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>鍚堣▓:</value></data>
+  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>閬告姙:</value></data>
+  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>銈裤偆銉堛儷銇с儠銈ｃ儷銈?..</value></data>
+  <data name="Rec_ProfileDepth" xml:space="preserve"><value>瀹屼簡鐜?{0}銆佸畬浜嗕綔骞冲潎 {1} 鏅傞枔銆佷腑鏂綔骞冲潎 {2} 鏅傞枔銆併儣銉儠銈°偆銉偩鍚? {3}銆?/value></data>
+  <data name="Rec_ColBreakdown" xml:space="preserve"><value>鍐呰ǔ</value></data>
+  <data name="Rec_FeedbackLike" xml:space="preserve"><value>濂姐伩</value></data>
+  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>濂姐伩娓堛伩</value></data>
+  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>瑕嬮€併倞</value></data>
+  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>瑕嬮€併倞娓堛伩</value></data>
+  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>銉┿偆銉栥儵銉唴銇銇綔鍝併伀杩戙亜鍊欒銇с仚: {0}銆?/value></data>
+  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>杩戙亜鍊欒銇亾銈屻伨銇уソ鎰忕殑銇弽蹇溿倰鍙椼亼銇︺亜銇俱仚銆?/value></data>
+  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>杩戙亜鍊欒銇互鍓嶃伀鍚﹀畾鐨勩仾鍙嶅繙銈掑彈銇戙仸銇勩伨銇欍€?/value></data>
+  <data name="Rec_SortLabel" xml:space="preserve"><value>涓︺伋鏇裤亪</value></data>
+  <data name="Rec_SortSmart" xml:space="preserve"><value>銈广優銉笺儓</value></data>
+  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>绶忓悎銉┿兂銈兂銈?/value></data>
+  <data name="Settings_AiTestButton" xml:space="preserve"><value>銉嗐偣銉?/value></data>
+  <data name="Settings_AiTestRunning" xml:space="preserve"><value>AI 鎺ョ稓銈掋儐銈广儓銇椼仸銇勩伨銇?..</value></data>
+  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI 銉嗐偣銉堛伀鎴愬姛銇椼伨銇椼仧銆傚繙绛? {0}</value></data>
+  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI 銉嗐偣銉堛伀澶辨晽銇椼伨銇椼仧: {0}</value></data>
+  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>API 銉欍兗銈筓RL銆丄PI 銈兗銆併儮銉囥儷銈掑厛銇叆鍔涖仐銇︺亸銇犮仌銇勩€?/value></data>
+  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API 銉欍兗銈筓RL銇岀劇鍔广仹銇欍€?/value></data>
+  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI 銉嗐偣銉堛伀澶辨晽銇椼伨銇椼仧: 蹇滅瓟銇銇垮彇銈屻倠銉嗐偔銈广儓銇屻亗銈娿伨銇涖倱銆?/value></data>
+  <data name="TitleBar_Settings" xml:space="preserve"><value>瑷畾</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>鏈€灏忓寲</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>鏈€澶у寲</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>闁夈仒銈?/value></data>
   <data name="Context_OpenVndb" xml:space="preserve"><value>VNDB</value></data>
   <data name="Context_OpenErogameSpace" xml:space="preserve"><value>ErogameSpace</value></data>
   <data name="Context_OpenBangumi" xml:space="preserve"><value>Bangumi</value></data>
-  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>公式サイト</value></data>
-  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>最終プレイ {0:yyyy-MM-dd}</value></data>
-  <data name="Game_DefaultTitle" xml:space="preserve"><value>新しいゲーム</value></data>
-  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite データベース (*.db)|*.db</value></data>
-  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0}時間 {1}分</value></data>
-  <data name="Playtime_Minutes" xml:space="preserve"><value>{0}分</value></data>
-  <data name="Playtime_Zero" xml:space="preserve"><value>0分</value></data>
+  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>鍏紡銈点偆銉?/value></data>
+  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>鏈€绲傘儣銉偆 {0:yyyy-MM-dd}</value></data>
+  <data name="Game_DefaultTitle" xml:space="preserve"><value>鏂般仐銇勩偛銉笺儬</value></data>
+  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite 銉囥兗銈裤儥銉笺偣 (*.db)|*.db</value></data>
+  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0}鏅傞枔 {1}鍒?/value></data>
+  <data name="Playtime_Minutes" xml:space="preserve"><value>{0}鍒?/value></data>
+  <data name="Playtime_Zero" xml:space="preserve"><value>0鍒?/value></data>
+  <data name="Workflow_Waiting" xml:space="preserve"><value>寰呮</value></data>
+  <data name="Workflow_Running" xml:space="preserve"><value>鍑︾悊涓?/value></data>
+  <data name="Workflow_Done" xml:space="preserve"><value>瀹屼簡</value></data>
+  <data name="Workflow_Failed" xml:space="preserve"><value>澶辨晽</value></data>
+  <data name="Workflow_Fallback" xml:space="preserve"><value>銉曘偐銉笺儷銉愩儍銈?/value></data>
+  <data name="Workflow_Skipped" xml:space="preserve"><value>銈广偔銉冦儣</value></data>
+  <data name="Rec_StepProfile" xml:space="preserve"><value>銉椼儹銉曘偅銉笺儷鐢熸垚</value></data>
+  <data name="Rec_StepBangumi" xml:space="preserve"><value>Bangumi 瑁滃畬</value></data>
+  <data name="Rec_StepAi" xml:space="preserve"><value>AI 鐞嗙敱</value></data>
+  <data name="Meta_SourceStatusTitle" xml:space="preserve"><value>銈姐兗銈圭姸鎱?/value></data>
+  <data name="Meta_CoverStatusTitle" xml:space="preserve"><value>銈儛銉肩姸鎱?/value></data>
+  <data name="Meta_SourceReady" xml:space="preserve"><value>{0} 銇簴鍌欏畬浜嗐仹銇欍€?/value></data>
+  <data name="Meta_SearchingSource" xml:space="preserve"><value>{0} 銈掓绱腑...</value></data>
+  <data name="Meta_SearchComplete" xml:space="preserve"><value>{0} 銇?{1} 浠惰繑銇椼伨銇椼仧銆?/value></data>
+  <data name="Meta_SearchFailed" xml:space="preserve"><value>{0} 銇绱伀澶辨晽銇椼伨銇椼仧銆?/value></data>
+  <data name="Meta_SourceNoResults" xml:space="preserve"><value>绲愭灉銇仐</value></data>
+  <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} 浠?/value></data>
+  <data name="Meta_AppliedSource" xml:space="preserve"><value>{0} 銇儭銈裤儑銉笺偪銈掗仼鐢ㄣ仐銇俱仐銇熴€?/value></data>
+  <data name="Toolbar_AddGame" xml:space="preserve"><value>銈层兗銉犺拷鍔?/value></data>
+  <data name="Toolbar_Recommendations" xml:space="preserve"><value>銇娿仚銇欍倎</value></data>
+  <data name="Toolbar_Stats" xml:space="preserve"><value>绲辫▓</value></data>
+  <data name="Toolbar_Settings" xml:space="preserve"><value>瑷畾</value></data>
+  <data name="Toolbar_ManageGames" xml:space="preserve"><value>銈层兗銉犵鐞?/value></data>
 </root>

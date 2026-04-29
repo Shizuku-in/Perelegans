@@ -47,9 +47,9 @@
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <TextBlock VerticalAlignment="Center" Margin="8,0,0,0" FontSize="12">
                     <Run Text="Total: "/>
-                    <Run Text="{Binding TotalCount}" FontWeight="SemiBold"/>
+                    <Run Text="{Binding TotalCount, Mode=OneWay}" FontWeight="SemiBold"/>
                     <Run Text=" / Selected: "/>
-                    <Run Text="{Binding SelectedCount}" FontWeight="SemiBold" Foreground="#E37F7F"/>
+                    <Run Text="{Binding SelectedCount, Mode=OneWay}" FontWeight="SemiBold" Foreground="#E37F7F"/>
                 </TextBlock>
             </StackPanel>
             <TextBox Height="28" FontSize="12" VerticalContentAlignment="Center"

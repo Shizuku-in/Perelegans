@@ -58,6 +58,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTestingAi;
 
+    public bool HasAiTestStatus => !string.IsNullOrWhiteSpace(AiTestStatusText);
+
     public string[] LanguageOptions { get; } = ["zh-Hans", "en-US", "ja-JP"];
     public IReadOnlyList<AppCloseBehaviorOption> CloseBehaviorOptions { get; } =
     [
@@ -130,6 +132,11 @@ public partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(AiApiKeyPlaceholder));
         OnPropertyChanged(nameof(AiModelPlaceholder));
         OnPropertyChanged(nameof(AiProviderHint));
+    }
+
+    partial void OnAiTestStatusTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasAiTestStatus));
     }
 
     [RelayCommand]

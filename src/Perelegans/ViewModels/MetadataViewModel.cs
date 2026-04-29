@@ -79,6 +79,18 @@ public partial class MetadataViewModel : ObservableObject
     private string _coverStatusText = string.Empty;
 
     [ObservableProperty]
+    private string _metadataStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _vndbSourceStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _bangumiSourceStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _egsSourceStatusText = string.Empty;
+
+    [ObservableProperty]
     private string _editTagsText = string.Empty;
 
     [ObservableProperty]
@@ -132,6 +144,14 @@ public partial class MetadataViewModel : ObservableObject
         _editExecutablePath = game.ExecutablePath ?? string.Empty;
 
         RefreshCoverPreview();
+        ResetSourceStatuses();
+    }
+
+    partial void OnSelectedSourceChanged(string value)
+    {
+        MetadataStatusText = string.Format(
+            TranslationService.Instance["Meta_SourceReady"],
+            value);
     }
 
     partial void OnEditCoverImagePathChanged(string value)
@@ -206,6 +226,10 @@ public partial class MetadataViewModel : ObservableObject
 
         IsSearching = true;
         SearchResults.Clear();
+        SetSourceStatus(SelectedSource, TranslationService.Instance["Workflow_Running"]);
+        MetadataStatusText = string.Format(
+            TranslationService.Instance["Meta_SearchingSource"],
+            SelectedSource);
 
         try
         {
@@ -221,9 +245,23 @@ public partial class MetadataViewModel : ObservableObject
             {
                 SearchResults.Add(result);
             }
+
+            SetSourceStatus(
+                SelectedSource,
+                results.Count == 0
+                    ? TranslationService.Instance["Meta_SourceNoResults"]
+                    : string.Format(TranslationService.Instance["Meta_SourceResultCount"], results.Count));
+            MetadataStatusText = string.Format(
+                TranslationService.Instance["Meta_SearchComplete"],
+                SelectedSource,
+                results.Count);
         }
         catch (Exception ex)
         {
+            SetSourceStatus(SelectedSource, TranslationService.Instance["Workflow_Failed"]);
+            MetadataStatusText = string.Format(
+                TranslationService.Instance["Meta_SearchFailed"],
+                SelectedSource);
             System.Diagnostics.Debug.WriteLine($"Metadata search error: {ex.Message}");
         }
         finally
@@ -237,6 +275,10 @@ public partial class MetadataViewModel : ObservableObject
     {
         if (SelectedResult == null)
             return;
+
+        MetadataStatusText = string.Format(
+            TranslationService.Instance["Meta_AppliedSource"],
+            SelectedResult.Source);
 
         var selectedTitle = !string.IsNullOrWhiteSpace(SelectedResult.OriginalTitle)
             ? SelectedResult.OriginalTitle
@@ -469,6 +511,32 @@ public partial class MetadataViewModel : ObservableObject
         _editCoverAspectRatio = aspectRatio;
         RefreshCoverPreview(forceNotify: true);
         CoverStatusText = statusText;
+    }
+
+    private void ResetSourceStatuses()
+    {
+        VndbSourceStatusText = TranslationService.Instance["Workflow_Waiting"];
+        BangumiSourceStatusText = TranslationService.Instance["Workflow_Waiting"];
+        EgsSourceStatusText = TranslationService.Instance["Workflow_Waiting"];
+        MetadataStatusText = string.Format(
+            TranslationService.Instance["Meta_SourceReady"],
+            SelectedSource);
+    }
+
+    private void SetSourceStatus(string source, string statusText)
+    {
+        switch (source)
+        {
+            case "VNDB":
+                VndbSourceStatusText = statusText;
+                break;
+            case "Bangumi":
+                BangumiSourceStatusText = statusText;
+                break;
+            case "ErogameSpace":
+                EgsSourceStatusText = statusText;
+                break;
+        }
     }
 
     private void RefreshCoverPreview(bool forceNotify = false)

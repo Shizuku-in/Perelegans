@@ -6,11 +6,14 @@ using System.Windows.Threading;
 using Perelegans.Models;
 using MahApps.Metro.Controls;
 using Perelegans.ViewModels;
+using Perelegans.Services;
 
 namespace Perelegans.Views;
 
 public partial class MainWindow : MetroWindow
 {
+    private ScrollViewer? _gameCardsScrollViewer;
+
     private readonly DispatcherTimer _refreshTimer = new()
     {
         Interval = TimeSpan.FromMinutes(1)
@@ -29,6 +32,11 @@ public partial class MainWindow : MetroWindow
     // ---- Title Bar Drag ----
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        if (FindAncestor<System.Windows.Controls.Primitives.ButtonBase>(e.OriginalSource as DependencyObject) != null)
+        {
+            return;
+        }
+
         if (e.ClickCount == 2)
         {
             ToggleMaximize();
@@ -46,6 +54,42 @@ public partial class MainWindow : MetroWindow
         {
             vm.OpenSettingsCommand.Execute(null);
         }
+    }
+
+    private async void BtnGameManagement_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+
+        if (DataContext is not MainViewModel vm)
+        {
+            return;
+        }
+
+        try
+        {
+            await vm.OpenGameManagementAsync();
+        }
+        catch (Exception ex)
+        {
+            App.WriteCrashLog(ex);
+            System.Windows.MessageBox.Show(
+                ex.ToString(),
+                TranslationService.Instance["Msg_ErrorTitle"],
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private void AddGameToolbarButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not System.Windows.Controls.Button button || button.ContextMenu == null)
+        {
+            return;
+        }
+
+        button.ContextMenu.PlacementTarget = button;
+        button.ContextMenu.IsOpen = true;
+        e.Handled = true;
     }
 
     private void BtnMinimize_Click(object sender, RoutedEventArgs e)
@@ -85,6 +129,7 @@ public partial class MainWindow : MetroWindow
         }
 
         RefreshPageSize();
+        _gameCardsScrollViewer = FindDescendant<ScrollViewer>(GameCards);
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -198,7 +243,7 @@ public partial class MainWindow : MetroWindow
 
     private void CardRow_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        var scrollViewer = FindDescendant<ScrollViewer>(GameCards);
+        var scrollViewer = _gameCardsScrollViewer ??= FindDescendant<ScrollViewer>(GameCards);
         if (scrollViewer == null)
         {
             return;
@@ -246,6 +291,21 @@ public partial class MainWindow : MetroWindow
             {
                 return descendant;
             }
+        }
+
+        return null;
+    }
+
+    private static T? FindAncestor<T>(DependencyObject? current) where T : DependencyObject
+    {
+        while (current != null)
+        {
+            if (current is T typed)
+            {
+                return typed;
+            }
+
+            current = VisualTreeHelper.GetParent(current);
         }
 
         return null;

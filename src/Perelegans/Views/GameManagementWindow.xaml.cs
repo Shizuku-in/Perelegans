@@ -20,7 +20,18 @@ public partial class GameManagementWindow : MetroWindow
             return;
 
         _loadedOnce = true;
-        await vm.LoadGamesAsync();
+
+        try
+        {
+            if (vm.TotalCount == 0)
+            {
+                await vm.LoadGamesAsync();
+            }
+        }
+        catch
+        {
+            Close();
+        }
     }
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)

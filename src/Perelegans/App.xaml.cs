@@ -34,6 +34,10 @@ public partial class App : System.Windows.Application
 
     private async void App_OnStartup(object sender, StartupEventArgs e)
     {
+        DispatcherUnhandledException += App_DispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += AppDomain_UnhandledException;
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
         if (!TryAcquireSingleInstanceLock())
         {
             await NotifyExistingInstanceAsync();
@@ -133,6 +137,51 @@ public partial class App : System.Windows.Application
         _processMonitor?.Stop();
         _themeService?.Dispose();
         base.OnExit(e);
+    }
+
+    public static void WriteCrashLog(Exception ex)
+    {
+        try
+        {
+            var logDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Perelegans");
+            Directory.CreateDirectory(logDir);
+
+            var logPath = Path.Combine(logDir, "error.log");
+            File.AppendAllText(
+                logPath,
+                $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}]\n{ex}\n\n");
+        }
+        catch
+        {
+            // Last-resort logging should never crash the app.
+        }
+    }
+
+    private void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+    {
+        WriteCrashLog(e.Exception);
+        System.Windows.MessageBox.Show(
+            e.Exception.ToString(),
+            TranslationService.Instance["Msg_ErrorTitle"],
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        e.Handled = true;
+    }
+
+    private static void AppDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception ex)
+        {
+            WriteCrashLog(ex);
+        }
+    }
+
+    private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        WriteCrashLog(e.Exception);
+        e.SetObserved();
     }
 
     private void InitializeTrayIcon()

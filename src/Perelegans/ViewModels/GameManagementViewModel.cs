@@ -48,7 +48,9 @@ public partial class GameManagementViewModel : ObservableObject
         Games.Clear();
         foreach (var game in allGames)
         {
-            Games.Add(new ManageableGame(game));
+            var manageableGame = new ManageableGame(game);
+            manageableGame.PropertyChanged += OnManageableGamePropertyChanged;
+            Games.Add(manageableGame);
         }
 
         Games.CollectionChanged -= OnGamesCollectionChanged;
@@ -62,6 +64,17 @@ public partial class GameManagementViewModel : ObservableObject
     private void OnGamesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(TotalCount));
+        if (e.OldItems != null)
+        {
+            foreach (ManageableGame game in e.OldItems)
+                game.PropertyChanged -= OnManageableGamePropertyChanged;
+        }
+    }
+
+    private void OnManageableGamePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ManageableGame.IsSelected))
+            SelectedCount = Games.Count(g => g.IsSelected);
     }
 
     public int TotalCount => Games.Count;
@@ -108,13 +121,18 @@ public partial class GameManagementViewModel : ObservableObject
     [RelayCommand]
     private async Task DeleteSelected()
     {
+        await DeleteSelectedGamesAsync();
+    }
+
+    public async Task<bool> DeleteSelectedGamesAsync()
+    {
         var selected = Games.Where(g => g.IsSelected).ToList();
         if (selected.Count == 0)
         {
             await _dialogCoordinator.ShowMessageAsync(this,
                 TranslationService.Instance["Msg_AppTitle"],
                 TranslationService.Instance["Msg_NoSelection"]);
-            return;
+            return false;
         }
 
         var result = await _dialogCoordinator.ShowMessageAsync(this,
@@ -123,7 +141,7 @@ public partial class GameManagementViewModel : ObservableObject
             MessageDialogStyle.AffirmativeAndNegative);
 
         if (result != MessageDialogResult.Affirmative)
-            return;
+            return false;
 
         foreach (var g in selected)
         {
@@ -133,6 +151,7 @@ public partial class GameManagementViewModel : ObservableObject
 
         SelectedCount = Games.Count(g => g.IsSelected);
         OnPropertyChanged(nameof(TotalCount));
+        return true;
     }
 }
 

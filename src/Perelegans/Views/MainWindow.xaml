@@ -104,6 +104,13 @@
 
             <StackPanel Grid.Column="2" Orientation="Horizontal"
                         VerticalAlignment="Stretch">
+                <Button x:Name="BtnGameManagement"
+                        Click="BtnGameManagement_Click"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
+                        ToolTip="{i18n:Translate Toolbar_ManageGames}">
+                    <iconPacks:PackIconMaterial Kind="DeleteOutline" Width="12" Height="12"/>
+                </Button>
                 <Button x:Name="BtnSettings" Click="BtnSettings_Click"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
@@ -193,6 +200,75 @@
                 </MenuItem>
             </MenuItem>
         </Menu>
+
+        <ToolBarTray DockPanel.Dock="Top"
+                     Background="{DynamicResource Perelegans.PanelBackground}">
+            <ToolBar Height="36"
+                     Padding="6,3"
+                     Background="{DynamicResource Perelegans.PanelBackground}">
+                <Button x:Name="AddGameToolbarButton"
+                        Height="28"
+                        MinWidth="92"
+                        Margin="0,0,6,0"
+                        Padding="8,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                        Click="AddGameToolbarButton_Click">
+                    <Button.ContextMenu>
+                        <ContextMenu Placement="Bottom"
+                                     HorizontalOffset="0"
+                                     VerticalOffset="2">
+                            <MenuItem Header="{i18n:Translate Menu_AddFromProcess}"
+                                      Command="{Binding PlacementTarget.DataContext.AddFromProcessCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                <MenuItem.Icon>
+                                    <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}"
+                                      Command="{Binding PlacementTarget.DataContext.AddFromWebsiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                <MenuItem.Icon>
+                                    <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="PlusBoxOutline" Width="14" Height="14"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"/>
+                        <TextBlock Text="{i18n:Translate Toolbar_AddGame}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Height="28"
+                        MinWidth="92"
+                        Margin="0,0,6,0"
+                        Padding="8,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square}"
+                        Command="{Binding OpenRecommendationsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"/>
+                        <TextBlock Text="{i18n:Translate Toolbar_Recommendations}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Height="28"
+                        MinWidth="92"
+                        Margin="0,0,6,0"
+                        Padding="8,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square}"
+                        Command="{Binding PlaytimeStatisticsCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"/>
+                        <TextBlock Text="{i18n:Translate Toolbar_Stats}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </ToolBar>
+        </ToolBarTray>
 
         <StatusBar DockPanel.Dock="Bottom" Height="22"
                    Background="{DynamicResource Perelegans.StatusBarBackground}"
@@ -303,9 +379,9 @@
                                                             ScaleY="1"/>
                                         </Border.RenderTransform>
                                         <Border.Effect>
-                                            <DropShadowEffect BlurRadius="18"
-                                                              ShadowDepth="6"
-                                                              Opacity="0.18"
+                                            <DropShadowEffect BlurRadius="10"
+                                                              ShadowDepth="3"
+                                                              Opacity="0.12"
                                                               Color="{DynamicResource Perelegans.CardShadowColor}"/>
                                         </Border.Effect>
                                         <Border.ContextMenu>
@@ -449,9 +525,9 @@
                                                             CornerRadius="13"
                                                             SnapsToDevicePixels="True">
                                                         <Border.Effect>
-                                                            <DropShadowEffect BlurRadius="8"
+                                                            <DropShadowEffect BlurRadius="5"
                                                                               ShadowDepth="0"
-                                                                              Opacity="0.24"
+                                                                              Opacity="0.18"
                                                                               Color="{DynamicResource Perelegans.CoverStatusBadgeShadowColor}"/>
                                                         </Border.Effect>
                                                         <iconPacks:PackIconMaterial Kind="{Binding Status, Converter={StaticResource StatusIconConverter}}"
@@ -512,16 +588,16 @@
                                                     <Storyboard FillBehavior="HoldEnd">
                                                         <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
                                                                          Storyboard.TargetProperty="ScaleX"
-                                                                         To="1.018"
-                                                                         Duration="0:0:0.18">
+                                                                         To="1.01"
+                                                                         Duration="0:0:0.11">
                                                             <DoubleAnimation.EasingFunction>
                                                                 <QuadraticEase EasingMode="EaseOut"/>
                                                             </DoubleAnimation.EasingFunction>
                                                         </DoubleAnimation>
                                                         <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
                                                                          Storyboard.TargetProperty="ScaleY"
-                                                                         To="1.018"
-                                                                         Duration="0:0:0.18">
+                                                                         To="1.01"
+                                                                         Duration="0:0:0.11">
                                                             <DoubleAnimation.EasingFunction>
                                                                 <QuadraticEase EasingMode="EaseOut"/>
                                                             </DoubleAnimation.EasingFunction>
@@ -535,7 +611,7 @@
                                                         <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
                                                                          Storyboard.TargetProperty="ScaleX"
                                                                          To="1"
-                                                                         Duration="0:0:0.18">
+                                                                         Duration="0:0:0.10">
                                                             <DoubleAnimation.EasingFunction>
                                                                 <QuadraticEase EasingMode="EaseOut"/>
                                                             </DoubleAnimation.EasingFunction>
@@ -543,7 +619,7 @@
                                                         <DoubleAnimation Storyboard.TargetName="GameCardScaleTransform"
                                                                          Storyboard.TargetProperty="ScaleY"
                                                                          To="1"
-                                                                         Duration="0:0:0.18">
+                                                                         Duration="0:0:0.10">
                                                             <DoubleAnimation.EasingFunction>
                                                                 <QuadraticEase EasingMode="EaseOut"/>
                                                             </DoubleAnimation.EasingFunction>

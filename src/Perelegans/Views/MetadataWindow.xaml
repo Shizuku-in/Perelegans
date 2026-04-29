@@ -6,7 +6,7 @@
         xmlns:i18n="clr-namespace:Perelegans.i18n"
         Title="{i18n:Translate Meta_Title}"
         TitleCharacterCasing="Normal"
-        Height="640" Width="620"
+        Height="680" Width="820"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowTitleBar="True"
@@ -122,7 +122,68 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="90"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="18"/>
+                    <ColumnDefinition Width="250"/>
                 </Grid.ColumnDefinitions>
+
+                <Border Grid.Row="0" Grid.Column="3" Grid.RowSpan="12"
+                        Padding="10"
+                        Background="{DynamicResource Perelegans.PanelBackground}"
+                        BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                        BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="{i18n:Translate Meta_SourceStatusTitle}"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,8">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="6"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="6"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Row="0" Text="VNDB" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding VndbSourceStatusText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                            <TextBlock Grid.Row="2" Text="Bangumi" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding BangumiSourceStatusText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                            <TextBlock Grid.Row="4" Text="ErogameSpace" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding EgsSourceStatusText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                        </Grid>
+
+                        <Border Padding="8,6"
+                                Background="{DynamicResource Perelegans.WindowBackground}"
+                                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                BorderThickness="1"
+                                Margin="0,0,0,10">
+                            <TextBlock Text="{Binding MetadataStatusText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Perelegans.AccentBrush}"
+                                       FontSize="11"/>
+                        </Border>
+
+                        <TextBlock Text="{i18n:Translate Meta_CoverStatusTitle}"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Margin="0,0,0,6"/>
+                        <TextBlock Text="{Binding CoverStatusText}"
+                                   TextWrapping="Wrap"
+                                   MinHeight="46"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                   FontSize="11"/>
+                    </StackPanel>
+                </Border>
 
                 <TextBlock Grid.Row="0" Text="{i18n:Translate Meta_FieldTitle}" VerticalAlignment="Center" FontSize="12" Margin="0,2"/>
                 <TextBox Grid.Row="0" Grid.Column="1" Height="24" FontSize="12" Margin="0,2"

@@ -64,6 +64,13 @@ public partial class RecommendationViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasRecommendations;
 
+    public ObservableCollection<WorkflowStepViewModel> WorkflowSteps { get; } =
+    [
+        new(TranslationService.Instance["Rec_StepProfile"], TranslationService.Instance["Workflow_Waiting"]),
+        new(TranslationService.Instance["Rec_StepBangumi"], TranslationService.Instance["Workflow_Waiting"]),
+        new(TranslationService.Instance["Rec_StepAi"], TranslationService.Instance["Workflow_Waiting"])
+    ];
+
     public RecommendationViewModel(
         DatabaseService dbService,
         SettingsService settingsService,
@@ -85,6 +92,8 @@ public partial class RecommendationViewModel : ObservableObject
         EmptyStateText = string.Empty;
         AiStatusText = string.Empty;
         AiProfileText = string.Empty;
+        ResetWorkflowSteps();
+        SetWorkflowStep(0, "Workflow_Running");
         _currentCandidates = [];
         Recommendations.Clear();
         HasRecommendations = false;
@@ -93,9 +102,12 @@ public partial class RecommendationViewModel : ObservableObject
         {
             var result = await _recommendationService.GetRecommendationsAsync();
             UpdateSummary(result.ProfileSummary);
+            SetWorkflowStep(0, "Workflow_Done");
 
             if (!result.ProfileSummary.HasEnoughSourceGames)
             {
+                SetWorkflowStep(1, "Workflow_Skipped");
+                SetWorkflowStep(2, "Workflow_Skipped");
                 EmptyStateText = TranslationService.Instance["Rec_EmptyNeedMoreData"];
                 AiStatusText = _aiRecommendationService.IsConfigured
                     ? TranslationService.Instance["Rec_AiStatusEnabled"]
@@ -105,6 +117,8 @@ public partial class RecommendationViewModel : ObservableObject
 
             if (result.Candidates.Count == 0)
             {
+                SetWorkflowStep(1, "Workflow_Skipped");
+                SetWorkflowStep(2, "Workflow_Skipped");
                 EmptyStateText = TranslationService.Instance["Rec_EmptyNoResults"];
                 AiStatusText = _aiRecommendationService.IsConfigured
                     ? TranslationService.Instance["Rec_AiStatusEnabled"]
@@ -125,17 +139,22 @@ public partial class RecommendationViewModel : ObservableObject
                 : TranslationService.Instance["Rec_AiStatusDisabled"];
 
             var bangumiEnrichmentTask = _recommendationService.EnrichCandidatesWithBangumiRatingsAsync(_currentCandidates);
+            SetWorkflowStep(1, "Workflow_Running");
 
             if (!_aiRecommendationService.IsConfigured)
             {
                 await bangumiEnrichmentTask;
+                SetWorkflowStep(1, "Workflow_Done");
+                SetWorkflowStep(2, "Workflow_Skipped");
                 ApplySort();
                 return;
             }
 
             await bangumiEnrichmentTask;
+            SetWorkflowStep(1, "Workflow_Done");
             ApplySort();
 
+            SetWorkflowStep(2, "Workflow_Running");
             var aiResult = await _aiRecommendationService.ExplainAsync(
                 result.ProfileSummary,
                 SelectCandidatesForAiRerank());
@@ -146,6 +165,7 @@ public partial class RecommendationViewModel : ObservableObject
                 AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
                     ? TranslationService.Instance["Rec_AiStatusFallback"]
                     : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
+                SetWorkflowStep(2, "Workflow_Fallback");
                 return;
             }
 
@@ -169,18 +189,43 @@ public partial class RecommendationViewModel : ObservableObject
             }
 
             AiProfileText = aiResult.UserProfileSummary;
+            SetWorkflowStep(2, "Workflow_Done");
             ApplySort();
         }
         catch (Exception ex)
         {
             EmptyStateText = TranslationService.Instance["Rec_EmptyNoResults"];
             AiStatusText = TranslationService.Instance["Rec_AiStatusFallback"];
+            MarkFirstWaitingWorkflowStepAsFailed();
             Debug.WriteLine($"Recommendation refresh error: {ex.Message}");
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private void ResetWorkflowSteps()
+    {
+        foreach (var step in WorkflowSteps)
+            step.StatusText = TranslationService.Instance["Workflow_Waiting"];
+    }
+
+    private void SetWorkflowStep(int index, string statusResourceKey)
+    {
+        if (index < 0 || index >= WorkflowSteps.Count)
+            return;
+
+        WorkflowSteps[index].StatusText = TranslationService.Instance[statusResourceKey];
+    }
+
+    private void MarkFirstWaitingWorkflowStepAsFailed()
+    {
+        var step = WorkflowSteps.FirstOrDefault(item =>
+            item.StatusText == TranslationService.Instance["Workflow_Running"] ||
+            item.StatusText == TranslationService.Instance["Workflow_Waiting"]);
+        if (step != null)
+            step.StatusText = TranslationService.Instance["Workflow_Failed"];
     }
 
     partial void OnSortModeChanged(RecommendationSortMode value)

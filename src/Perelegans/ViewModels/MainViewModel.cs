@@ -29,6 +29,7 @@ public partial class MainViewModel : ObservableObject
     private readonly ProcessMonitorService _processMonitor;
     private HttpClient _httpClient;
     private readonly IDialogCoordinator _dialogCoordinator;
+    private BulkDeleteWindow? _bulkDeleteWindow;
     private int _loadedGameCount;
     private int _materializedGameCount;
     private int _visibleRefreshVersion;
@@ -556,6 +557,59 @@ public partial class MainViewModel : ObservableObject
         };
 
         win.ShowDialog();
+    }
+
+    public async Task OpenGameManagementAsync()
+    {
+        try
+        {
+            if (_bulkDeleteWindow is { IsVisible: true })
+            {
+                _bulkDeleteWindow.Activate();
+                return;
+            }
+
+            var vm = new GameManagementViewModel(_dbService, _dialogCoordinator);
+            await vm.LoadGamesAsync();
+
+            var win = new BulkDeleteWindow
+            {
+                DataContext = vm,
+                Owner = Application.Current.MainWindow,
+                ShowInTaskbar = false
+            };
+
+            _bulkDeleteWindow = win;
+            win.Closed += async (_, _) =>
+            {
+                _bulkDeleteWindow = null;
+                if (!win.HasDeletedGames)
+                    return;
+
+                try
+                {
+                    var games = await _dbService.GetAllGamesAsync();
+                    ReplaceGames(games);
+                }
+                catch (Exception ex)
+                {
+                    Perelegans.App.WriteCrashLog(ex);
+                    System.Windows.MessageBox.Show(
+                        ex.ToString(),
+                        TranslationService.Instance["Msg_ErrorTitle"],
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            };
+
+            win.Show();
+            win.Activate();
+        }
+        catch (Exception ex)
+        {
+            Perelegans.App.WriteCrashLog(ex);
+            throw;
+        }
     }
 
     // ---- Menu Commands (Help) ----
