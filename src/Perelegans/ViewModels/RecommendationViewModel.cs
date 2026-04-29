@@ -276,13 +276,13 @@ public partial class RecommendationViewModel : ObservableObject
 
         if (!candidate.AiAffinityScore.HasValue)
         {
-            return candidate.RecommendationScore * 0.78
-                   + externalScore * 0.22;
+            return candidate.RecommendationScore * 0.70
+                   + externalScore * 0.30;
         }
 
-        return candidate.RecommendationScore * 0.55
-               + candidate.AiAffinityScore.Value * 0.25
-               + externalScore * 0.20;
+        return candidate.RecommendationScore * 0.48
+               + candidate.AiAffinityScore.Value * 0.22
+               + externalScore * 0.30;
     }
 
     private List<RecommendationCandidate> SelectCandidatesForAiRerank()
@@ -384,6 +384,9 @@ public partial class RecommendationViewModel : ObservableObject
 
         await _dbService.RecordRecommendationSignalAsync(candidate.VndbId, negativeDelta: 1.0);
         candidate.FeedbackVote = -1;
+        _currentCandidates.RemoveAll(item =>
+            string.Equals(item.VndbId, candidate.VndbId, StringComparison.OrdinalIgnoreCase));
+        ApplySort();
     }
 
     [RelayCommand]

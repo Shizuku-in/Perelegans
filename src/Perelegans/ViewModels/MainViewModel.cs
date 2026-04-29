@@ -33,6 +33,7 @@ public partial class MainViewModel : ObservableObject
     private int _loadedGameCount;
     private int _materializedGameCount;
     private int _visibleRefreshVersion;
+    private int _profileRefreshVersion;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
@@ -131,6 +132,10 @@ public partial class MainViewModel : ObservableObject
         {
             game.IsDetectedRunning = isDetectedRunning;
             SortGamesForDisplay();
+            if (!isDetectedRunning)
+            {
+                QueueRecommendationProfileRefresh();
+            }
         }
     }
 
@@ -211,6 +216,7 @@ public partial class MainViewModel : ObservableObject
         game.RefreshCoverBindings();
         RefreshStats();
         _processMonitor.UpdateMonitoredGames(Games);
+        QueueRecommendationProfileRefresh();
     }
 
     private void RebuildVisibleRows()
@@ -301,6 +307,7 @@ public partial class MainViewModel : ObservableObject
     {
         await _dbService.AddGameAsync(game);
         InsertImportedGameIntoCollection(game, insertAtTop, selectAfterInsert);
+        QueueRecommendationProfileRefresh();
         _ = AutoFetchCoverForImportedGameAsync(game);
     }
 
@@ -575,7 +582,6 @@ public partial class MainViewModel : ObservableObject
             var win = new BulkDeleteWindow
             {
                 DataContext = vm,
-                Owner = Application.Current.MainWindow,
                 ShowInTaskbar = false
             };
 
@@ -590,6 +596,7 @@ public partial class MainViewModel : ObservableObject
                 {
                     var games = await _dbService.GetAllGamesAsync();
                     ReplaceGames(games);
+                    QueueRecommendationProfileRefresh();
                 }
                 catch (Exception ex)
                 {
@@ -799,6 +806,7 @@ public partial class MainViewModel : ObservableObject
             await _dbService.UpdateGameAsync(SelectedGame);
             RefreshStats();
             _processMonitor.UpdateMonitoredGames(Games);
+            QueueRecommendationProfileRefresh();
         }
         catch (Exception ex)
         {
@@ -837,6 +845,33 @@ public partial class MainViewModel : ObservableObject
             await _dbService.DeleteGameAsync(SelectedGame.Id);
             Games.Remove(SelectedGame);
             SelectedGame = null;
+            QueueRecommendationProfileRefresh();
+        }
+    }
+
+    private void QueueRecommendationProfileRefresh()
+    {
+        var version = Interlocked.Increment(ref _profileRefreshVersion);
+        _ = WarmRecommendationProfileAsync(version);
+    }
+
+    private async Task WarmRecommendationProfileAsync(int version)
+    {
+        try
+        {
+            await Task.Delay(1200);
+            if (version != _profileRefreshVersion)
+                return;
+
+            var recommendationService = new RecommendationService(
+                _dbService,
+                _httpClient,
+                new VndbRecommendationCacheService());
+            await recommendationService.WarmProfileCacheAsync();
+        }
+        catch (Exception ex)
+        {
+            Perelegans.App.WriteCrashLog(ex);
         }
     }
 

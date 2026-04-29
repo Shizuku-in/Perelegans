@@ -15,6 +15,7 @@ namespace Perelegans.Services;
 public class AiRecommendationService
 {
     private const string AnthropicVersion = "2023-06-01";
+    private static readonly TimeSpan AiRequestTimeout = TimeSpan.FromSeconds(300);
     private readonly HttpClient _httpClient;
     private readonly SettingsService _settingsService;
 
@@ -93,7 +94,8 @@ public class AiRecommendationService
             };
 
             using var request = BuildRequest(provider, baseUri, payload);
-            using var response = await _httpClient.SendAsync(request);
+            using var timeoutCts = new System.Threading.CancellationTokenSource(AiRequestTimeout);
+            using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
             var responseBody = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
@@ -159,6 +161,11 @@ public class AiRecommendationService
             result.ErrorMessage = "AI JSON did not contain an 'explanations' array.";
             return result;
         }
+        catch (OperationCanceledException)
+        {
+            result.ErrorMessage = $"AI request timed out after {AiRequestTimeout.TotalSeconds:F0} seconds.";
+            return result;
+        }
         catch (Exception ex)
         {
             result.ErrorMessage = $"AI parsing failed: {ex.Message}";
@@ -170,8 +177,17 @@ public class AiRecommendationService
     {
         var model = _settingsService.Settings.AiModel.Trim();
         var apiKey = _settingsService.Settings.AiApiKey.Trim();
+        var languageCode = TranslationService.NormalizeLanguageCode(_settingsService.Settings.Language);
+        var outputLanguage = languageCode switch
+        {
+            "zh-Hans" => "Simplified Chinese",
+            "ja-JP" => "Japanese",
+            _ => "English"
+        };
         var userPrompt =
             "Return a JSON object with a short 'userProfileSummary' string and an 'explanations' array. " +
+            $"All user-facing text values must be written in {outputLanguage}. " +
+            "Do not use English for reason, caution, sellingPoint, or userProfileSummary unless the requested language is English. " +
             "Each item must contain candidateId, reason, matchingTags, caution, and sellingPoint. " +
             "Each item may include affinityScore from 0.0 to 1.0, where 1.0 means very aligned with the generated user taste profile. Use the full range and make the scores discriminative, not clustered. " +
             "matchingTags must be an array of short strings already present in the candidate data. " +
@@ -187,7 +203,7 @@ public class AiRecommendationService
                 model,
                 max_tokens = 900,
                 temperature = 0.3,
-                system = "You explain visual novel recommendations. Return JSON only. Keep each reason concise and practical.",
+                system = $"You explain visual novel recommendations. Return JSON only. Keep each reason concise and practical. Write all user-facing text in {outputLanguage}.",
                 messages = new object[]
                 {
                     new
@@ -217,7 +233,7 @@ public class AiRecommendationService
                 new
                 {
                     role = "system",
-                    content = "You explain visual novel recommendations. Return JSON only. Keep each reason concise and practical."
+                    content = $"You explain visual novel recommendations. Return JSON only. Keep each reason concise and practical. Write all user-facing text in {outputLanguage}."
                 },
                 new
                 {

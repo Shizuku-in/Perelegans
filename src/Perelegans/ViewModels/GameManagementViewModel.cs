@@ -153,6 +153,24 @@ public partial class GameManagementViewModel : ObservableObject
         OnPropertyChanged(nameof(TotalCount));
         return true;
     }
+
+    public int GetSelectedGameCount()
+    {
+        return Games.Count(g => g.IsSelected);
+    }
+
+    public async Task DeleteSelectedGamesWithoutPromptAsync()
+    {
+        var selected = Games.Where(g => g.IsSelected).ToList();
+        foreach (var g in selected)
+        {
+            await _dbService.DeleteGameAsync(g.Id);
+            Games.Remove(g);
+        }
+
+        SelectedCount = Games.Count(g => g.IsSelected);
+        OnPropertyChanged(nameof(TotalCount));
+    }
 }
 
 public partial class ManageableGame : ObservableObject

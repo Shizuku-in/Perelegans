@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -21,6 +22,7 @@ public class RecommendationService
     private const int CandidateSearchPageSize = 100;
     private const int FinalRecommendationLimit = 24;
     private const int MinimumFallbackResultCount = 12;
+    private const string ProfileCacheVersion = "profile-v2";
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
     private readonly VndbRecommendationCacheService _cacheService;
@@ -34,69 +36,20 @@ public class RecommendationService
 
     public async Task<RecommendationResult> GetRecommendationsAsync()
     {
-        var games = await _dbService.GetAllGamesAsync();
+        var context = await GetProfileContextAsync(useCache: true);
         var result = new RecommendationResult
         {
-            ProfileSummary = new TasteProfileSummary
-            {
-                TotalLibraryGames = games.Count,
-                CompletedGames = games.Count(game => game.Status == GameStatus.Completed),
-                DroppedGames = games.Count(game => game.Status == GameStatus.Dropped)
-            }
+            ProfileSummary = context.ProfileSummary
         };
 
-        result.ProfileSummary.CompletionRate = games.Count == 0
-            ? 0
-            : (double)result.ProfileSummary.CompletedGames / games.Count;
-        result.ProfileSummary.AveragePlaytimeHours = games.Count == 0
-            ? 0
-            : games.Average(game => game.Playtime.TotalHours);
-        result.ProfileSummary.AverageCompletedHours = games
-            .Where(game => game.Status == GameStatus.Completed)
-            .Select(game => game.Playtime.TotalHours)
-            .DefaultIfEmpty(0)
-            .Average();
-        result.ProfileSummary.AverageDroppedHours = games
-            .Where(game => game.Status == GameStatus.Dropped)
-            .Select(game => game.Playtime.TotalHours)
-            .DefaultIfEmpty(0)
-            .Average();
-
-        var libraryIds = games
-            .Select(game => VndbIdUtilities.Normalize(game.VndbId))
-            .Where(id => !string.IsNullOrWhiteSpace(id))
-            .Cast<string>()
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        var cacheDocument = await _cacheService.LoadAsync();
-        var metadataById = await GetVisualNovelsByIdsAsync(libraryIds, cacheDocument);
-        var bangumiMetadataByGameId = await GetBangumiMetadataByGameIdAsync(games);
-        var feedbackById = await _dbService.GetRecommendationFeedbackMapAsync();
-
-        var profiledGames = games
-            .Select(game =>
-            {
-                var vndbId = VndbIdUtilities.Normalize(game.VndbId);
-                var vndbMetadata = vndbId != null && metadataById.TryGetValue(vndbId, out var foundVndb)
-                    ? foundVndb
-                    : null;
-                bangumiMetadataByGameId.TryGetValue(game.Id, out var bangumiMetadata);
-                return (Game: game, Metadata: MergeLibraryMetadata(vndbMetadata, bangumiMetadata));
-            })
-            .Where(item => item.Metadata != null)
-            .Select(item => (item.Game, Metadata: item.Metadata!))
-            .ToList();
-
-        result.ProfileSummary.EligibleLibraryGames = profiledGames.Count;
-        if (profiledGames.Count < 3)
+        if (context.Profile == null)
             return result;
 
-        var profile = BuildProfile(profiledGames, feedbackById, result.ProfileSummary);
-        if (profile.PositiveTagIds.Count == 0)
-            return result;
-
-        var rankedCandidates = (await SearchCandidatesAsync(profile, libraryIds, feedbackById, cacheDocument))
+        var rankedCandidates = (await SearchCandidatesAsync(
+                context.Profile,
+                context.LibraryIds,
+                context.FeedbackById,
+                context.CacheDocument))
             .OrderByDescending(candidate => candidate.RecommendationScore)
             .ThenByDescending(candidate => candidate.TagOverlapScore)
             .ThenByDescending(candidate => candidate.FeedbackAffinity)
@@ -120,6 +73,118 @@ public class RecommendationService
         }
 
         return result;
+    }
+
+    public async Task WarmProfileCacheAsync()
+    {
+        await GetProfileContextAsync(useCache: false);
+    }
+
+    private async Task<RecommendationProfileContext> GetProfileContextAsync(bool useCache)
+    {
+        var games = await _dbService.GetAllGamesAsync();
+        var profileSummary = new TasteProfileSummary
+        {
+            TotalLibraryGames = games.Count,
+            CompletedGames = games.Count(game => game.Status == GameStatus.Completed),
+            DroppedGames = games.Count(game => game.Status == GameStatus.Dropped)
+        };
+
+        profileSummary.CompletionRate = games.Count == 0
+            ? 0
+            : (double)profileSummary.CompletedGames / games.Count;
+        profileSummary.AveragePlaytimeHours = games.Count == 0
+            ? 0
+            : games.Average(game => game.Playtime.TotalHours);
+        profileSummary.AverageCompletedHours = games
+            .Where(game => game.Status == GameStatus.Completed)
+            .Select(game => game.Playtime.TotalHours)
+            .DefaultIfEmpty(0)
+            .Average();
+        profileSummary.AverageDroppedHours = games
+            .Where(game => game.Status == GameStatus.Dropped)
+            .Select(game => game.Playtime.TotalHours)
+            .DefaultIfEmpty(0)
+            .Average();
+
+        var libraryIds = games
+            .Select(game => VndbIdUtilities.Normalize(game.VndbId))
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Cast<string>()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var cacheDocument = await _cacheService.LoadAsync();
+        var feedbackById = await _dbService.GetRecommendationFeedbackMapAsync();
+        var signature = BuildProfileSignature(games, feedbackById);
+
+        if (useCache &&
+            cacheDocument.ProfileCache is { Profile: not null } profileCache &&
+            string.Equals(profileCache.Signature, signature, StringComparison.Ordinal))
+        {
+            return new RecommendationProfileContext(
+                profileCache.Summary,
+                FromCachedProfile(profileCache.Profile),
+                libraryIds,
+                feedbackById,
+                cacheDocument);
+        }
+
+        var metadataById = await GetVisualNovelsByIdsAsync(libraryIds, cacheDocument);
+        var bangumiMetadataByGameId = await GetBangumiMetadataByGameIdAsync(games);
+
+        var profiledGames = games
+            .Select(game =>
+            {
+                var vndbId = VndbIdUtilities.Normalize(game.VndbId);
+                var vndbMetadata = vndbId != null && metadataById.TryGetValue(vndbId, out var foundVndb)
+                    ? foundVndb
+                    : null;
+                bangumiMetadataByGameId.TryGetValue(game.Id, out var bangumiMetadata);
+                return (Game: game, Metadata: MergeLibraryMetadata(vndbMetadata, bangumiMetadata));
+            })
+            .Where(item => item.Metadata != null)
+            .Select(item => (item.Game, Metadata: item.Metadata!))
+            .ToList();
+
+        profileSummary.EligibleLibraryGames = profiledGames.Count;
+        if (profiledGames.Count < 3)
+        {
+            cacheDocument.ProfileCache = new CachedRecommendationProfile
+            {
+                Signature = signature,
+                CachedAtUtc = DateTimeOffset.UtcNow,
+                Summary = profileSummary,
+                Profile = null
+            };
+            await _cacheService.SaveAsync(cacheDocument);
+            return new RecommendationProfileContext(profileSummary, null, libraryIds, feedbackById, cacheDocument);
+        }
+
+        var profile = BuildProfile(profiledGames, feedbackById, profileSummary);
+        if (profile.PositiveTagIds.Count == 0)
+        {
+            cacheDocument.ProfileCache = new CachedRecommendationProfile
+            {
+                Signature = signature,
+                CachedAtUtc = DateTimeOffset.UtcNow,
+                Summary = profileSummary,
+                Profile = null
+            };
+            await _cacheService.SaveAsync(cacheDocument);
+            return new RecommendationProfileContext(profileSummary, null, libraryIds, feedbackById, cacheDocument);
+        }
+
+        cacheDocument.ProfileCache = new CachedRecommendationProfile
+        {
+            Signature = signature,
+            CachedAtUtc = DateTimeOffset.UtcNow,
+            Summary = profileSummary,
+            Profile = ToCachedProfile(profile)
+        };
+        await _cacheService.SaveAsync(cacheDocument);
+
+        return new RecommendationProfileContext(profileSummary, profile, libraryIds, feedbackById, cacheDocument);
     }
 
     private async Task<Dictionary<string, CachedVndbVisualNovel>> GetVisualNovelsByIdsAsync(
@@ -295,6 +360,100 @@ public class RecommendationService
             .ToList();
     }
 
+    private static string BuildProfileSignature(
+        IReadOnlyCollection<Game> games,
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine(ProfileCacheVersion);
+        foreach (var game in games.OrderBy(game => game.Id))
+        {
+            builder
+                .Append(game.Id).Append('|')
+                .Append(game.Status).Append('|')
+                .Append(game.Playtime.Ticks).Append('|')
+                .Append(game.AccessedDate.Ticks).Append('|')
+                .Append(VndbIdUtilities.Normalize(game.VndbId) ?? string.Empty).Append('|')
+                .Append(game.BangumiId?.Trim() ?? string.Empty).Append('|')
+                .Append(game.Tags?.Trim() ?? string.Empty)
+                .AppendLine();
+        }
+
+        foreach (var feedback in feedbackById.OrderBy(item => item.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            builder
+                .Append(feedback.Key).Append('|')
+                .Append(feedback.Value.PositiveSignal.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                .Append(feedback.Value.NegativeSignal.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                .Append(feedback.Value.UpdatedAt.Ticks)
+                .AppendLine();
+        }
+
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(builder.ToString()));
+        return Convert.ToHexString(bytes);
+    }
+
+    private static CachedRecommendationProfileData ToCachedProfile(RecommendationProfile profile)
+    {
+        return new CachedRecommendationProfileData
+        {
+            TagScores = new Dictionary<string, double>(profile.TagScores, StringComparer.OrdinalIgnoreCase),
+            RecentTagScores = new Dictionary<string, double>(profile.RecentTagScores, StringComparer.OrdinalIgnoreCase),
+            PositiveTagIds = profile.PositiveTagIds.ToList(),
+            SecondaryPositiveTagIds = profile.SecondaryPositiveTagIds.ToList(),
+            NegativeTagIds = profile.NegativeTagIds.ToList(),
+            SoftNegativeTagIds = profile.SoftNegativeTagIds.ToList(),
+            DeveloperScores = new Dictionary<string, double>(profile.DeveloperScores, StringComparer.OrdinalIgnoreCase),
+            PreferredDevelopers = profile.PreferredDevelopers.ToList(),
+            PreferredReleaseYear = profile.PreferredReleaseYear,
+            MaxPositiveOverlap = profile.MaxPositiveOverlap,
+            MaxRecentOverlap = profile.MaxRecentOverlap,
+            SourceGames = profile.SourceGames
+                .Select(source => new CachedSourceGameProfile
+                {
+                    Title = source.Title,
+                    Developers = source.Developers.ToList(),
+                    ReleaseDate = source.ReleaseDate,
+                    PositiveTagScores = new Dictionary<string, double>(source.PositiveTagScores, StringComparer.OrdinalIgnoreCase),
+                    Weight = source.Weight,
+                    RecentBias = source.RecentBias
+                })
+                .ToList(),
+            DeveloperPreferenceWeight = profile.DeveloperPreferenceWeight
+        };
+    }
+
+    private static RecommendationProfile FromCachedProfile(CachedRecommendationProfileData profile)
+    {
+        profile.EnsureInitialized();
+        return new RecommendationProfile
+        {
+            TagScores = new Dictionary<string, double>(profile.TagScores, StringComparer.OrdinalIgnoreCase),
+            RecentTagScores = new Dictionary<string, double>(profile.RecentTagScores, StringComparer.OrdinalIgnoreCase),
+            PositiveTagIds = profile.PositiveTagIds.ToList(),
+            SecondaryPositiveTagIds = profile.SecondaryPositiveTagIds.ToList(),
+            NegativeTagIds = profile.NegativeTagIds.ToList(),
+            SoftNegativeTagIds = profile.SoftNegativeTagIds.ToList(),
+            DeveloperScores = new Dictionary<string, double>(profile.DeveloperScores, StringComparer.OrdinalIgnoreCase),
+            PreferredDevelopers = profile.PreferredDevelopers.ToList(),
+            PreferredReleaseYear = profile.PreferredReleaseYear,
+            MaxPositiveOverlap = profile.MaxPositiveOverlap,
+            MaxRecentOverlap = profile.MaxRecentOverlap,
+            SourceGames = profile.SourceGames
+                .Select(source => new SourceGameProfile
+                {
+                    Title = source.Title,
+                    Developers = source.Developers.ToList(),
+                    ReleaseDate = source.ReleaseDate,
+                    PositiveTagScores = new Dictionary<string, double>(source.PositiveTagScores, StringComparer.OrdinalIgnoreCase),
+                    Weight = source.Weight,
+                    RecentBias = source.RecentBias
+                })
+                .ToList(),
+            DeveloperPreferenceWeight = profile.DeveloperPreferenceWeight
+        };
+    }
+
     private async Task<List<RecommendationCandidate>> SearchCandidatesAsync(
         RecommendationProfile profile,
         HashSet<string> existingIds,
@@ -360,8 +519,18 @@ public class RecommendationService
 
         return visualNovelsById.Values
             .Where(visualNovel => !existingIds.Contains(visualNovel.Id))
+            .Where(visualNovel => !IsSkippedRecommendation(visualNovel.Id, feedbackById))
             .Select(visualNovel => BuildCandidate(visualNovel, profile, feedbackById))
             .ToList();
+    }
+
+    private static bool IsSkippedRecommendation(
+        string vndbId,
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById)
+    {
+        return feedbackById.TryGetValue(vndbId, out var feedback)
+               && feedback.LastNegativeAt.HasValue
+               && feedback.NegativeSignal > 0;
     }
 
     private async Task<List<CachedVndbVisualNovel>> SearchBroadFallbackCandidatesAsync(
@@ -641,7 +810,7 @@ public class RecommendationService
         summary.SoftNegativeTags = softNegativeTags.Take(3).Select(item => tagNames[item.Key]).ToList();
         summary.PreferredDevelopers = topPositiveDevelopers.Take(3).Select(item => item.Key).ToList();
         summary.PreferredReleaseYear = weightedYearTotal > 0 ? weightedYearSum / weightedYearTotal : null;
-        summary.PreferenceStyle = developerPreferenceStrength >= 1.15 ? "Developer-led" : "Tag-led";
+        summary.PreferenceStyle = BuildPreferenceStyle(developerPreferenceStrength, topPositiveDevelopers.Count, positiveTags.Count);
 
         return new RecommendationProfile
         {
@@ -1037,6 +1206,18 @@ public class RecommendationService
         return entries.Max() / total;
     }
 
+    private static string BuildPreferenceStyle(double developerPreferenceStrength, int developerCount, int positiveTagCount)
+    {
+        if (developerPreferenceStrength >= 1.35 && developerCount > 0)
+            return TranslationService.Instance["Rec_ProfileStyleDeveloperStrong"];
+        if (developerPreferenceStrength >= 0.95 && developerCount > 0)
+            return TranslationService.Instance["Rec_ProfileStyleDeveloperBalanced"];
+        if (positiveTagCount >= 8)
+            return TranslationService.Instance["Rec_ProfileStyleTagDiverse"];
+
+        return TranslationService.Instance["Rec_ProfileStyleTagFocused"];
+    }
+
     private static bool IsStructuralPreferenceTag(string tagName)
     {
         if (string.IsNullOrWhiteSpace(tagName))
@@ -1144,6 +1325,13 @@ public class RecommendationService
         public List<SourceGameProfile> SourceGames { get; init; } = [];
         public double DeveloperPreferenceWeight { get; init; }
     }
+
+    private sealed record RecommendationProfileContext(
+        TasteProfileSummary ProfileSummary,
+        RecommendationProfile? Profile,
+        HashSet<string> LibraryIds,
+        IReadOnlyDictionary<string, RecommendationFeedback> FeedbackById,
+        VndbRecommendationCacheDocument CacheDocument);
 
     private sealed class SourceGameProfile
     {

@@ -259,5 +259,9 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>Stats</value></data>
   <data name="Toolbar_Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Toolbar_ManageGames" xml:space="preserve"><value>Manage Games</value></data>
+  <data name="Rec_ProfileStyleDeveloperStrong" xml:space="preserve"><value>developer affinity is strong, so familiar studios get a moderate bonus</value></data>
+  <data name="Rec_ProfileStyleDeveloperBalanced" xml:space="preserve"><value>balanced between preferred studios and shared themes</value></data>
+  <data name="Rec_ProfileStyleTagDiverse" xml:space="preserve"><value>theme-driven with varied genre interests</value></data>
+  <data name="Rec_ProfileStyleTagFocused" xml:space="preserve"><value>focused on recurring themes and structures</value></data>
 </root>
 

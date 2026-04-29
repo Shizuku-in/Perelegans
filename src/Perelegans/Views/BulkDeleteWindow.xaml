@@ -9,7 +9,7 @@
         Width="820"
         MinHeight="420"
         MinWidth="680"
-        WindowStartupLocation="CenterOwner"
+        WindowStartupLocation="CenterScreen"
         Background="{DynamicResource Perelegans.WindowBackground}"
         Foreground="{DynamicResource Perelegans.ForegroundBrush}">
     <Window.Resources>

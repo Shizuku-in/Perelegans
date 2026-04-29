@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using Perelegans.Models;
 using MahApps.Metro.Controls;
@@ -12,7 +13,10 @@ namespace Perelegans.Views;
 
 public partial class MainWindow : MetroWindow
 {
+    private const int WmSysCommand = 0x0112;
+    private const int ScMinimize = 0xF020;
     private ScrollViewer? _gameCardsScrollViewer;
+    private HwndSource? _windowSource;
 
     private readonly DispatcherTimer _refreshTimer = new()
     {
@@ -26,6 +30,7 @@ public partial class MainWindow : MetroWindow
         Loaded += OnLoaded;
         Closed += OnClosed;
         SizeChanged += OnWindowSizeChanged;
+        SourceInitialized += OnSourceInitialized;
         _refreshTimer.Tick += OnRefreshTimerTick;
     }
 
@@ -134,11 +139,35 @@ public partial class MainWindow : MetroWindow
 
     private void OnClosed(object? sender, EventArgs e)
     {
+        if (_windowSource != null)
+        {
+            _windowSource.RemoveHook(WndProc);
+            _windowSource = null;
+        }
+
         _refreshTimer.Stop();
         _refreshTimer.Tick -= OnRefreshTimerTick;
         Loaded -= OnLoaded;
         Closed -= OnClosed;
         SizeChanged -= OnWindowSizeChanged;
+        SourceInitialized -= OnSourceInitialized;
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        _windowSource = PresentationSource.FromVisual(this) as HwndSource;
+        _windowSource?.AddHook(WndProc);
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WmSysCommand && ((int)wParam & 0xFFF0) == ScMinimize)
+        {
+            WindowState = WindowState.Minimized;
+            handled = true;
+        }
+
+        return IntPtr.Zero;
     }
 
     private void OnRefreshTimerTick(object? sender, EventArgs e)

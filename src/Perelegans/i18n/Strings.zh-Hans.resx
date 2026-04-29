@@ -1,252 +1,242 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-  <data name="Menu_File" xml:space="preserve"><value>鏂囦欢 (_F)</value></data>
-  <data name="Menu_AddFromProcess" xml:space="preserve"><value>浠庤繘绋嬫坊鍔?(_P)</value></data>
-  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>浠庣綉绔欐坊鍔?(_W)</value></data>
-  <data name="Menu_SaveBackup" xml:space="preserve"><value>淇濆瓨澶囦唤 (_S)</value></data>
-  <data name="Menu_RestoreBackup" xml:space="preserve"><value>鎭㈠澶囦唤 (_R)</value></data>
-  <data name="Menu_Exit" xml:space="preserve"><value>閫€鍑?(_X)</value></data>
+  <data name="Menu_File" xml:space="preserve"><value>文件 (_F)</value></data>
+  <data name="Menu_AddFromProcess" xml:space="preserve"><value>从进程添加 (_P)</value></data>
+  <data name="Menu_AddFromWebsite" xml:space="preserve"><value>从网站添加 (_W)</value></data>
+  <data name="Menu_SaveBackup" xml:space="preserve"><value>保存备份 (_S)</value></data>
+  <data name="Menu_RestoreBackup" xml:space="preserve"><value>恢复备份 (_R)</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>退出 (_X)</value></data>
 
-  <data name="Menu_Tool" xml:space="preserve"><value>宸ュ叿 (_T)</value></data>
-  <data name="Menu_MonitorProcess" xml:space="preserve"><value>鐩戣杩涚▼璁剧疆 (_M)</value></data>
-  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>娓哥帺鏃堕棿缁熻 (_T)</value></data>
-  <data name="Menu_Language" xml:space="preserve"><value>璇█ (_L)</value></data>
+  <data name="Menu_Tool" xml:space="preserve"><value>工具 (_T)</value></data>
+  <data name="Menu_MonitorProcess" xml:space="preserve"><value>监视进程设置 (_M)</value></data>
+  <data name="Menu_PlaytimeStats" xml:space="preserve"><value>游玩时间统计 (_T)</value></data>
+  <data name="Menu_Language" xml:space="preserve"><value>语言 (_L)</value></data>
   
-  <data name="Menu_Help" xml:space="preserve"><value>甯姪 (_H)</value></data>
-  <data name="Menu_About" xml:space="preserve"><value>鍏充簬 (_A)</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>帮助 (_H)</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>关于 (_A)</value></data>
 
-  <data name="Column_Title" xml:space="preserve"><value>鏍囬</value></data>
-  <data name="Column_Brand" xml:space="preserve"><value>鍝佺墝</value></data>
-  <data name="Column_ReleaseDate" xml:space="preserve"><value>鍙戝敭鏃ユ湡</value></data>
-  <data name="Column_Playtime" xml:space="preserve"><value>娓哥帺鏃堕暱</value></data>
-  <data name="Column_Created" xml:space="preserve"><value>鍒涘缓鏃ユ湡</value></data>
-  <data name="Column_LastPlayed" xml:space="preserve"><value>鏈€鍚庢父鐜?/value></data>
+  <data name="Column_Title" xml:space="preserve"><value>标题</value></data>
+  <data name="Column_Brand" xml:space="preserve"><value>品牌</value></data>
+  <data name="Column_ReleaseDate" xml:space="preserve"><value>发售日期</value></data>
+  <data name="Column_Playtime" xml:space="preserve"><value>游玩时长</value></data>
+  <data name="Column_Created" xml:space="preserve"><value>创建日期</value></data>
+  <data name="Column_LastPlayed" xml:space="preserve"><value>最后游玩</value></data>
 
-  <data name="Status_TotalPlaytime" xml:space="preserve"><value>鎬昏娓哥帺鏃堕暱: </value></data>
-  <data name="Status_Completed" xml:space="preserve"><value>宸叉帹瀹? </value></data>
+  <data name="Status_TotalPlaytime" xml:space="preserve"><value>总计游玩时长: </value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>已推完: </value></data>
 
-  <data name="Context_StartGame" xml:space="preserve"><value>鍚姩</value></data>
-  <data name="Context_Metadata" xml:space="preserve"><value>鍏冩暟鎹?/value></data>
-  <data name="Context_FetchMetadata" xml:space="preserve"><value>鑾峰彇鍏冩暟鎹?/value></data>
-  <data name="Context_EditMetadata" xml:space="preserve"><value>缂栬緫鍏冩暟鎹?/value></data>
-  <data name="Context_Open" xml:space="preserve"><value>鎵撳紑</value></data>
-  <data name="Context_OpenFolder" xml:space="preserve"><value>鎵撳紑娓告垙鏂囦欢澶?/value></data>
-  <data name="Context_OpenWebsite" xml:space="preserve"><value>鎵撳紑缃戦〉</value></data>
-  <data name="Context_OpenGameStats" xml:space="preserve"><value>鏌ョ湅杩愯鏃ュ織</value></data>
-  <data name="Context_Copy" xml:space="preserve"><value>澶嶅埗</value></data>
-  <data name="Context_CopyTitle" xml:space="preserve"><value>澶嶅埗鏍囬</value></data>
-  <data name="Context_CopyBrand" xml:space="preserve"><value>澶嶅埗鍝佺墝</value></data>
-  <data name="Context_Delete" xml:space="preserve"><value>鍒犻櫎娓告垙</value></data>
-  <data name="Settings_Appearance" xml:space="preserve"><value>澶栬涓庤瑷€鐣岄潰</value></data>
-  <data name="Settings_ThemeMode" xml:space="preserve"><value>搴旂敤涓婚:</value></data>
-  <data name="Settings_Language" xml:space="preserve"><value>鍋忓ソ璇█:</value></data>
-  <data name="Settings_Monitor" xml:space="preserve"><value>鍚庡彴杩涚▼鏃舵鐩戣鍣?/value></data>
-  <data name="Settings_Enabled" xml:space="preserve"><value>鍚敤鑷惎鐩戣:</value></data>
-  <data name="Settings_Interval" xml:space="preserve"><value>杞闂撮殧(绉?:</value></data>
-  <data name="Settings_Network" xml:space="preserve"><value>缃戠粶浠ｇ悊璁剧疆</value></data>
-  <data name="Settings_Proxy" xml:space="preserve"><value>HTTP浠ｇ悊:</value></data>
-  <data name="Settings_System" xml:space="preserve"><value>鍚姩涓庨€€鍑?/value></data>
-  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>寮€鏈鸿嚜鍚?</value></data>
-  <data name="Settings_CloseBehavior" xml:space="preserve"><value>鍏抽棴绐楀彛鏃?</value></data>
-  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>鐩存帴閫€鍑?/value></data>
-  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>鏈€灏忓寲鍒版墭鐩?/value></data>
+  <data name="Context_StartGame" xml:space="preserve"><value>启动</value></data>
+  <data name="Context_Metadata" xml:space="preserve"><value>元数据</value></data>
+  <data name="Context_FetchMetadata" xml:space="preserve"><value>获取元数据</value></data>
+  <data name="Context_EditMetadata" xml:space="preserve"><value>编辑元数据</value></data>
+  <data name="Context_Open" xml:space="preserve"><value>打开</value></data>
+  <data name="Context_OpenFolder" xml:space="preserve"><value>打开游戏文件夹</value></data>
+  <data name="Context_OpenWebsite" xml:space="preserve"><value>打开网页</value></data>
+  <data name="Context_OpenGameStats" xml:space="preserve"><value>查看运行日志</value></data>
+  <data name="Context_Copy" xml:space="preserve"><value>复制</value></data>
+  <data name="Context_CopyTitle" xml:space="preserve"><value>复制标题</value></data>
+  <data name="Context_CopyBrand" xml:space="preserve"><value>复制品牌</value></data>
+  <data name="Context_Delete" xml:space="preserve"><value>删除游戏</value></data>
+  <data name="Settings_Appearance" xml:space="preserve"><value>外观与语言界面</value></data>
+  <data name="Settings_ThemeMode" xml:space="preserve"><value>应用主题:</value></data>
+  <data name="Settings_Language" xml:space="preserve"><value>偏好语言:</value></data>
+  <data name="Settings_Monitor" xml:space="preserve"><value>后台进程时段监视器</value></data>
+  <data name="Settings_Enabled" xml:space="preserve"><value>启用自启监视:</value></data>
+  <data name="Settings_Interval" xml:space="preserve"><value>轮询间隔(秒):</value></data>
+  <data name="Settings_Network" xml:space="preserve"><value>网络代理设置</value></data>
+  <data name="Settings_Proxy" xml:space="preserve"><value>HTTP代理:</value></data>
+  <data name="Settings_System" xml:space="preserve"><value>启动与退出</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>开机自启:</value></data>
+  <data name="Settings_CloseBehavior" xml:space="preserve"><value>关闭窗口时:</value></data>
+  <data name="Settings_CloseBehaviorExit" xml:space="preserve"><value>直接退出</value></data>
+  <data name="Settings_CloseBehaviorTray" xml:space="preserve"><value>最小化到托盘</value></data>
 
-  <data name="Btn_Save" xml:space="preserve"><value>纭畾</value></data>
-  <data name="Btn_Cancel" xml:space="preserve"><value>鍙栨秷</value></data>
-  <data name="Btn_Ok" xml:space="preserve"><value>瀹屾垚</value></data>
+  <data name="Btn_Save" xml:space="preserve"><value>确定</value></data>
+  <data name="Btn_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Btn_Ok" xml:space="preserve"><value>完成</value></data>
 
-  <data name="Meta_Title" xml:space="preserve"><value>娓告垙鍏冩暟鎹厤缃?/value></data>
-  <data name="Meta_SearchWatermark" xml:space="preserve"><value>杈撳叆鍘熷悕杩涜璺ㄥ簱鎼滅储...</value></data>
-  <data name="Meta_SearchBtn" xml:space="preserve"><value>鎼滅储</value></data>
-  <data name="Meta_ApplyBtn" xml:space="preserve"><value>鈫?濉厖</value></data>
-  <data name="Meta_ApplyHint" xml:space="preserve"><value>鐩爣鍦ㄧ嚎鏁版嵁琛屽皢琚嚜鍔ㄨВ鍖呭～鍏ヤ笅鏂圭紪杈戝尯渚涙牎楠屼繚瀛樸€?/value></data>
-  <data name="Meta_FieldTitle" xml:space="preserve"><value>娓告垙鍚?</value></data>
-  <data name="Meta_FieldBrand" xml:space="preserve"><value>鍘傚晢/鍝佺墝:</value></data>
-  <data name="Meta_FieldDate" xml:space="preserve"><value>棣栧彂鏃ユ湡:</value></data>
-  <data name="Meta_FieldStatus" xml:space="preserve"><value>娓哥帺杩涘害:</value></data>
-  <data name="Meta_FieldWebsite" xml:space="preserve"><value>瀹樼綉涓婚〉:</value></data>
-  <data name="Meta_FieldCover" xml:space="preserve"><value>灏侀潰:</value></data>
-  <data name="Meta_FieldTags" xml:space="preserve"><value>鏍囩:</value></data>
-  <data name="Meta_FieldProcess" xml:space="preserve"><value>杩涚▼鐗瑰緛:</value></data>
-  <data name="Meta_FieldExec" xml:space="preserve"><value>鍚姩璺緞:</value></data>
-  <data name="Meta_TagsWatermark" xml:space="preserve"><value>姣忚涓€涓爣绛?/value></data>
-  <data name="Meta_ColSource" xml:space="preserve"><value>鏉ユ簮</value></data>
-  <data name="Meta_ColTitle" xml:space="preserve"><value>鏍囬</value></data>
-  <data name="Meta_ColBrand" xml:space="preserve"><value>鍘傚晢</value></data>
-  <data name="Meta_ColDate" xml:space="preserve"><value>鍙戝敭</value></data>
-  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>灏氭湭璁剧疆灏侀潰銆?/value></data>
-  <data name="Meta_CoverFile" xml:space="preserve"><value>鏈湴鏂囦欢:</value></data>
-  <data name="Meta_CoverUrl" xml:space="preserve"><value>鍥剧墖閾炬帴:</value></data>
+  <data name="Meta_Title" xml:space="preserve"><value>游戏元数据配置</value></data>
+  <data name="Meta_SearchWatermark" xml:space="preserve"><value>输入原名进行跨库搜索...</value></data>
+  <data name="Meta_SearchBtn" xml:space="preserve"><value>搜索</value></data>
+  <data name="Meta_ApplyBtn" xml:space="preserve"><value>↓ 填充</value></data>
+  <data name="Meta_ApplyHint" xml:space="preserve"><value>目标在线数据行将被自动解包填入下方编辑区供校验保存。</value></data>
+  <data name="Meta_FieldTitle" xml:space="preserve"><value>游戏名:</value></data>
+  <data name="Meta_FieldBrand" xml:space="preserve"><value>厂商/品牌:</value></data>
+  <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
+  <data name="Meta_FieldStatus" xml:space="preserve"><value>游玩进度:</value></data>
+  <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
+  <data name="Meta_FieldCover" xml:space="preserve"><value>封面:</value></data>
+  <data name="Meta_FieldTags" xml:space="preserve"><value>标签:</value></data>
+  <data name="Meta_FieldProcess" xml:space="preserve"><value>进程特征:</value></data>
+  <data name="Meta_FieldExec" xml:space="preserve"><value>启动路径:</value></data>
+  <data name="Meta_TagsWatermark" xml:space="preserve"><value>每行一个标签</value></data>
+  <data name="Meta_ColSource" xml:space="preserve"><value>来源</value></data>
+  <data name="Meta_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Meta_ColBrand" xml:space="preserve"><value>厂商</value></data>
+  <data name="Meta_ColDate" xml:space="preserve"><value>发售</value></data>
+  <data name="Meta_CoverPreviewEmpty" xml:space="preserve"><value>尚未设置封面。</value></data>
+  <data name="Meta_CoverFile" xml:space="preserve"><value>本地文件:</value></data>
+  <data name="Meta_CoverUrl" xml:space="preserve"><value>图片链接:</value></data>
   <data name="Meta_CoverPathWatermark" xml:space="preserve"><value>C:\Images\cover.jpg</value></data>
-  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>鑷姩鎶撳彇</value></data>
-  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>浠庢湰鍦板鍏?/value></data>
-  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>娓呯┖灏侀潰</value></data>
-  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>閫夋嫨灏侀潰鍥剧墖</value></data>
-  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>宸查€夋嫨鏈湴灏侀潰銆?/value></data>
-  <data name="Meta_CoverCleared" xml:space="preserve"><value>宸叉竻绌哄皝闈€?/value></data>
-  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>璇峰厛濉啓鏍囬鎴栧厓鏁版嵁 ID锛屽啀鎶撳彇灏侀潰銆?/value></data>
-  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>鏈兘浠庣綉绔欐壘鍒板皝闈€?/value></data>
-  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>灏侀潰宸叉姄鍙栧苟缂撳瓨鍒版湰鍦般€?/value></data>
-  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>灏侀潰閾炬帴鎶撳彇鎴愬姛銆?/value></data>
-  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>鎵€閫夊皝闈㈡枃浠朵笉鏄湁鏁堝浘鐗囥€?/value></data>
-  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>灏侀潰閾炬帴蹇呴』鏄湁鏁堢殑缁濆鍦板潃銆?/value></data>
-  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>宸蹭粠鎵€閫夊厓鏁版嵁缁撴灉搴旂敤灏侀潰閾炬帴銆?/value></data>
-  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>宸插簲鐢ㄦ墍閫夊皝闈€?/value></data>
-  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>閫夋嫨灏侀潰</value></data>
-  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>璇烽€夋嫨浠?VNDB 鎴?Bangumi 鎶撳彇鍒扮殑灏侀潰銆?/value></data>
-  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>姝ｅ湪鎶撳彇灏侀潰鍊欓€?..</value></data>
-  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>浣跨敤閫変腑灏侀潰</value></data>
+  <data name="Meta_CoverFetchBtn" xml:space="preserve"><value>自动抓取</value></data>
+  <data name="Meta_CoverImportLocalBtn" xml:space="preserve"><value>从本地导入</value></data>
+  <data name="Meta_CoverClearBtn" xml:space="preserve"><value>清空封面</value></data>
+  <data name="Meta_CoverBrowseTitle" xml:space="preserve"><value>选择封面图片</value></data>
+  <data name="Meta_CoverSelectedLocal" xml:space="preserve"><value>已选择本地封面。</value></data>
+  <data name="Meta_CoverCleared" xml:space="preserve"><value>已清空封面。</value></data>
+  <data name="Meta_CoverFetchMissingInput" xml:space="preserve"><value>请先填写标题或元数据 ID，再抓取封面。</value></data>
+  <data name="Meta_CoverFetchFailed" xml:space="preserve"><value>未能从网站找到封面。</value></data>
+  <data name="Meta_CoverFetchSuccessCached" xml:space="preserve"><value>封面已抓取并缓存到本地。</value></data>
+  <data name="Meta_CoverFetchSuccessUrl" xml:space="preserve"><value>封面链接抓取成功。</value></data>
+  <data name="Meta_CoverInvalidFile" xml:space="preserve"><value>所选封面文件不是有效图片。</value></data>
+  <data name="Meta_CoverInvalidUrl" xml:space="preserve"><value>封面链接必须是有效的绝对地址。</value></data>
+  <data name="Meta_CoverAppliedFromResult" xml:space="preserve"><value>已从所选元数据结果应用封面链接。</value></data>
+  <data name="Meta_CoverAppliedFromAutoFetch" xml:space="preserve"><value>已应用所选封面。</value></data>
+  <data name="Meta_CoverPickerTitle" xml:space="preserve"><value>选择封面</value></data>
+  <data name="Meta_CoverPickerHint" xml:space="preserve"><value>请选择从 VNDB 或 Bangumi 抓取到的封面。</value></data>
+  <data name="Meta_CoverPickerLoading" xml:space="preserve"><value>正在抓取封面候选...</value></data>
+  <data name="Meta_CoverPickerApplyBtn" xml:space="preserve"><value>使用选中封面</value></data>
 
-  <data name="AddProc_Title" xml:space="preserve"><value>浠庢椿璺冭繘绋嬫坊鍔犲簱娓告垙</value></data>
-  <data name="AddProc_Refresh" xml:space="preserve"><value>閲嶆柊鎵弿</value></data>
-  <data name="AddProc_Hint" xml:space="preserve"><value>榛樿浠呭睍绀轰笖鍖呭惈鈥滀富绐椾綋鈥濆睘鎬х殑鍙杩愯娲昏穬杩涚▼銆?/value></data>
-  <data name="AddProc_ColWindow" xml:space="preserve"><value>绐楀彛鏍囬鍚嶇О</value></data>
-  <data name="AddProc_ColProc" xml:space="preserve"><value>杩涚▼瀵硅薄</value></data>
-  <data name="AddProc_ColPath" xml:space="preserve"><value>鎵ц鐗╃悊缁濆璺緞</value></data>
+  <data name="AddProc_Title" xml:space="preserve"><value>从活跃进程添加库游戏</value></data>
+  <data name="AddProc_Refresh" xml:space="preserve"><value>重新扫描</value></data>
+  <data name="AddProc_Hint" xml:space="preserve"><value>默认仅展示且包含“主窗体”属性的可见运行活跃进程。</value></data>
+  <data name="AddProc_ColWindow" xml:space="preserve"><value>窗口标题名称</value></data>
+  <data name="AddProc_ColProc" xml:space="preserve"><value>进程对象</value></data>
+  <data name="AddProc_ColPath" xml:space="preserve"><value>执行物理绝对路径</value></data>
 
-  <data name="Stats_Title" xml:space="preserve"><value>娓告垙娓哥帺鏃堕棿鍗犳瘮涓庣粺璁℃姤琛?/value></data>
-  <data name="Stats_Tab7Days" xml:space="preserve"><value>杩囧幓 7 澶?/value></data>
-  <data name="Stats_TabWeekly" xml:space="preserve"><value>鏈懆杩借釜</value></data>
-  <data name="Stats_TabMonthly" xml:space="preserve"><value>褰撴湀鎬昏</value></data>
-  <data name="Stats_TabYearly" xml:space="preserve"><value>骞村害鎬荤粨</value></data>
-  <data name="Stats_ColGame" xml:space="preserve"><value>娓告垙鏈綋</value></data>
-  <data name="Stats_ColPeriod" xml:space="preserve"><value>缁熻鍛ㄦ湡</value></data>
-  <data name="Stats_ColPlaytime" xml:space="preserve"><value>娓哥帺鏃堕暱</value></data>
-  <data name="Stats_ColSessions" xml:space="preserve"><value>浼氳瘽鏁?/value></data>
+  <data name="Stats_Title" xml:space="preserve"><value>游戏游玩时间占比与统计报表</value></data>
+  <data name="Stats_Tab7Days" xml:space="preserve"><value>过去 7 天</value></data>
+  <data name="Stats_TabWeekly" xml:space="preserve"><value>本周追踪</value></data>
+  <data name="Stats_TabMonthly" xml:space="preserve"><value>当月总览</value></data>
+  <data name="Stats_TabYearly" xml:space="preserve"><value>年度总结</value></data>
+  <data name="Stats_ColGame" xml:space="preserve"><value>游戏本体</value></data>
+  <data name="Stats_ColPeriod" xml:space="preserve"><value>统计周期</value></data>
+  <data name="Stats_ColPlaytime" xml:space="preserve"><value>游玩时长</value></data>
+  <data name="Stats_ColSessions" xml:space="preserve"><value>会话数</value></data>
 
-  <data name="Log_Title" xml:space="preserve"><value>鏈湴鍗曞紑鍘嗗彶娓哥帺 Session 杩借釜蹇?/value></data>
-  <data name="Log_ColSession" xml:space="preserve"><value>Session 鍙?/value></data>
-  <data name="Log_ColStart" xml:space="preserve"><value>鎵撳紑鏃堕棿</value></data>
-  <data name="Log_ColEnd" xml:space="preserve"><value>鍏抽棴鎸傝捣浜嬩欢</value></data>
-  <data name="Log_ColDate" xml:space="preserve"><value>鏃ユ湡</value></data>
-  <data name="Log_ColTime" xml:space="preserve"><value>鏃堕棿</value></data>
-  <data name="Log_ColDuration" xml:space="preserve"><value>鍗曟鎸佺画</value></data>
+  <data name="Log_Title" xml:space="preserve"><value>本地单开历史游玩 Session 追踪志</value></data>
+  <data name="Log_ColSession" xml:space="preserve"><value>Session 号</value></data>
+  <data name="Log_ColStart" xml:space="preserve"><value>打开时间</value></data>
+  <data name="Log_ColEnd" xml:space="preserve"><value>关闭挂起事件</value></data>
+  <data name="Log_ColDate" xml:space="preserve"><value>日期</value></data>
+  <data name="Log_ColTime" xml:space="preserve"><value>时间</value></data>
+  <data name="Log_ColDuration" xml:space="preserve"><value>单次持续</value></data>
   <data name="Msg_AppTitle" xml:space="preserve"><value>Perelegans</value></data>
-  <data name="Msg_ErrorTitle" xml:space="preserve"><value>鍑洪敊</value></data>
-  <data name="Msg_BackupSuccess" xml:space="preserve"><value>澶囦唤淇濆瓨鎴愬姛锛?/value></data>
-  <data name="Msg_BackupFailed" xml:space="preserve"><value>澶囦唤澶辫触: {0}</value></data>
-  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>澶囦唤鎭㈠鎴愬姛锛?/value></data>
-  <data name="Msg_RestoreFailed" xml:space="preserve"><value>鎭㈠澶辫触: {0}</value></data>
-  <data name="Msg_AboutTitle" xml:space="preserve"><value>鍏充簬 Perelegans</value></data>
+  <data name="Msg_ErrorTitle" xml:space="preserve"><value>出错</value></data>
+  <data name="Msg_BackupSuccess" xml:space="preserve"><value>备份保存成功！</value></data>
+  <data name="Msg_BackupFailed" xml:space="preserve"><value>备份失败: {0}</value></data>
+  <data name="Msg_RestoreSuccess" xml:space="preserve"><value>备份恢复成功！</value></data>
+  <data name="Msg_RestoreFailed" xml:space="preserve"><value>恢复失败: {0}</value></data>
+  <data name="Msg_AboutTitle" xml:space="preserve"><value>关于 Perelegans</value></data>
   <data name="Msg_AboutText" xml:space="preserve"><value>Perelegans v0.2
 Game Playtime Tracker &amp; Manager
 
 Copyright 2026 gkouen. All Lolis Reserved</value></data>
-  <data name="Msg_NoExecPath" xml:space="preserve"><value>璇ユ父鎴忓皻鏈厤缃彲鎵ц鏂囦欢璺緞銆?
-璇峰湪鈥滃厓鏁版嵁鈥濈紪杈戠獥鍙ｄ腑璁剧疆鍗冲彲鐩存帴鍚姩娓告垙銆?/value></data>
-  <data name="Msg_GameStartFailed" xml:space="preserve"><value>娓告垙鍚姩澶辫触: {0}</value></data>
-  <data name="Msg_NoVndbId" xml:space="preserve"><value>鏈壘鍒?VNDB ID銆?/value></data>
-  <data name="Msg_NoEgsId" xml:space="preserve"><value>鏈壘鍒?ErogameSpace ID銆?/value></data>
-  <data name="Msg_NoBangumiId" xml:space="preserve"><value>鏈壘鍒?Bangumi ID銆?/value></data>
-  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>鍒犻櫎纭</value></data>
-  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>纭畾瑕佸垹闄ゃ€寋0}銆嶅悧锛?/value></data>
-  <data name="Msg_SelectProcess" xml:space="preserve"><value>璇峰厛閫夋嫨涓€涓繘绋嬨€?/value></data>
-  <data name="GameStatus_Playing" xml:space="preserve"><value>娓哥帺涓?/value></data>
-  <data name="GameStatus_Dropped" xml:space="preserve"><value>宸插純鍧?/value></data>
-  <data name="GameStatus_Completed" xml:space="preserve"><value>宸查€氬叧</value></data>
-  <data name="Tray_Show" xml:space="preserve"><value>鏄剧ず涓荤獥鍙?/value></data>
-  <data name="Tray_Exit" xml:space="preserve"><value>閫€鍑虹▼搴?/value></data>
-  <data name="Menu_Recommendations" xml:space="preserve"><value>鎺ㄨ崘娓告垙 (_R)</value></data>
-  <data name="Settings_Ai" xml:space="preserve"><value>AI 鎺ㄨ崘</value></data>
-  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 鍦板潃:</value></data>
-  <data name="Settings_AiApiKey" xml:space="preserve"><value>API 瀵嗛挜:</value></data>
-  <data name="Settings_AiModel" xml:space="preserve"><value>妯″瀷鍚?</value></data>
-  <data name="Rec_Title" xml:space="preserve"><value>娓告垙鎺ㄨ崘</value></data>
-  <data name="Rec_Refresh" xml:space="preserve"><value>鍒锋柊</value></data>
-  <data name="Rec_ProfileSummary" xml:space="preserve"><value>宸蹭娇鐢?{0} / {1} 涓甫 VNDB/Bangumi 鍏冩暟鎹殑娓告垙鐢熸垚鐢诲儚銆?/value></data>
-  <data name="Rec_TopTags" xml:space="preserve"><value>鍋忓ソ鏍囩: {0}</value></data>
-  <data name="Rec_AvoidTags" xml:space="preserve"><value>鍥為伩鏍囩: {0}</value></data>
-  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>鍋忓ソ鍘傚晢: {0}</value></data>
-  <data name="Rec_None" xml:space="preserve"><value>鏃?/value></data>
-  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>鑷冲皯涓?3 涓父鎴忚ˉ鍏?VNDB 鍏冩暟鎹悗锛屾墠鑳界敓鎴愭帹鑽愩€?/value></data>
-  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>褰撳墠娌℃湁鍚堥€傜殑鎺ㄨ崘缁撴灉銆?/value></data>
-  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>宸插惎鐢?AI 鎺ㄨ崘鐞嗙敱銆?/value></data>
-  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>灏氭湭閰嶇疆 AI锛屽綋鍓嶄粎鏄剧ず鏈湴鎺ㄨ崘鐞嗙敱銆?/value></data>
-  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI 鐞嗙敱鏆備笉鍙敤锛屽綋鍓嶄粎鏄剧ず鏈湴鎺ㄨ崘鐞嗙敱銆?/value></data>
-  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI 鐞嗙敱鏆備笉鍙敤锛屽綋鍓嶄粎鏄剧ず鏈湴鎺ㄨ崘鐞嗙敱銆傚師鍥? {0}</value></data>
-  <data name="Rec_ColTitle" xml:space="preserve"><value>鏍囬</value></data>
-  <data name="Rec_ColBrand" xml:space="preserve"><value>鍘傚晢</value></data>
-  <data name="Rec_ColDate" xml:space="preserve"><value>鍙戝敭鏃?/value></data>
-  <data name="Rec_ColScore" xml:space="preserve"><value>鍒嗘暟</value></data>
-  <data name="Rec_ColReason" xml:space="preserve"><value>鎺ㄨ崘鐞嗙敱</value></data>
-  <data name="Rec_ColActions" xml:space="preserve"><value>鎿嶄綔</value></data>
-  <data name="Rec_Import" xml:space="preserve"><value>瀵煎叆</value></data>
-  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>宸插湪搴撲腑</value></data>
-  <data name="Rec_OpenVndb" xml:space="preserve"><value>鎵撳紑 VNDB</value></data>
-  <data name="Rec_OpenBangumi" xml:space="preserve"><value>鎵撳紑 Bangumi</value></data>
-  <data name="Rec_ImportFailed" xml:space="preserve"><value>瀵煎叆鎺ㄨ崘澶辫触: {0}</value></data>
-  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>鍛戒腑浣犵殑鍋忓ソ鏍囩: {0}銆?/value></data>
-  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>鏉ヨ嚜浣犲父鍠滄鐨勫巶鍟? {0}銆?/value></data>
-  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>鍙戝敭骞翠唬鎺ヨ繎浣犵殑鍋忓ソ鍖洪棿銆?/value></data>
-  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>鍩轰簬浣犵殑娓告垙搴撶敾鍍忥紝瀹冩槸涓€涓暣浣撳尮閰嶅害杈冮珮鐨勫€欓€夈€?/value></data>
-  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>鍙兘鍖呭惈浣犲父寮冨潙鐨勬爣绛? {0}銆?/value></data>
-  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>鍙戝敭骞翠唬涓庝綘骞虫椂鍋忓ソ宸窛杈冨ぇ銆?/value></data>
-  <data name="GameStatus_Planned" xml:space="preserve"><value>寰呯帺</value></data>
-  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>纭畾瑕佸垹闄よ繖 {0} 涓父鎴忓悧锛?/value></data>
-  <data name="Msg_NoSelection" xml:space="preserve"><value>娌℃湁閫変腑浠讳綍娓告垙銆?/value></data>
-  <data name="Menu_GameManagement" xml:space="preserve"><value>娓告垙绠＄悊 (_G)</value></data>
-  <data name="GameMgmt_Title" xml:space="preserve"><value>娓告垙绠＄悊</value></data>
-  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>鍏ㄩ€?/value></data>
-  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>鍙栨秷鍏ㄩ€?/value></data>
-  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>鍙嶉€?/value></data>
-  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>鍒犻櫎閫変腑</value></data>
-  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>鎬昏:</value></data>
-  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>宸查€?</value></data>
-  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>鎸夋爣棰樿繃婊?..</value></data>
-  <data name="Rec_ProfileDepth" xml:space="preserve"><value>瀹屾垚鐜?{0}锛屽凡閫氬叧骞冲潎 {1} 灏忔椂锛屽純鍧戝钩鍧?{2} 灏忔椂锛岀敾鍍忛鏍硷細{3}銆?/value></data>
-  <data name="Rec_ColBreakdown" xml:space="preserve"><value>鎷嗗垎</value></data>
-  <data name="Rec_FeedbackLike" xml:space="preserve"><value>鍠滄</value></data>
-  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>宸插枩娆?/value></data>
-  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>璺宠繃</value></data>
-  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>宸茶烦杩?/value></data>
-  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>鍜屼綘搴撻噷鐨勮繖浜涗綔鍝佹瘮杈冩帴杩戯細{0}銆?/value></data>
-  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>鐩歌繎浣滃搧鏇惧緱鍒颁綘鐨勬鍚戝弽棣堛€?/value></data>
-  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>鐩歌繎鎺ㄨ崘姝ゅ墠鏀跺埌杩囦綘鐨勮礋鍚戝弽棣堛€?/value></data>
-  <data name="Rec_SortLabel" xml:space="preserve"><value>鎺掑簭</value></data>
-  <data name="Rec_SortSmart" xml:space="preserve"><value>鏅鸿兘鎺ㄨ崘</value></data>
-  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>缁煎悎鎺掑悕</value></data>
-  <data name="Settings_AiTestButton" xml:space="preserve"><value>娴嬭瘯</value></data>
-  <data name="Settings_AiTestRunning" xml:space="preserve"><value>姝ｅ湪娴嬭瘯 AI 杩炴帴...</value></data>
-  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI 娴嬭瘯鎴愬姛銆傝繑鍥? {0}</value></data>
-  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI 娴嬭瘯澶辫触: {0}</value></data>
-  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>璇峰厛濉啓 API 鍦板潃銆丄PI 瀵嗛挜鍜屾ā鍨嬪悕銆?/value></data>
-  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API 鍦板潃鏃犳晥銆?/value></data>
-  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI 娴嬭瘯澶辫触锛氬搷搴斾腑娌℃湁鍙鏂囨湰銆?/value></data>
-  <data name="TitleBar_Settings" xml:space="preserve"><value>璁剧疆</value></data>
-  <data name="TitleBar_Minimize" xml:space="preserve"><value>鏈€灏忓寲</value></data>
-  <data name="TitleBar_Maximize" xml:space="preserve"><value>鏈€澶у寲</value></data>
-  <data name="TitleBar_Close" xml:space="preserve"><value>鍏抽棴</value></data>
-  <data name="Context_OpenVndb" xml:space="preserve"><value>VNDB</value></data>
-  <data name="Context_OpenErogameSpace" xml:space="preserve"><value>ErogameSpace</value></data>
-  <data name="Context_OpenBangumi" xml:space="preserve"><value>Bangumi</value></data>
-  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>瀹樻柟缃戠珯</value></data>
-  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>鏈€鍚庢父鐜?{0:yyyy-MM-dd}</value></data>
-  <data name="Game_DefaultTitle" xml:space="preserve"><value>鏂版父鎴?/value></data>
-  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite 鏁版嵁搴?(*.db)|*.db</value></data>
-  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0} 灏忔椂 {1} 鍒嗛挓</value></data>
-  <data name="Playtime_Minutes" xml:space="preserve"><value>{0} 鍒嗛挓</value></data>
-  <data name="Playtime_Zero" xml:space="preserve"><value>0 鍒嗛挓</value></data>
-  <data name="Workflow_Waiting" xml:space="preserve"><value>绛夊緟</value></data>
-  <data name="Workflow_Running" xml:space="preserve"><value>杩涜涓?/value></data>
-  <data name="Workflow_Done" xml:space="preserve"><value>瀹屾垚</value></data>
-  <data name="Workflow_Failed" xml:space="preserve"><value>澶辫触</value></data>
-  <data name="Workflow_Fallback" xml:space="preserve"><value>宸插洖閫€</value></data>
-  <data name="Workflow_Skipped" xml:space="preserve"><value>璺宠繃</value></data>
-  <data name="Rec_StepProfile" xml:space="preserve"><value>鐢熸垚鐢诲儚</value></data>
-  <data name="Rec_StepBangumi" xml:space="preserve"><value>琛ュ叏 Bangumi</value></data>
-  <data name="Rec_StepAi" xml:space="preserve"><value>AI 鐞嗙敱</value></data>
-  <data name="Meta_SourceStatusTitle" xml:space="preserve"><value>鏉ユ簮鐘舵€?/value></data>
-  <data name="Meta_CoverStatusTitle" xml:space="preserve"><value>灏侀潰鐘舵€?/value></data>
-  <data name="Meta_SourceReady" xml:space="preserve"><value>{0} 宸插氨缁€?/value></data>
-  <data name="Meta_SearchingSource" xml:space="preserve"><value>姝ｅ湪鎼滅储 {0}...</value></data>
-  <data name="Meta_SearchComplete" xml:space="preserve"><value>{0} 杩斿洖 {1} 鏉＄粨鏋溿€?/value></data>
-  <data name="Meta_SearchFailed" xml:space="preserve"><value>{0} 鎼滅储澶辫触銆?/value></data>
-  <data name="Meta_SourceNoResults" xml:space="preserve"><value>鏃犵粨鏋?/value></data>
-  <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} 鏉＄粨鏋?/value></data>
-  <data name="Meta_AppliedSource" xml:space="preserve"><value>宸插簲鐢ㄦ潵鑷?{0} 鐨勫厓鏁版嵁銆?/value></data>
-  <data name="Toolbar_AddGame" xml:space="preserve"><value>娣诲姞娓告垙</value></data>
-  <data name="Toolbar_Recommendations" xml:space="preserve"><value>鎺ㄨ崘</value></data>
-  <data name="Toolbar_Stats" xml:space="preserve"><value>缁熻</value></data>
-  <data name="Toolbar_Settings" xml:space="preserve"><value>璁剧疆</value></data>
-  <data name="Toolbar_ManageGames" xml:space="preserve"><value>绠＄悊娓告垙</value></data>
+  <data name="Msg_NoExecPath" xml:space="preserve"><value>该游戏尚未配置可执行文件路径。
+请在“元数据”编辑窗口中设置即可直接启动游戏。</value></data>
+  <data name="Msg_GameStartFailed" xml:space="preserve"><value>游戏启动失败: {0}</value></data>
+  <data name="Msg_NoVndbId" xml:space="preserve"><value>未找到 VNDB ID。</value></data>
+  <data name="Msg_NoEgsId" xml:space="preserve"><value>未找到 ErogameSpace ID。</value></data>
+  <data name="Msg_NoBangumiId" xml:space="preserve"><value>未找到 Bangumi ID。</value></data>
+  <data name="Msg_DeleteConfirmTitle" xml:space="preserve"><value>删除确认</value></data>
+  <data name="Msg_DeleteConfirmText" xml:space="preserve"><value>确定要删除「{0}」吗？</value></data>
+  <data name="Msg_SelectProcess" xml:space="preserve"><value>请先选择一个进程。</value></data>
+  <data name="GameStatus_Playing" xml:space="preserve"><value>游玩中</value></data>
+  <data name="GameStatus_Dropped" xml:space="preserve"><value>已弃坑</value></data>
+  <data name="GameStatus_Completed" xml:space="preserve"><value>已通关</value></data>
+  <data name="Tray_Show" xml:space="preserve"><value>显示主窗口</value></data>
+  <data name="Tray_Exit" xml:space="preserve"><value>退出程序</value></data>
+  <data name="Menu_Recommendations" xml:space="preserve"><value>推荐游戏 (_R)</value></data>
+  <data name="Settings_Ai" xml:space="preserve"><value>AI 推荐</value></data>
+  <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 地址:</value></data>
+  <data name="Settings_AiApiKey" xml:space="preserve"><value>API 密钥:</value></data>
+  <data name="Settings_AiModel" xml:space="preserve"><value>模型名:</value></data>
+  <data name="Rec_Title" xml:space="preserve"><value>游戏推荐</value></data>
+  <data name="Rec_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB/Bangumi 元数据的游戏生成画像。</value></data>
+  <data name="Rec_TopTags" xml:space="preserve"><value>偏好标签: {0}</value></data>
+  <data name="Rec_AvoidTags" xml:space="preserve"><value>回避标签: {0}</value></data>
+  <data name="Rec_PreferredDevelopers" xml:space="preserve"><value>偏好厂商: {0}</value></data>
+  <data name="Rec_None" xml:space="preserve"><value>无</value></data>
+  <data name="Rec_EmptyNeedMoreData" xml:space="preserve"><value>至少为 3 个游戏补全 VNDB 元数据后，才能生成推荐。</value></data>
+  <data name="Rec_EmptyNoResults" xml:space="preserve"><value>当前没有合适的推荐结果。</value></data>
+  <data name="Rec_AiStatusEnabled" xml:space="preserve"><value>已启用 AI 推荐理由。</value></data>
+  <data name="Rec_AiStatusDisabled" xml:space="preserve"><value>尚未配置 AI，当前仅显示本地推荐理由。</value></data>
+  <data name="Rec_AiStatusFallback" xml:space="preserve"><value>AI 理由暂不可用，当前仅显示本地推荐理由。</value></data>
+  <data name="Rec_AiStatusFallbackWithReason" xml:space="preserve"><value>AI 理由暂不可用，当前仅显示本地推荐理由。原因: {0}</value></data>
+  <data name="Rec_ColTitle" xml:space="preserve"><value>标题</value></data>
+  <data name="Rec_ColBrand" xml:space="preserve"><value>厂商</value></data>
+  <data name="Rec_ColDate" xml:space="preserve"><value>发售日</value></data>
+  <data name="Rec_ColScore" xml:space="preserve"><value>分数</value></data>
+  <data name="Rec_ColReason" xml:space="preserve"><value>推荐理由</value></data>
+  <data name="Rec_ColActions" xml:space="preserve"><value>操作</value></data>
+  <data name="Rec_Import" xml:space="preserve"><value>导入</value></data>
+  <data name="Rec_AlreadyInLibrary" xml:space="preserve"><value>已在库中</value></data>
+  <data name="Rec_OpenVndb" xml:space="preserve"><value>打开 VNDB</value></data>
+  <data name="Rec_OpenBangumi" xml:space="preserve"><value>打开 Bangumi</value></data>
+  <data name="Rec_ImportFailed" xml:space="preserve"><value>导入推荐失败: {0}</value></data>
+  <data name="Rec_LocalReasonTags" xml:space="preserve"><value>命中你的偏好标签: {0}。</value></data>
+  <data name="Rec_LocalReasonDeveloper" xml:space="preserve"><value>来自你常喜欢的厂商: {0}。</value></data>
+  <data name="Rec_LocalReasonYear" xml:space="preserve"><value>发售年代接近你的偏好区间。</value></data>
+  <data name="Rec_LocalReasonFallback" xml:space="preserve"><value>基于你的游戏库画像，它是一个整体匹配度较高的候选。</value></data>
+  <data name="Rec_LocalCautionTags" xml:space="preserve"><value>可能包含你常弃坑的标签: {0}。</value></data>
+  <data name="Rec_LocalCautionYear" xml:space="preserve"><value>发售年代与你平时偏好差距较大。</value></data>
+  <data name="GameStatus_Planned" xml:space="preserve"><value>待玩</value></data>
+  <data name="Msg_DeleteSelectedConfirmText" xml:space="preserve"><value>确定要删除这 {0} 个游戏吗？</value></data>
+  <data name="Msg_NoSelection" xml:space="preserve"><value>没有选中任何游戏。</value></data>
+  <data name="Menu_GameManagement" xml:space="preserve"><value>游戏管理 (_G)</value></data>
+  <data name="GameMgmt_Title" xml:space="preserve"><value>游戏管理</value></data>
+  <data name="GameMgmt_SelectAll" xml:space="preserve"><value>全选</value></data>
+  <data name="GameMgmt_DeselectAll" xml:space="preserve"><value>取消全选</value></data>
+  <data name="GameMgmt_InvertSelection" xml:space="preserve"><value>反选</value></data>
+  <data name="GameMgmt_DeleteSelected" xml:space="preserve"><value>删除选中</value></data>
+  <data name="GameMgmt_TotalCount" xml:space="preserve"><value>总计:</value></data>
+  <data name="GameMgmt_SelectedCount" xml:space="preserve"><value>已选:</value></data>
+  <data name="GameMgmt_FilterWatermark" xml:space="preserve"><value>按标题过滤...</value></data>
+  <data name="Rec_ProfileDepth" xml:space="preserve"><value>完成率 {0}，已通关平均 {1} 小时，弃坑平均 {2} 小时，画像风格：{3}。</value></data>
+  <data name="Rec_ColBreakdown" xml:space="preserve"><value>拆分</value></data>
+  <data name="Rec_FeedbackLike" xml:space="preserve"><value>喜欢</value></data>
+  <data name="Rec_FeedbackLiked" xml:space="preserve"><value>已喜欢</value></data>
+  <data name="Rec_FeedbackDislike" xml:space="preserve"><value>跳过</value></data>
+  <data name="Rec_FeedbackDisliked" xml:space="preserve"><value>已跳过</value></data>
+  <data name="Rec_LocalReasonSource" xml:space="preserve"><value>和你库里的这些作品比较接近：{0}。</value></data>
+  <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>相近作品曾得到你的正向反馈。</value></data>
+  <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>相近推荐此前收到过你的负向反馈。</value></data>
+  <data name="Rec_SortLabel" xml:space="preserve"><value>排序</value></data>
+  <data name="Rec_SortSmart" xml:space="preserve"><value>智能推荐</value></data>
+  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>综合排名</value></data>
+  <data name="Settings_AiTestButton" xml:space="preserve"><value>测试</value></data>
+  <data name="Settings_AiTestRunning" xml:space="preserve"><value>正在测试 AI 连接...</value></data>
+  <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI 测试成功。返回: {0}</value></data>
+  <data name="Settings_AiTestFailed" xml:space="preserve"><value>AI 测试失败: {0}</value></data>
+  <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>请先填写 API 地址、API 密钥和模型名。</value></data>
+  <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API 地址无效。</value></data>
+  <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI 测试失败：响应中没有可读文本。</value></data>
+  <data name="Workflow_Waiting" xml:space="preserve"><value>等待</value></data>
+  <data name="Workflow_Running" xml:space="preserve"><value>进行中</value></data>
+  <data name="Workflow_Done" xml:space="preserve"><value>完成</value></data>
+  <data name="Workflow_Failed" xml:space="preserve"><value>失败</value></data>
+  <data name="Workflow_Fallback" xml:space="preserve"><value>已回退</value></data>
+  <data name="Workflow_Skipped" xml:space="preserve"><value>跳过</value></data>
+  <data name="Rec_StepProfile" xml:space="preserve"><value>生成画像</value></data>
+  <data name="Rec_StepBangumi" xml:space="preserve"><value>补全 Bangumi</value></data>
+  <data name="Rec_StepAi" xml:space="preserve"><value>AI 理由</value></data>
+  <data name="Meta_SourceStatusTitle" xml:space="preserve"><value>来源状态</value></data>
+  <data name="Meta_CoverStatusTitle" xml:space="preserve"><value>封面状态</value></data>
+  <data name="Meta_SourceReady" xml:space="preserve"><value>{0} 已就绪。</value></data>
+  <data name="Meta_SearchingSource" xml:space="preserve"><value>正在搜索 {0}...</value></data>
+  <data name="Meta_SearchComplete" xml:space="preserve"><value>{0} 返回 {1} 条结果。</value></data>
+  <data name="Meta_SearchFailed" xml:space="preserve"><value>{0} 搜索失败。</value></data>
+  <data name="Meta_SourceNoResults" xml:space="preserve"><value>无结果</value></data>
+  <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} 条结果</value></data>
+  <data name="Meta_AppliedSource" xml:space="preserve"><value>已应用来自 {0} 的元数据。</value></data>
+  <data name="Toolbar_AddGame" xml:space="preserve"><value>添加游戏</value></data>
+  <data name="Toolbar_Recommendations" xml:space="preserve"><value>推荐</value></data>
+  <data name="Toolbar_Stats" xml:space="preserve"><value>统计</value></data>
+  <data name="Toolbar_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Toolbar_ManageGames" xml:space="preserve"><value>管理游戏</value></data>
+  <data name="Rec_ProfileStyleDeveloperStrong" xml:space="preserve"><value>厂商偏好较强，同厂商或相近厂商会获得适度加分</value></data>
+  <data name="Rec_ProfileStyleDeveloperBalanced" xml:space="preserve"><value>厂商偏好和题材标签共同驱动</value></data>
+  <data name="Rec_ProfileStyleTagDiverse" xml:space="preserve"><value>题材驱动，兴趣范围较分散</value></data>
+  <data name="Rec_ProfileStyleTagFocused" xml:space="preserve"><value>题材和结构偏好较集中</value></data>
 </root>
