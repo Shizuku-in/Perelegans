@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -61,9 +62,7 @@ public partial class MainViewModel : ObservableObject
             var total = TimeSpan.Zero;
             foreach (var g in Games)
                 total += g.Playtime;
-            int hours = (int)total.TotalHours;
-            int mins = total.Minutes;
-            return hours > 0 ? $"{hours}h {mins}m" : $"{mins}m";
+            return PlaytimeTextFormatter.Format(total);
         }
     }
 
@@ -89,6 +88,7 @@ public partial class MainViewModel : ObservableObject
         // Subscribe to process monitor events
         _processMonitor.PlaytimeUpdated += OnPlaytimeUpdated;
         _processMonitor.GameDetectionChanged += OnGameDetectionChanged;
+        TranslationService.Instance.PropertyChanged += OnTranslationChanged;
         AttachGamesCollection(Games);
     }
 
@@ -151,6 +151,14 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(TotalPlaytimeText));
         OnPropertyChanged(nameof(CompletedCount));
         OnPropertyChanged(nameof(TotalGameCount));
+    }
+
+    private void OnTranslationChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == "Item[]")
+        {
+            RefreshStats();
+        }
     }
 
     public void RefreshUi()
@@ -405,7 +413,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task AddFromWebsite()
     {
-        var newGame = new Game { Title = "New Game" };
+        var newGame = new Game { Title = TranslationService.Instance["Game_DefaultTitle"] };
         var vm = new MetadataViewModel(newGame, _httpClient, _dbService, isNewGame: true, isSearchEnabled: true);
         var win = new MetadataWindow
         {
@@ -424,7 +432,7 @@ public partial class MainViewModel : ObservableObject
     {
         var dialog = new Microsoft.Win32.SaveFileDialog
         {
-            Filter = "SQLite Database (*.db)|*.db",
+            Filter = TranslationService.Instance["Dialog_SqliteDatabaseFilter"],
             FileName = "perelegans_backup.db"
         };
         if (dialog.ShowDialog() == true)
@@ -446,7 +454,7 @@ public partial class MainViewModel : ObservableObject
     {
         var dialog = new Microsoft.Win32.OpenFileDialog
         {
-            Filter = "SQLite Database (*.db)|*.db"
+            Filter = TranslationService.Instance["Dialog_SqliteDatabaseFilter"]
         };
         if (dialog.ShowDialog() == true)
         {

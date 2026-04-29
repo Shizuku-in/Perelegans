@@ -222,5 +222,19 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>Please fill API base URL, API key, and model first.</value></data>
   <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API base URL is invalid.</value></data>
   <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI test failed: response did not contain readable text.</value></data>
+  <data name="TitleBar_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>Minimize</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>Maximize</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Context_OpenVndb" xml:space="preserve"><value>VNDB</value></data>
+  <data name="Context_OpenErogameSpace" xml:space="preserve"><value>ErogameSpace</value></data>
+  <data name="Context_OpenBangumi" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>Official Site</value></data>
+  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>Last played {0:yyyy-MM-dd}</value></data>
+  <data name="Game_DefaultTitle" xml:space="preserve"><value>New Game</value></data>
+  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite Database (*.db)|*.db</value></data>
+  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0}h {1}m</value></data>
+  <data name="Playtime_Minutes" xml:space="preserve"><value>{0}m</value></data>
+  <data name="Playtime_Zero" xml:space="preserve"><value>0m</value></data>
 </root>
 

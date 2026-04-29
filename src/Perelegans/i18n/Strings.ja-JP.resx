@@ -212,4 +212,18 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>API ベースURL、API キー、モデルを先に入力してください。</value></data>
   <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API ベースURLが無効です。</value></data>
   <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI テストに失敗しました: 応答に読み取れるテキストがありません。</value></data>
+  <data name="TitleBar_Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>閉じる</value></data>
+  <data name="Context_OpenVndb" xml:space="preserve"><value>VNDB</value></data>
+  <data name="Context_OpenErogameSpace" xml:space="preserve"><value>ErogameSpace</value></data>
+  <data name="Context_OpenBangumi" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>公式サイト</value></data>
+  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>最終プレイ {0:yyyy-MM-dd}</value></data>
+  <data name="Game_DefaultTitle" xml:space="preserve"><value>新しいゲーム</value></data>
+  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite データベース (*.db)|*.db</value></data>
+  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0}時間 {1}分</value></data>
+  <data name="Playtime_Minutes" xml:space="preserve"><value>{0}分</value></data>
+  <data name="Playtime_Zero" xml:space="preserve"><value>0分</value></data>
 </root>

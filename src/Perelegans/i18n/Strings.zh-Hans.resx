@@ -212,4 +212,18 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiTestMissingConfig" xml:space="preserve"><value>请先填写 API 地址、API 密钥和模型名。</value></data>
   <data name="Settings_AiTestInvalidUrl" xml:space="preserve"><value>API 地址无效。</value></data>
   <data name="Settings_AiTestNoContent" xml:space="preserve"><value>AI 测试失败：响应中没有可读文本。</value></data>
+  <data name="TitleBar_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="TitleBar_Minimize" xml:space="preserve"><value>最小化</value></data>
+  <data name="TitleBar_Maximize" xml:space="preserve"><value>最大化</value></data>
+  <data name="TitleBar_Close" xml:space="preserve"><value>关闭</value></data>
+  <data name="Context_OpenVndb" xml:space="preserve"><value>VNDB</value></data>
+  <data name="Context_OpenErogameSpace" xml:space="preserve"><value>ErogameSpace</value></data>
+  <data name="Context_OpenBangumi" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Context_OpenOfficialSite" xml:space="preserve"><value>官方网站</value></data>
+  <data name="Card_LastPlayedFormat" xml:space="preserve"><value>最后游玩 {0:yyyy-MM-dd}</value></data>
+  <data name="Game_DefaultTitle" xml:space="preserve"><value>新游戏</value></data>
+  <data name="Dialog_SqliteDatabaseFilter" xml:space="preserve"><value>SQLite 数据库 (*.db)|*.db</value></data>
+  <data name="Playtime_HoursMinutes" xml:space="preserve"><value>{0} 小时 {1} 分钟</value></data>
+  <data name="Playtime_Minutes" xml:space="preserve"><value>{0} 分钟</value></data>
+  <data name="Playtime_Zero" xml:space="preserve"><value>0 分钟</value></data>
 </root>

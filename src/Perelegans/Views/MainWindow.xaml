@@ -9,6 +9,7 @@
         xmlns:controls="clr-namespace:Perelegans.Controls"
         xmlns:models="clr-namespace:Perelegans.Models"
         xmlns:i18n="clr-namespace:Perelegans.i18n"
+        xmlns:services="clr-namespace:Perelegans.Services"
         mc:Ignorable="d"
         Title="Perelegans"
         TitleCharacterCasing="Normal"
@@ -31,6 +32,7 @@
         <converters:CoverArtImageSourceConverter x:Key="CoverArtImageSourceConverter"/>
         <converters:CoverAspectRatioToStretchConverter x:Key="CoverAspectRatioToStretchConverter"/>
         <converters:StatusIconConverter x:Key="StatusIconConverter"/>
+        <converters:LocalizedStringFormatConverter x:Key="LocalizedStringFormatConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="White"/>
@@ -105,26 +107,26 @@
                 <Button x:Name="BtnSettings" Click="BtnSettings_Click"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Settings">
+                        ToolTip="{i18n:Translate TitleBar_Settings}">
                     <iconPacks:PackIconMaterial Kind="CogOutline" Width="12" Height="12"/>
                 </Button>
                 <Button x:Name="BtnMinimize" Click="BtnMinimize_Click"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Minimize">
+                        ToolTip="{i18n:Translate TitleBar_Minimize}">
                     <iconPacks:PackIconMaterial Kind="WindowMinimize" Width="12" Height="12"/>
                 </Button>
                 <Button x:Name="BtnMaximize" Click="BtnMaximize_Click"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.TitleBarButtonStyle}"
-                        ToolTip="Maximize">
+                        ToolTip="{i18n:Translate TitleBar_Maximize}">
                     <iconPacks:PackIconMaterial Kind="WindowMaximize" Width="12" Height="12"
                                                 x:Name="MaximizeIcon"/>
                 </Button>
                 <Button x:Name="BtnClose" Click="BtnClose_Click"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource Perelegans.CloseButtonStyle}"
-                        ToolTip="Close">
+                        ToolTip="{i18n:Translate TitleBar_Close}">
                     <iconPacks:PackIconMaterial Kind="WindowClose" Width="12" Height="12"/>
                 </Button>
             </StackPanel>
@@ -330,13 +332,13 @@
                                                     <MenuItem Header="{i18n:Translate Context_OpenFolder}"
                                                               Command="{Binding PlacementTarget.Tag.OpenGameFolderCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     <MenuItem Header="{i18n:Translate Context_OpenWebsite}">
-                                                        <MenuItem Header="VNDB"
+                                                        <MenuItem Header="{i18n:Translate Context_OpenVndb}"
                                                                   Command="{Binding PlacementTarget.Tag.OpenVndbCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                        <MenuItem Header="ErogameSpace"
+                                                        <MenuItem Header="{i18n:Translate Context_OpenErogameSpace}"
                                                                   Command="{Binding PlacementTarget.Tag.OpenErogameSpaceCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                        <MenuItem Header="Bangumi"
+                                                        <MenuItem Header="{i18n:Translate Context_OpenBangumi}"
                                                                   Command="{Binding PlacementTarget.Tag.OpenBangumiCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                        <MenuItem Header="Official Site"
+                                                        <MenuItem Header="{i18n:Translate Context_OpenOfficialSite}"
                                                                   Command="{Binding PlacementTarget.Tag.OpenOfficialSiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                     </MenuItem>
                                                     <MenuItem Header="{i18n:Translate Context_OpenGameStats}"
@@ -475,15 +477,29 @@
                                                                FontSize="10"
                                                                Margin="0,3,0,0"
                                                                Opacity="0.92"/>
-                                                    <TextBlock Text="{Binding Playtime, Converter={StaticResource PlaytimeConverter}}"
-                                                               Style="{StaticResource CardMetaTextStyle}"
+                                                    <TextBlock Style="{StaticResource CardMetaTextStyle}"
                                                                FontSize="11"
                                                                FontWeight="SemiBold"
-                                                               Margin="0,8,0,0"/>
-                                                    <TextBlock Text="{Binding AccessedDate, StringFormat=Last played {0:yyyy-MM-dd}}"
-                                                               Style="{StaticResource CardMetaTextStyle}"
+                                                               Margin="0,8,0,0">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding Converter="{StaticResource PlaytimeConverter}">
+                                                                <Binding Path="Playtime"/>
+                                                                <Binding Source="{x:Static services:TranslationService.Instance}"
+                                                                         Path="[Playtime_HoursMinutes]"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource CardMetaTextStyle}"
                                                                FontSize="10"
-                                                               Margin="0,4,0,0"/>
+                                                               Margin="0,4,0,0">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding Converter="{StaticResource LocalizedStringFormatConverter}">
+                                                                <Binding Source="{x:Static services:TranslationService.Instance}"
+                                                                         Path="[Card_LastPlayedFormat]"/>
+                                                                <Binding Path="AccessedDate"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
                                                 </StackPanel>
                                             </Grid>
                                         </Border>
