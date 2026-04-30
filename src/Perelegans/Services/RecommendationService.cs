@@ -20,9 +20,15 @@ public class RecommendationService
     private const string DetailFieldsWithoutRank = "id, title, alttitle, released, rating, votecount, developers.name, tags.id, tags.name, tags.rating, extlinks.url, extlinks.label, extlinks.name";
     private const int CacheTtlDays = 7;
     private const int CandidateSearchPageSize = 100;
+    private const int CandidateEvaluationLimit = 48;
     private const int FinalRecommendationLimit = 24;
     private const int MinimumFallbackResultCount = 12;
     private const string ProfileCacheVersion = "profile-v2";
+    private static readonly TimeSpan BangumiSearchCacheTtl = TimeSpan.FromDays(14);
+    private static readonly TimeSpan CandidateSearchCacheTtl = TimeSpan.FromDays(1);
+    private static readonly TimeSpan BangumiRequestTimeout = TimeSpan.FromSeconds(5);
+    private static int _libraryCrossSourceEnrichmentRunning;
+    private static readonly RecommendationScoringOptions Scoring = new();
     private readonly DatabaseService _dbService;
     private readonly HttpClient _httpClient;
     private readonly VndbRecommendationCacheService _cacheService;
@@ -45,11 +51,13 @@ public class RecommendationService
         if (context.Profile == null)
             return result;
 
-        var rankedCandidates = (await SearchCandidatesAsync(
+        var candidatePool = await SearchCandidatesAsync(
                 context.Profile,
                 context.LibraryIds,
                 context.FeedbackById,
-                context.CacheDocument))
+                context.CacheDocument);
+
+        var enrichedCandidates = candidatePool
             .OrderByDescending(candidate => candidate.RecommendationScore)
             .ThenByDescending(candidate => candidate.TagOverlapScore)
             .ThenByDescending(candidate => candidate.FeedbackAffinity)
@@ -57,27 +65,238 @@ public class RecommendationService
             .ThenByDescending(candidate => candidate.YearAffinity)
             .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
             .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
+            .Take(CandidateEvaluationLimit)
             .ToList();
 
-        result.Candidates = rankedCandidates
-            .Where(IsRelevantCandidate)
-            .Take(FinalRecommendationLimit)
+        await EnrichCandidatesWithBangumiRatingsAsync(
+            enrichedCandidates.Take(Scoring.BlockingBangumiEnrichmentLimit).ToList());
+
+        var rankedCandidates = enrichedCandidates
+            .OrderByDescending(ComputeCandidateSelectionScore)
+            .ThenByDescending(candidate => candidate.RecommendationScore)
+            .ThenByDescending(candidate => candidate.ExternalRatingScore ?? NormalizeRating(candidate.VndbRating) ?? 0)
+            .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
+            .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
+            .ThenByDescending(candidate => candidate.TagOverlapScore)
+            .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
+            .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        result.Candidates = DiversifyCandidates(
+                rankedCandidates.Where(IsRelevantCandidate),
+                FinalRecommendationLimit)
             .ToList();
 
         if (result.Candidates.Count == 0)
         {
-            result.Candidates = rankedCandidates
-                .Where(candidate => candidate.RecommendationScore > 0)
-                .Take(MinimumFallbackResultCount)
+            result.Candidates = DiversifyCandidates(
+                    rankedCandidates
+                        .Where(candidate => candidate.RecommendationScore > 0)
+                        .Take(MinimumFallbackResultCount * 2),
+                    MinimumFallbackResultCount)
                 .ToList();
         }
 
         return result;
     }
 
+    private static IEnumerable<RecommendationCandidate> DiversifyCandidates(
+        IEnumerable<RecommendationCandidate> rankedCandidates,
+        int limit)
+    {
+        var remaining = rankedCandidates.ToList();
+        var selected = new List<RecommendationCandidate>(limit);
+        var developerCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var tagCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        while (remaining.Count > 0 && selected.Count < limit)
+        {
+            var pickedIndex = remaining.FindIndex(candidate =>
+                IsWithinDiversityBudget(candidate, developerCounts, tagCounts, selected.Count));
+
+            if (pickedIndex < 0)
+                pickedIndex = 0;
+
+            var picked = remaining[pickedIndex];
+            remaining.RemoveAt(pickedIndex);
+            selected.Add(picked);
+
+            foreach (var developer in picked.MatchingDevelopers.DefaultIfEmpty(picked.Brand).Where(value => !string.IsNullOrWhiteSpace(value)))
+                developerCounts[developer] = developerCounts.TryGetValue(developer, out var count) ? count + 1 : 1;
+
+            foreach (var tag in picked.MatchingTags.Take(2))
+                tagCounts[tag] = tagCounts.TryGetValue(tag, out var count) ? count + 1 : 1;
+        }
+
+        return selected;
+    }
+
+    private static bool IsWithinDiversityBudget(
+        RecommendationCandidate candidate,
+        IReadOnlyDictionary<string, int> developerCounts,
+        IReadOnlyDictionary<string, int> tagCounts,
+        int selectedCount)
+    {
+        var developerLimit = selectedCount < 12 ? 2 : 3;
+        var tagLimit = selectedCount < 12 ? 4 : 6;
+
+        var developers = candidate.MatchingDevelopers.Count > 0
+            ? candidate.MatchingDevelopers
+            : string.IsNullOrWhiteSpace(candidate.Brand) ? [] : [candidate.Brand];
+
+        if (developers.Any(developer => developerCounts.TryGetValue(developer, out var count) && count >= developerLimit))
+            return false;
+
+        if (candidate.MatchingTags.Take(2).Any(tag => tagCounts.TryGetValue(tag, out var count) && count >= tagLimit))
+            return false;
+
+        return true;
+    }
+
+    private static double ComputeCandidateSelectionScore(RecommendationCandidate candidate)
+    {
+        var externalScore = candidate.ExternalRatingScore ?? NormalizeRating(candidate.VndbRating) ?? 0;
+        return candidate.RecommendationScore * Scoring.ProfileSelectionWeight
+               + externalScore * Scoring.ExternalSelectionWeight;
+    }
+
     public async Task WarmProfileCacheAsync()
     {
         await GetProfileContextAsync(useCache: false);
+    }
+
+    private void StartLibraryCrossSourceEnrichment(IReadOnlyCollection<Game> games)
+    {
+        if (games.Count == 0 || Interlocked.CompareExchange(ref _libraryCrossSourceEnrichmentRunning, 1, 0) != 0)
+            return;
+
+        var snapshot = games
+            .Where(game =>
+                (!string.IsNullOrWhiteSpace(game.VndbId) && string.IsNullOrWhiteSpace(game.BangumiId)) ||
+                (string.IsNullOrWhiteSpace(game.VndbId) && !string.IsNullOrWhiteSpace(game.BangumiId)))
+            .Select(CloneGameForBackgroundEnrichment)
+            .ToList();
+
+        if (snapshot.Count == 0)
+        {
+            Interlocked.Exchange(ref _libraryCrossSourceEnrichmentRunning, 0);
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var cacheDocument = await _cacheService.LoadAsync();
+                await EnrichLibraryCrossSourceMetadataAsync(snapshot, cacheDocument);
+            }
+            catch
+            {
+                // Cross-source enrichment is opportunistic and must not block recommendations.
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _libraryCrossSourceEnrichmentRunning, 0);
+            }
+        });
+    }
+
+    private static Game CloneGameForBackgroundEnrichment(Game game)
+    {
+        return new Game
+        {
+            Id = game.Id,
+            Title = game.Title,
+            Brand = game.Brand,
+            ReleaseDate = game.ReleaseDate,
+            Status = game.Status,
+            ProcessName = game.ProcessName,
+            ExecutablePath = game.ExecutablePath,
+            Playtime = game.Playtime,
+            CreatedDate = game.CreatedDate,
+            AccessedDate = game.AccessedDate,
+            VndbId = game.VndbId,
+            ErogameSpaceId = game.ErogameSpaceId,
+            BangumiId = game.BangumiId,
+            OfficialWebsite = game.OfficialWebsite,
+            Tags = game.Tags,
+            CoverImageUrl = game.CoverImageUrl,
+            CoverImagePath = game.CoverImagePath,
+            CoverAspectRatio = game.CoverAspectRatio
+        };
+    }
+
+    private async Task EnrichLibraryCrossSourceMetadataAsync(
+        IReadOnlyCollection<Game> games,
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var vndbOnlyGames = games
+            .Where(game => !string.IsNullOrWhiteSpace(game.VndbId) && string.IsNullOrWhiteSpace(game.BangumiId))
+            .ToList();
+        var bangumiOnlyGames = games
+            .Where(game => string.IsNullOrWhiteSpace(game.VndbId) && !string.IsNullOrWhiteSpace(game.BangumiId))
+            .ToList();
+
+        if (vndbOnlyGames.Count == 0 && bangumiOnlyGames.Count == 0)
+            return;
+
+        var bangumiService = new BangumiService(_httpClient);
+        var bangumiQueryCache = new ConcurrentDictionary<string, Lazy<Task<List<MetadataResult>>>>(StringComparer.OrdinalIgnoreCase);
+        var bangumiCacheLock = new object();
+
+        if (vndbOnlyGames.Count > 0)
+        {
+            var ids = vndbOnlyGames
+                .Select(game => VndbIdUtilities.Normalize(game.VndbId))
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Cast<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            var vndbMetadataById = await GetVisualNovelsByIdsAsync(ids, cacheDocument);
+
+            foreach (var game in vndbOnlyGames)
+            {
+                var vndbId = VndbIdUtilities.Normalize(game.VndbId);
+                if (string.IsNullOrWhiteSpace(vndbId) || !vndbMetadataById.TryGetValue(vndbId, out var metadata))
+                    continue;
+
+                var candidate = BuildCandidateForCrossSourceMatch(metadata);
+                var match = await FindBestBangumiMatchAsync(
+                    bangumiService,
+                    candidate,
+                    cacheDocument,
+                    bangumiCacheLock,
+                    bangumiQueryCache);
+                if (string.IsNullOrWhiteSpace(match?.SourceId))
+                    continue;
+
+                game.BangumiId = match.SourceId;
+                MergeGameMetadataFromResult(game, match);
+                await _dbService.UpdateGameAsync(game);
+            }
+        }
+
+        if (bangumiOnlyGames.Count > 0)
+        {
+            foreach (var game in bangumiOnlyGames)
+            {
+                var bangumiMetadata = await WithTimeout(
+                    bangumiService.GetByIdAsync(game.BangumiId!),
+                    BangumiRequestTimeout);
+                if (bangumiMetadata == null)
+                    continue;
+
+                var match = await FindBestVndbMatchAsync(game, bangumiMetadata, cacheDocument);
+                if (match == null)
+                    continue;
+
+                game.VndbId = match.Id;
+                MergeGameMetadataFromVndb(game, match);
+                await _dbService.UpdateGameAsync(game);
+            }
+        }
+
+        await _cacheService.SaveAsync(cacheDocument);
     }
 
     private async Task<RecommendationProfileContext> GetProfileContextAsync(bool useCache)
@@ -107,6 +326,9 @@ public class RecommendationService
             .DefaultIfEmpty(0)
             .Average();
 
+        var cacheDocument = await _cacheService.LoadAsync();
+        StartLibraryCrossSourceEnrichment(games);
+
         var libraryIds = games
             .Select(game => VndbIdUtilities.Normalize(game.VndbId))
             .Where(id => !string.IsNullOrWhiteSpace(id))
@@ -114,9 +336,8 @@ public class RecommendationService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var cacheDocument = await _cacheService.LoadAsync();
         var feedbackById = await _dbService.GetRecommendationFeedbackMapAsync();
-        var signature = BuildProfileSignature(games, feedbackById);
+        var signature = BuildProfileSignature(games, feedbackById, cacheDocument.TagWeights);
 
         if (useCache &&
             cacheDocument.ProfileCache is { Profile: not null } profileCache &&
@@ -131,6 +352,7 @@ public class RecommendationService
         }
 
         var metadataById = await GetVisualNovelsByIdsAsync(libraryIds, cacheDocument);
+        var feedbackMetadataById = await GetFeedbackMetadataByIdAsync(feedbackById, libraryIds, cacheDocument);
         var bangumiMetadataByGameId = await GetBangumiMetadataByGameIdAsync(games);
 
         var profiledGames = games
@@ -161,7 +383,7 @@ public class RecommendationService
             return new RecommendationProfileContext(profileSummary, null, libraryIds, feedbackById, cacheDocument);
         }
 
-        var profile = BuildProfile(profiledGames, feedbackById, profileSummary);
+        var profile = BuildProfile(profiledGames, feedbackMetadataById, feedbackById, cacheDocument.TagWeights, profileSummary);
         if (profile.PositiveTagIds.Count == 0)
         {
             cacheDocument.ProfileCache = new CachedRecommendationProfile
@@ -230,6 +452,22 @@ public class RecommendationService
         }
 
         return results;
+    }
+
+    private async Task<Dictionary<string, CachedVndbVisualNovel>> GetFeedbackMetadataByIdAsync(
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById,
+        HashSet<string> libraryIds,
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var feedbackIds = feedbackById
+            .Where(item => !libraryIds.Contains(item.Key))
+            .Where(item => item.Value.PositiveSignal > 0 || item.Value.NegativeSignal > 0)
+            .OrderByDescending(item => item.Value.UpdatedAt)
+            .Take(80)
+            .Select(item => item.Key)
+            .ToList();
+
+        return await GetVisualNovelsByIdsAsync(feedbackIds, cacheDocument);
     }
 
     private async Task<List<CachedVndbVisualNovel>> FetchVisualNovelsByIdsAsync(IReadOnlyList<string> ids)
@@ -362,7 +600,8 @@ public class RecommendationService
 
     private static string BuildProfileSignature(
         IReadOnlyCollection<Game> games,
-        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById)
+        IReadOnlyDictionary<string, RecommendationFeedback> feedbackById,
+        IReadOnlyDictionary<string, CachedTagWeight> tagWeights)
     {
         var builder = new StringBuilder();
         builder.AppendLine(ProfileCacheVersion);
@@ -386,6 +625,16 @@ public class RecommendationService
                 .Append(feedback.Value.PositiveSignal.ToString("R", CultureInfo.InvariantCulture)).Append('|')
                 .Append(feedback.Value.NegativeSignal.ToString("R", CultureInfo.InvariantCulture)).Append('|')
                 .Append(feedback.Value.UpdatedAt.Ticks)
+                .AppendLine();
+        }
+
+        foreach (var tagWeight in tagWeights.OrderBy(item => item.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            builder
+                .Append(tagWeight.Key).Append('|')
+                .Append(tagWeight.Value.Category).Append('|')
+                .Append(tagWeight.Value.Weight.ToString("R", CultureInfo.InvariantCulture)).Append('|')
+                .Append(tagWeight.Value.Confidence.ToString("R", CultureInfo.InvariantCulture))
                 .AppendLine();
         }
 
@@ -462,21 +711,25 @@ public class RecommendationService
     {
         var recallPlans = new[]
         {
-            new RecallPlan(profile.PositiveTagIds.Take(6).ToList(), profile.NegativeTagIds.Take(3).ToList(), 5),
+            new RecallPlan(profile.PositiveTagIds.Take(6).ToList(), profile.NegativeTagIds.Take(2).ToList(), 4, "rating"),
             new RecallPlan(
                 profile.SecondaryPositiveTagIds.Count > 0 ? profile.SecondaryPositiveTagIds.Take(8).ToList() : profile.PositiveTagIds.Take(8).ToList(),
-                profile.NegativeTagIds.Take(1).ToList(),
-                3)
+                [],
+                3,
+                "rating"),
+            new RecallPlan(profile.PositiveTagIds.Take(3).ToList(), [], 2, "released"),
+            new RecallPlan(profile.PositiveTagIds.Take(3).ToList(), [], 2, "rating", requireAllPositiveTags: true),
         };
 
         var visualNovelsById = new Dictionary<string, CachedVndbVisualNovel>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var recallPlan in recallPlans.Where(plan => plan.PositiveTagIds.Count > 0))
         {
+            var positiveOperation = recallPlan.RequireAllPositiveTags ? "and" : "or";
             var clauses = new List<object>
             {
                 BuildCompoundFilter(
-                    "or",
+                    positiveOperation,
                     recallPlan.PositiveTagIds.Select(tagId => (object)new object[] { "tag", "=", tagId }))
             };
 
@@ -487,11 +740,12 @@ public class RecommendationService
 
             for (var page = 1; page <= recallPlan.MaxPages; page++)
             {
-                var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating", page);
-                if (responseJson == null)
-                    break;
-
-                var pageResults = ParseVisualNovels(responseJson);
+                var pageResults = await SearchVndbCandidatesWithCacheAsync(
+                    filters,
+                    CandidateSearchPageSize,
+                    recallPlan.Sort,
+                    page,
+                    cacheDocument);
                 if (pageResults.Count == 0)
                     break;
 
@@ -549,15 +803,58 @@ public class RecommendationService
         var filters = BuildCompoundFilter(
             "or",
             fallbackTags.Select(tagId => (object)new object[] { "tag", "=", tagId }));
-        var responseJson = await PostToVndbAsync(filters, CandidateSearchPageSize, DetailFields, "rating");
-        if (responseJson == null)
-            return [];
-
-        var fallbackResults = ParseVisualNovels(responseJson);
+        var fallbackResults = await SearchVndbCandidatesWithCacheAsync(
+            filters,
+            CandidateSearchPageSize,
+            "rating",
+            page: 1,
+            cacheDocument);
         foreach (var visualNovel in fallbackResults)
             cacheDocument.Entries[visualNovel.Id] = visualNovel;
 
         return fallbackResults;
+    }
+
+    private async Task<List<CachedVndbVisualNovel>> SearchVndbCandidatesWithCacheAsync(
+        object filters,
+        int results,
+        string sort,
+        int page,
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var cacheKey = BuildCandidateSearchCacheKey(filters, results, sort, page);
+        if (cacheDocument.CandidateSearches.TryGetValue(cacheKey, out var cached) &&
+            DateTimeOffset.UtcNow - cached.CachedAtUtc <= CandidateSearchCacheTtl)
+        {
+            var cachedResults = cached.VndbIds
+                .Select(id => cacheDocument.Entries.TryGetValue(id, out var entry) ? entry : null)
+                .Where(entry => entry != null)
+                .Cast<CachedVndbVisualNovel>()
+                .ToList();
+
+            if (cachedResults.Count == cached.VndbIds.Count)
+                return cachedResults;
+        }
+
+        var responseJson = await PostToVndbAsync(filters, results, DetailFields, sort, page);
+        if (responseJson == null)
+            return [];
+
+        var pageResults = ParseVisualNovels(responseJson);
+        cacheDocument.CandidateSearches[cacheKey] = new CachedVndbCandidateSearch
+        {
+            CachedAtUtc = DateTimeOffset.UtcNow,
+            VndbIds = pageResults.Select(visualNovel => visualNovel.Id).ToList()
+        };
+
+        return pageResults;
+    }
+
+    private static string BuildCandidateSearchCacheKey(object filters, int results, string sort, int page)
+    {
+        var signature = JsonSerializer.Serialize(new { filters, results, sort, page });
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(signature));
+        return Convert.ToHexString(bytes);
     }
 
     private async Task<string?> PostToVndbAsync(object filters, int results, string fields, string sort, int page = 1)
@@ -679,7 +976,9 @@ public class RecommendationService
 
     private static RecommendationProfile BuildProfile(
         IReadOnlyCollection<(Game Game, CachedVndbVisualNovel Metadata)> sourceGames,
+        IReadOnlyDictionary<string, CachedVndbVisualNovel> feedbackMetadataById,
         IReadOnlyDictionary<string, RecommendationFeedback> feedbackById,
+        IReadOnlyDictionary<string, CachedTagWeight> tagWeights,
         TasteProfileSummary summary)
     {
         var tagScores = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
@@ -702,7 +1001,8 @@ public class RecommendationService
 
             foreach (var tag in metadata.Tags)
             {
-                var score = weight * tag.Rating;
+                var semanticWeight = GetSemanticTagWeight(tag, tagWeights);
+                var score = weight * tag.Rating * semanticWeight;
                 tagScores[tag.Id] = tagScores.TryGetValue(tag.Id, out var current) ? current + score : score;
                 tagNames[tag.Id] = tag.Name;
 
@@ -750,11 +1050,33 @@ public class RecommendationService
             }
         }
 
+        var sourceVndbIds = sourceGames
+            .Select(item => VndbIdUtilities.Normalize(item.Game.VndbId))
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .Cast<string>()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         foreach (var (vndbId, feedback) in feedbackById)
         {
             var feedbackValue = feedback.PositiveSignal - feedback.NegativeSignal;
             if (Math.Abs(feedbackValue) < 0.001)
                 continue;
+
+            if (!sourceVndbIds.Contains(vndbId) &&
+                feedbackMetadataById.TryGetValue(vndbId, out var feedbackMetadata))
+            {
+                ApplyFeedbackMetadataToProfile(
+                    feedbackMetadata,
+                    feedback,
+                    feedbackValue,
+                    tagScores,
+                    recentTagScores,
+                    hardNegativeScores,
+                    tagNames,
+                    developerScores,
+                    sourceProfiles,
+                    tagWeights);
+            }
 
             if (feedbackValue < 0)
             {
@@ -826,8 +1148,73 @@ public class RecommendationService
             MaxPositiveOverlap = positiveTags.Take(6).Sum(item => item.Value * 3d),
             MaxRecentOverlap = recentTagScores.Values.Where(value => value > 0).OrderByDescending(value => value).Take(6).Sum(value => value * 3d),
             SourceGames = sourceProfiles,
-            DeveloperPreferenceWeight = developerPreferenceStrength >= 1.15 ? 0.35 : 0.22
+            DeveloperPreferenceWeight = developerPreferenceStrength >= 1.15
+                ? Scoring.StrongDeveloperPreferenceWeight
+                : Scoring.BalancedDeveloperPreferenceWeight
         };
+    }
+
+    private static void ApplyFeedbackMetadataToProfile(
+        CachedVndbVisualNovel metadata,
+        RecommendationFeedback feedback,
+        double feedbackValue,
+        Dictionary<string, double> tagScores,
+        Dictionary<string, double> recentTagScores,
+        Dictionary<string, double> hardNegativeScores,
+        Dictionary<string, string> tagNames,
+        Dictionary<string, double> developerScores,
+        List<SourceGameProfile> sourceProfiles,
+        IReadOnlyDictionary<string, CachedTagWeight> tagWeights)
+    {
+        var recencyAnchor = feedback.LastPositiveAt ?? feedback.LastNegativeAt ?? feedback.UpdatedAt;
+        var recentBias = ComputeRecentBias(recencyAnchor);
+        var weight = Math.Clamp(feedbackValue, -Scoring.MaxFeedbackProfileSignal, Scoring.MaxFeedbackProfileSignal) *
+                     Scoring.FeedbackProfileWeight;
+        var sourcePositiveTags = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var tag in metadata.Tags)
+        {
+            var semanticWeight = GetSemanticTagWeight(tag, tagWeights);
+            var score = weight * tag.Rating * semanticWeight;
+            tagScores[tag.Id] = tagScores.TryGetValue(tag.Id, out var current) ? current + score : score;
+            tagNames[tag.Id] = tag.Name;
+
+            if (weight > 0)
+            {
+                sourcePositiveTags[tag.Id] = sourcePositiveTags.TryGetValue(tag.Id, out var positiveCurrent)
+                    ? positiveCurrent + score
+                    : score;
+                recentTagScores[tag.Id] = recentTagScores.TryGetValue(tag.Id, out var recentCurrent)
+                    ? recentCurrent + score * recentBias
+                    : score * recentBias;
+            }
+            else
+            {
+                hardNegativeScores[tag.Id] = hardNegativeScores.TryGetValue(tag.Id, out var negativeCurrent)
+                    ? negativeCurrent + Math.Abs(score)
+                    : Math.Abs(score);
+            }
+        }
+
+        if (weight <= 0)
+            return;
+
+        foreach (var developer in metadata.Developers)
+        {
+            developerScores[developer] = developerScores.TryGetValue(developer, out var current)
+                ? current + weight * recentBias
+                : weight * recentBias;
+        }
+
+        sourceProfiles.Add(new SourceGameProfile
+        {
+            Title = !string.IsNullOrWhiteSpace(metadata.OriginalTitle) ? metadata.OriginalTitle : metadata.Title,
+            Developers = metadata.Developers,
+            ReleaseDate = metadata.ReleaseDate,
+            PositiveTagScores = sourcePositiveTags,
+            Weight = weight,
+            RecentBias = recentBias
+        });
     }
 
     private static RecommendationCandidate BuildCandidate(
@@ -872,9 +1259,9 @@ public class RecommendationService
 
         var recommendationScore = tagOverlapScore
             + profile.DeveloperPreferenceWeight * developerBonus
-            + 0.12 * yearAffinity
-            + 0.18 * feedbackAffinity
-            + 0.12 * recentAlignment;
+            + Scoring.YearAffinityWeight * yearAffinity
+            + Scoring.FeedbackAffinityWeight * feedbackAffinity
+            + Scoring.RecentAlignmentWeight * recentAlignment;
 
         return new RecommendationCandidate
         {
@@ -928,7 +1315,9 @@ public class RecommendationService
             return;
 
         var bangumiService = new BangumiService(_httpClient);
-        var queryCache = new ConcurrentDictionary<string, Lazy<Task<MetadataResult?>>>(StringComparer.OrdinalIgnoreCase);
+        var cacheDocument = await _cacheService.LoadAsync();
+        var cacheLock = new object();
+        var queryCache = new ConcurrentDictionary<string, Lazy<Task<List<MetadataResult>>>>(StringComparer.OrdinalIgnoreCase);
         using var throttler = new SemaphoreSlim(4);
 
         var tasks = candidates.Select(async candidate =>
@@ -936,13 +1325,14 @@ public class RecommendationService
             await throttler.WaitAsync();
             try
             {
-                var query = GetBangumiSearchQuery(candidate);
-                var match = string.IsNullOrWhiteSpace(query)
-                    ? null
-                    : await queryCache.GetOrAdd(
-                        query,
-                        key => new Lazy<Task<MetadataResult?>>(
-                            () => FindBestBangumiMatchAsync(bangumiService, candidate, key))).Value;
+                var match = await WithTimeout(
+                    FindBestBangumiMatchAsync(
+                        bangumiService,
+                        candidate,
+                        cacheDocument,
+                        cacheLock,
+                        queryCache),
+                    BangumiRequestTimeout);
 
                 if (match == null)
                 {
@@ -967,34 +1357,302 @@ public class RecommendationService
         });
 
         await Task.WhenAll(tasks);
+        await _cacheService.SaveAsync(cacheDocument);
     }
 
     private static async Task<MetadataResult?> FindBestBangumiMatchAsync(
         BangumiService bangumiService,
         RecommendationCandidate candidate,
-        string query)
+        VndbRecommendationCacheDocument cacheDocument,
+        object cacheLock,
+        ConcurrentDictionary<string, Lazy<Task<List<MetadataResult>>>> queryCache)
     {
-        var results = await bangumiService.SearchAsync(query, includeDetails: false);
+        var results = new Dictionary<string, MetadataResult>(StringComparer.OrdinalIgnoreCase);
+        foreach (var query in GetBangumiSearchQueries(candidate))
+        {
+            var queryResults = await queryCache.GetOrAdd(
+                query,
+                key => new Lazy<Task<List<MetadataResult>>>(
+                    () => SearchBangumiWithCacheAsync(bangumiService, key, cacheDocument, cacheLock))).Value;
+
+            foreach (var result in queryResults)
+            {
+                if (!string.IsNullOrWhiteSpace(result.SourceId))
+                    results.TryAdd(result.SourceId, result);
+            }
+        }
+
         if (results.Count == 0)
             return null;
 
         var normalizedTitle = NormalizeTitleForMatch(candidate.Title);
         var normalizedOriginalTitle = NormalizeTitleForMatch(candidate.OriginalTitle);
 
-        return results
-            .OrderByDescending(result => IsTitleMatch(result, normalizedTitle, normalizedOriginalTitle) ? 1 : 0)
-            .ThenByDescending(result => result.Rating.HasValue ? 1 : 0)
-            .ThenByDescending(result => result.VoteCount ?? -1)
-            .ThenByDescending(result => result.Rating ?? -1)
+        var ranked = results.Values
+            .Select(result => new
+            {
+                Result = result,
+                TitleScore = CalculateTitleMatchScore(result, normalizedTitle, normalizedOriginalTitle),
+                YearCompatible = IsYearCompatible(candidate.ReleaseDate, result.ReleaseDate, Scoring.BangumiYearTolerance),
+                HasDetails = !string.IsNullOrWhiteSpace(result.Brand) || result.Tags.Count > 0
+            })
+            .Where(item => item.YearCompatible)
+            .Where(item => item.TitleScore >= (item.HasDetails ? Scoring.BangumiDetailMatchThreshold : Scoring.BangumiExactMatchThreshold))
+            .OrderByDescending(item => item.TitleScore)
+            .ThenByDescending(item => item.HasDetails ? 1 : 0)
+            .ThenByDescending(item => item.Result.Rating.HasValue ? 1 : 0)
+            .ThenByDescending(item => item.Result.VoteCount ?? -1)
+            .ThenByDescending(item => item.Result.Rating ?? -1)
+            .ToList();
+
+        var best = ranked.FirstOrDefault()?.Result;
+        if (best == null || string.IsNullOrWhiteSpace(best.SourceId) || !string.IsNullOrWhiteSpace(best.Brand) || best.Tags.Count > 0)
+            return best;
+
+        var detailed = await WithTimeout(
+            bangumiService.GetByIdAsync(best.SourceId),
+            BangumiRequestTimeout);
+        return detailed ?? best;
+    }
+
+    private async Task<CachedVndbVisualNovel?> FindBestVndbMatchAsync(
+        Game game,
+        MetadataResult bangumiMetadata,
+        VndbRecommendationCacheDocument cacheDocument)
+    {
+        var results = new Dictionary<string, CachedVndbVisualNovel>(StringComparer.OrdinalIgnoreCase);
+        foreach (var query in GetCrossSourceSearchQueries(game, bangumiMetadata))
+        {
+            var filters = new object[] { "search", "=", query };
+            var responseJson = await PostToVndbAsync(filters, 10, DetailFields, "searchrank");
+            if (responseJson == null)
+                continue;
+
+            foreach (var visualNovel in ParseVisualNovels(responseJson))
+            {
+                cacheDocument.Entries[visualNovel.Id] = visualNovel;
+                results.TryAdd(visualNovel.Id, visualNovel);
+            }
+        }
+
+        if (results.Count == 0)
+            return null;
+
+        var normalizedTitle = NormalizeTitleForMatch(game.Title);
+        var normalizedOriginalTitle = NormalizeTitleForMatch(bangumiMetadata.OriginalTitle);
+        return results.Values
+            .Select(visualNovel => new
+            {
+                VisualNovel = visualNovel,
+                TitleScore = CalculateTitleMatchScore(ToMetadataResult(visualNovel), normalizedTitle, normalizedOriginalTitle),
+                YearCompatible = IsYearCompatible(game.ReleaseDate ?? bangumiMetadata.ReleaseDate, visualNovel.ReleaseDate, Scoring.BangumiYearTolerance)
+            })
+            .Where(item => item.YearCompatible)
+            .Where(item => item.TitleScore >= Scoring.CrossSourceMatchThreshold)
+            .OrderByDescending(item => item.TitleScore)
+            .ThenByDescending(item => item.VisualNovel.Rating ?? 0)
+            .ThenByDescending(item => item.VisualNovel.VoteCount ?? 0)
+            .Select(item => item.VisualNovel)
             .FirstOrDefault();
     }
 
-    private static string GetBangumiSearchQuery(RecommendationCandidate candidate)
+    private static RecommendationCandidate BuildCandidateForCrossSourceMatch(CachedVndbVisualNovel metadata)
     {
-        var query = candidate.DisplayTitle;
+        return new RecommendationCandidate
+        {
+            VndbId = metadata.Id,
+            Title = metadata.Title,
+            OriginalTitle = metadata.OriginalTitle,
+            Brand = string.Join(", ", metadata.Developers),
+            ReleaseDate = metadata.ReleaseDate,
+            VndbRating = metadata.Rating,
+            VndbRank = metadata.Rank,
+            VndbVoteCount = metadata.VoteCount,
+            Tags = TagUtilities.Normalize(metadata.Tags.Select(tag => tag.Name))
+        };
+    }
+
+    private static MetadataResult ToMetadataResult(CachedVndbVisualNovel visualNovel)
+    {
+        return new MetadataResult
+        {
+            Source = "VNDB",
+            SourceId = visualNovel.Id,
+            Title = visualNovel.Title,
+            OriginalTitle = visualNovel.OriginalTitle,
+            Brand = string.Join(", ", visualNovel.Developers),
+            ReleaseDate = visualNovel.ReleaseDate,
+            Rating = visualNovel.Rating,
+            Rank = visualNovel.Rank,
+            VoteCount = visualNovel.VoteCount,
+            Tags = TagUtilities.Normalize(visualNovel.Tags.Select(tag => tag.Name))
+        };
+    }
+
+    private static List<string> GetCrossSourceSearchQueries(Game game, MetadataResult metadata)
+    {
+        var queries = new List<string>();
+        AddBangumiSearchQuery(queries, game.Title);
+        AddBangumiSearchQuery(queries, metadata.Title);
+        AddBangumiSearchQuery(queries, metadata.OriginalTitle);
+        foreach (var title in queries.ToList())
+        {
+            AddBangumiSearchQuery(queries, StripEditionSuffix(title));
+            AddBangumiSearchQuery(queries, StripBracketedText(title));
+        }
+
+        return queries
+            .Where(query => query.Length >= 2)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(5)
+            .ToList();
+    }
+
+    private static void MergeGameMetadataFromResult(Game game, MetadataResult metadata)
+    {
+        if (string.IsNullOrWhiteSpace(game.Brand) && !string.IsNullOrWhiteSpace(metadata.Brand))
+            game.Brand = metadata.Brand;
+        if (!game.ReleaseDate.HasValue && metadata.ReleaseDate.HasValue)
+            game.ReleaseDate = metadata.ReleaseDate;
+        if (string.IsNullOrWhiteSpace(game.Tags) && metadata.Tags.Count > 0)
+            game.Tags = string.Join(Environment.NewLine, metadata.Tags);
+        if (string.IsNullOrWhiteSpace(game.CoverImageUrl) && !string.IsNullOrWhiteSpace(metadata.ImageUrl))
+            game.CoverImageUrl = metadata.ImageUrl;
+    }
+
+    private static void MergeGameMetadataFromVndb(Game game, CachedVndbVisualNovel metadata)
+    {
+        if (string.IsNullOrWhiteSpace(game.Brand) && metadata.Developers.Count > 0)
+            game.Brand = string.Join(", ", metadata.Developers);
+        if (!game.ReleaseDate.HasValue && metadata.ReleaseDate.HasValue)
+            game.ReleaseDate = metadata.ReleaseDate;
+        if (string.IsNullOrWhiteSpace(game.Tags) && metadata.Tags.Count > 0)
+            game.Tags = string.Join(Environment.NewLine, TagUtilities.Normalize(metadata.Tags.Select(tag => tag.Name)));
+        if (string.IsNullOrWhiteSpace(game.OfficialWebsite))
+            game.OfficialWebsite = SelectOfficialWebsite(metadata.ExternalLinks);
+    }
+
+    private static async Task<List<MetadataResult>> SearchBangumiWithCacheAsync(
+        BangumiService bangumiService,
+        string query,
+        VndbRecommendationCacheDocument cacheDocument,
+        object cacheLock)
+    {
+        var cacheKey = BuildBangumiSearchCacheKey(query);
+        lock (cacheLock)
+        {
+            if (cacheDocument.BangumiSearches.TryGetValue(cacheKey, out var cached) &&
+                DateTimeOffset.UtcNow - cached.CachedAtUtc <= BangumiSearchCacheTtl)
+            {
+                return cached.Results;
+            }
+        }
+
+        var results = await WithTimeout(
+            bangumiService.SearchAsync(query, includeDetails: false),
+            BangumiRequestTimeout,
+            new List<MetadataResult>());
+        lock (cacheLock)
+        {
+            cacheDocument.BangumiSearches[cacheKey] = new CachedBangumiSearch
+            {
+                CachedAtUtc = DateTimeOffset.UtcNow,
+                Results = results
+            };
+        }
+
+        return results;
+    }
+
+    private static List<string> GetBangumiSearchQueries(RecommendationCandidate candidate)
+    {
+        var queries = new List<string>();
+        AddBangumiSearchQuery(queries, candidate.DisplayTitle);
+        AddBangumiSearchQuery(queries, candidate.Title);
+        AddBangumiSearchQuery(queries, candidate.OriginalTitle);
+
+        foreach (var title in queries.ToList())
+        {
+            AddBangumiSearchQuery(queries, StripEditionSuffix(title));
+            AddBangumiSearchQuery(queries, StripBracketedText(title));
+        }
+
+        return queries
+            .Where(query => query.Length >= 2)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(5)
+            .ToList();
+    }
+
+    private static async Task<T?> WithTimeout<T>(Task<T?> task, TimeSpan timeout)
+    {
+        var completed = await Task.WhenAny(task, Task.Delay(timeout));
+        if (completed != task)
+            return default;
+
+        return await task;
+    }
+
+    private static async Task<T> WithTimeout<T>(Task<T> task, TimeSpan timeout, T fallback)
+    {
+        var completed = await Task.WhenAny(task, Task.Delay(timeout));
+        if (completed != task)
+            return fallback;
+
+        return await task;
+    }
+
+    private static void AddBangumiSearchQuery(List<string> queries, string? query)
+    {
         if (string.IsNullOrWhiteSpace(query))
-            query = candidate.Title;
-        return query.Trim();
+            return;
+
+        var trimmed = query.Trim();
+        if (trimmed.Length > 0)
+            queries.Add(trimmed);
+    }
+
+    private static string BuildBangumiSearchCacheKey(string query)
+    {
+        return NormalizeTitleForMatch(query);
+    }
+
+    private static string StripBracketedText(string title)
+    {
+        var builder = new StringBuilder(title.Length);
+        var depth = 0;
+        foreach (var ch in title)
+        {
+            if (ch is '(' or '（' or '[' or '［' or '【')
+            {
+                depth++;
+                continue;
+            }
+
+            if (ch is ')' or '）' or ']' or '］' or '】')
+            {
+                depth = Math.Max(0, depth - 1);
+                continue;
+            }
+
+            if (depth == 0)
+                builder.Append(ch);
+        }
+
+        return builder.ToString().Trim();
+    }
+
+    private static string StripEditionSuffix(string title)
+    {
+        var separators = new[] { " - ", " / ", " ～", " ~ " };
+        foreach (var separator in separators)
+        {
+            var index = title.IndexOf(separator, StringComparison.Ordinal);
+            if (index > 2)
+                return title[..index].Trim();
+        }
+
+        return title.Trim();
     }
 
     private static bool IsTitleMatch(MetadataResult result, string normalizedTitle, string normalizedOriginalTitle)
@@ -1006,8 +1664,44 @@ public class RecommendationService
                 (string.Equals(resultTitle, normalizedTitle, StringComparison.OrdinalIgnoreCase) ||
                  string.Equals(resultOriginalTitle, normalizedTitle, StringComparison.OrdinalIgnoreCase)))
                || (!string.IsNullOrWhiteSpace(normalizedOriginalTitle) &&
-                   (string.Equals(resultTitle, normalizedOriginalTitle, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(resultOriginalTitle, normalizedOriginalTitle, StringComparison.OrdinalIgnoreCase)));
+                    (string.Equals(resultTitle, normalizedOriginalTitle, StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(resultOriginalTitle, normalizedOriginalTitle, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static double CalculateTitleMatchScore(MetadataResult result, string normalizedTitle, string normalizedOriginalTitle)
+    {
+        var resultTitle = NormalizeTitleForMatch(result.Title);
+        var resultOriginalTitle = NormalizeTitleForMatch(result.OriginalTitle);
+        var candidateTitles = new[] { normalizedTitle, normalizedOriginalTitle }
+            .Where(title => !string.IsNullOrWhiteSpace(title))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var resultTitles = new[] { resultTitle, resultOriginalTitle }
+            .Where(title => !string.IsNullOrWhiteSpace(title))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (candidateTitles.Count == 0 || resultTitles.Count == 0)
+            return 0;
+
+        if (resultTitles.Any(resultValue => candidateTitles.Any(candidateValue =>
+                string.Equals(resultValue, candidateValue, StringComparison.OrdinalIgnoreCase))))
+        {
+            return 1;
+        }
+
+        return resultTitles
+            .SelectMany(resultValue => candidateTitles.Select(candidateValue => ComputeStringSimilarity(resultValue, candidateValue)))
+            .DefaultIfEmpty(0)
+            .Max();
+    }
+
+    private static bool IsYearCompatible(DateTime? candidateReleaseDate, DateTime? resultReleaseDate, int toleranceYears)
+    {
+        if (!candidateReleaseDate.HasValue || !resultReleaseDate.HasValue)
+            return true;
+
+        return Math.Abs(candidateReleaseDate.Value.Year - resultReleaseDate.Value.Year) <= toleranceYears;
     }
 
     private static string NormalizeTitleForMatch(string? title)
@@ -1019,6 +1713,48 @@ public class RecommendationService
             .Where(ch => !char.IsWhiteSpace(ch) && !char.IsPunctuation(ch) && !char.IsSymbol(ch))
             .Select(char.ToUpperInvariant);
         return new string(chars.ToArray());
+    }
+
+    private static double ComputeStringSimilarity(string left, string right)
+    {
+        if (left.Length == 0 || right.Length == 0)
+            return 0;
+
+        if (left.Contains(right, StringComparison.OrdinalIgnoreCase) ||
+            right.Contains(left, StringComparison.OrdinalIgnoreCase))
+        {
+            var shorter = Math.Min(left.Length, right.Length);
+            var longer = Math.Max(left.Length, right.Length);
+            return longer == 0 ? 0 : (double)shorter / longer;
+        }
+
+        var distance = ComputeLevenshteinDistance(left, right);
+        return 1d - (double)distance / Math.Max(left.Length, right.Length);
+    }
+
+    private static int ComputeLevenshteinDistance(string left, string right)
+    {
+        var previous = new int[right.Length + 1];
+        var current = new int[right.Length + 1];
+
+        for (var j = 0; j <= right.Length; j++)
+            previous[j] = j;
+
+        for (var i = 1; i <= left.Length; i++)
+        {
+            current[0] = i;
+            for (var j = 1; j <= right.Length; j++)
+            {
+                var cost = left[i - 1] == right[j - 1] ? 0 : 1;
+                current[j] = Math.Min(
+                    Math.Min(current[j - 1] + 1, previous[j] + 1),
+                    previous[j - 1] + cost);
+            }
+
+            (previous, current) = (current, previous);
+        }
+
+        return previous[right.Length];
     }
 
     private static IEnumerable<string> GetProfileTagKeys(CachedVndbTag tag)
@@ -1049,7 +1785,7 @@ public class RecommendationService
         var normalizedVndb = NormalizeRating(vndbRating);
 
         if (normalizedBangumi.HasValue && normalizedVndb.HasValue)
-            return normalizedBangumi.GetValueOrDefault() * 0.75 + normalizedVndb.GetValueOrDefault() * 0.25;
+            return normalizedBangumi.GetValueOrDefault() * 0.5 + normalizedVndb.GetValueOrDefault() * 0.5;
         if (normalizedBangumi.HasValue)
             return normalizedBangumi.GetValueOrDefault();
         if (normalizedVndb.HasValue)
@@ -1206,6 +1942,66 @@ public class RecommendationService
         return entries.Max() / total;
     }
 
+    private static double GetSemanticTagWeight(
+        CachedVndbTag tag,
+        IReadOnlyDictionary<string, CachedTagWeight> tagWeights)
+    {
+        if (tagWeights.TryGetValue(tag.Name, out var cached) ||
+            tagWeights.TryGetValue(BuildTagWeightKey(tag.Name), out cached) ||
+            tagWeights.TryGetValue(tag.Id, out cached))
+        {
+            return Math.Clamp(cached.Weight * Math.Clamp(cached.Confidence, 0.35, 1.0), 0.2, 1.8);
+        }
+
+        return GetHeuristicTagWeight(tag.Name);
+    }
+
+    public static string BuildTagWeightKey(string tagName)
+    {
+        var normalized = NormalizeTitleForMatch(tagName);
+        return string.IsNullOrWhiteSpace(normalized)
+            ? tagName.Trim().ToUpperInvariant()
+            : normalized;
+    }
+
+    private static double GetHeuristicTagWeight(string tagName)
+    {
+        if (string.IsNullOrWhiteSpace(tagName))
+            return 0.7;
+
+        if (IsStructuralPreferenceTag(tagName))
+            return 0.35;
+
+        if (tagName.Contains("Protagonist", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Heroine", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Ending", StringComparison.OrdinalIgnoreCase))
+        {
+            return 0.55;
+        }
+
+        if (tagName.Contains("Sexual", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Violence", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Gore", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Rape", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Incest", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1.35;
+        }
+
+        if (tagName.Contains("Romance", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Drama", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Mystery", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Comedy", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Horror", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Fantasy", StringComparison.OrdinalIgnoreCase) ||
+            tagName.Contains("Sci-fi", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1.2;
+        }
+
+        return 1.0;
+    }
+
     private static string BuildPreferenceStyle(double developerPreferenceStrength, int developerCount, int positiveTagCount)
     {
         if (developerPreferenceStrength >= 1.35 && developerCount > 0)
@@ -1326,6 +2122,24 @@ public class RecommendationService
         public double DeveloperPreferenceWeight { get; init; }
     }
 
+    private sealed class RecommendationScoringOptions
+    {
+        public double StrongDeveloperPreferenceWeight { get; init; } = 0.35;
+        public double BalancedDeveloperPreferenceWeight { get; init; } = 0.22;
+        public double YearAffinityWeight { get; init; } = 0.12;
+        public double FeedbackAffinityWeight { get; init; } = 0.18;
+        public double RecentAlignmentWeight { get; init; } = 0.12;
+        public double FeedbackProfileWeight { get; init; } = 0.65;
+        public double MaxFeedbackProfileSignal { get; init; } = 2.5;
+        public double BangumiExactMatchThreshold { get; init; } = 0.88;
+        public double BangumiDetailMatchThreshold { get; init; } = 0.72;
+        public double CrossSourceMatchThreshold { get; init; } = 0.78;
+        public int BangumiYearTolerance { get; init; } = 2;
+        public double ProfileSelectionWeight { get; init; } = 0.68;
+        public double ExternalSelectionWeight { get; init; } = 0.32;
+        public int BlockingBangumiEnrichmentLimit { get; init; } = 32;
+    }
+
     private sealed record RecommendationProfileContext(
         TasteProfileSummary ProfileSummary,
         RecommendationProfile? Profile,
@@ -1343,10 +2157,17 @@ public class RecommendationService
         public double RecentBias { get; init; }
     }
 
-    private sealed class RecallPlan(List<string> positiveTagIds, List<string> negativeTagIds, int maxPages)
+    private sealed class RecallPlan(
+        List<string> positiveTagIds,
+        List<string> negativeTagIds,
+        int maxPages,
+        string sort,
+        bool requireAllPositiveTags = false)
     {
         public List<string> PositiveTagIds { get; } = positiveTagIds;
         public List<string> NegativeTagIds { get; } = negativeTagIds;
         public int MaxPages { get; } = maxPages;
+        public string Sort { get; } = sort;
+        public bool RequireAllPositiveTags { get; } = requireAllPositiveTags;
     }
 }

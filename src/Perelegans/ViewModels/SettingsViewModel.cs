@@ -186,7 +186,9 @@ public partial class SettingsViewModel : ObservableObject
             var content = ExtractAiTestContent(responseBody, provider);
             if (string.IsNullOrWhiteSpace(content))
             {
-                AiTestStatusText = TranslationService.Instance["Settings_AiTestNoContent"];
+                AiTestStatusText = string.Format(
+                    TranslationService.Instance["Settings_AiTestFailed"],
+                    $"{TranslationService.Instance["Settings_AiTestNoContent"]} Raw: {TruncateForDisplay(responseBody)}");
                 return;
             }
 
@@ -267,9 +269,7 @@ public partial class SettingsViewModel : ObservableObject
         var normalizedBase = baseUri.AbsoluteUri.EndsWith("/", System.StringComparison.Ordinal)
             ? baseUri
             : new Uri(baseUri.AbsoluteUri + "/", UriKind.Absolute);
-        var endpoint = provider == AiProvider.Anthropic
-            ? new Uri(normalizedBase, "v1/messages")
-            : new Uri(normalizedBase, "chat/completions");
+        var endpoint = BuildAiEndpoint(normalizedBase, provider);
 
         var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
         request.Headers.Add("User-Agent", "Perelegans/0.2");
@@ -282,14 +282,14 @@ public partial class SettingsViewModel : ObservableObject
                 JsonSerializer.Serialize(new
                 {
                     model = AiModel.Trim(),
-                    max_tokens = 16,
+                    max_tokens = 32,
                     temperature = 0,
                     messages = new object[]
                     {
                         new
                         {
                             role = "user",
-                            content = "test"
+                            content = "Reply exactly: ok"
                         }
                     }
                 }),
@@ -310,19 +310,33 @@ public partial class SettingsViewModel : ObservableObject
             {
                 model = AiModel.Trim(),
                 temperature = 0,
-                max_tokens = 16,
+                max_tokens = 32,
                 messages = new object[]
                 {
                     new
                     {
                         role = "user",
-                        content = "test"
+                        content = "Reply exactly: ok"
                     }
                 }
             }),
             Encoding.UTF8,
             "application/json");
         return request;
+    }
+
+    private static Uri BuildAiEndpoint(Uri normalizedBase, AiProvider provider)
+    {
+        if (provider == AiProvider.Anthropic)
+        {
+            return normalizedBase.AbsolutePath.EndsWith("/v1/messages", StringComparison.OrdinalIgnoreCase)
+                ? normalizedBase
+                : new Uri(normalizedBase, "v1/messages");
+        }
+
+        return normalizedBase.AbsolutePath.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase)
+            ? normalizedBase
+            : new Uri(normalizedBase, "chat/completions");
     }
 
     private static string ExtractAiTestContent(string responseJson, AiProvider provider)
@@ -343,11 +357,9 @@ public partial class SettingsViewModel : ObservableObject
             choices.ValueKind == JsonValueKind.Array &&
             choices.GetArrayLength() > 0 &&
             choices[0].TryGetProperty("message", out var message) &&
-            message.TryGetProperty("content", out var content))
+            TryExtractMessageText(message, out var messageText))
         {
-            return content.ValueKind == JsonValueKind.String
-                ? content.GetString() ?? string.Empty
-                : ExtractTextFromContentArray(content);
+            return messageText;
         }
 
         if (document.RootElement.TryGetProperty("output", out var output) &&
@@ -366,6 +378,35 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         return string.Empty;
+    }
+
+    private static bool TryExtractMessageText(JsonElement message, out string text)
+    {
+        if (message.TryGetProperty("content", out var content))
+        {
+            text = content.ValueKind == JsonValueKind.String
+                ? content.GetString() ?? string.Empty
+                : ExtractTextFromContentArray(content);
+            if (!string.IsNullOrWhiteSpace(text))
+                return true;
+        }
+
+        if (message.TryGetProperty("reasoning_content", out var reasoningContent) &&
+            reasoningContent.ValueKind == JsonValueKind.String)
+        {
+            text = reasoningContent.GetString() ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(text);
+        }
+
+        if (message.TryGetProperty("reasoning", out var reasoning) &&
+            reasoning.ValueKind == JsonValueKind.String)
+        {
+            text = reasoning.GetString() ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(text);
+        }
+
+        text = string.Empty;
+        return false;
     }
 
     private static string ExtractTextFromContentArray(JsonElement content)

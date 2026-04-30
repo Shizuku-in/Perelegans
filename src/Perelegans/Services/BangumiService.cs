@@ -81,7 +81,11 @@ public class BangumiService
                 if (item.TryGetProperty("name", out var name))
                     result.OriginalTitle = name.GetString() ?? "";
 
-                result.Title = result.OriginalTitle;
+                if (item.TryGetProperty("name_cn", out var nameCn))
+                    result.Title = nameCn.GetString() ?? "";
+
+                if (string.IsNullOrWhiteSpace(result.Title))
+                    result.Title = result.OriginalTitle;
 
                 if (item.TryGetProperty("date", out var date) &&
                     TryParseFlexibleDate(date.GetString(), out var parsedDate))

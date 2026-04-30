@@ -4,11 +4,18 @@ using System.IO;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Perelegans.Models;
 
 namespace Perelegans.Services;
 
 public class VndbRecommendationCacheService
 {
+    private const int MaxVndbEntryCount = 3000;
+    private const int MaxCandidateSearchCount = 200;
+    private const int MaxBangumiSearchCount = 500;
+    private static readonly TimeSpan MaxVndbEntryAge = TimeSpan.FromDays(30);
+    private static readonly TimeSpan MaxCandidateSearchAge = TimeSpan.FromDays(3);
+    private static readonly TimeSpan MaxBangumiSearchAge = TimeSpan.FromDays(30);
     private static readonly string CacheDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Perelegans",
@@ -52,6 +59,7 @@ public class VndbRecommendationCacheService
         try
         {
             document.EnsureInitialized();
+            Prune(document);
             Directory.CreateDirectory(CacheDir);
             var json = JsonSerializer.Serialize(document, JsonOptions);
             await File.WriteAllTextAsync(CachePath, json);
@@ -61,17 +69,114 @@ public class VndbRecommendationCacheService
             FileLock.Release();
         }
     }
+
+    private static void Prune(VndbRecommendationCacheDocument document)
+    {
+        var now = DateTimeOffset.UtcNow;
+        PruneDictionary(
+            document.Entries,
+            item => now - item.Value.CachedAtUtc <= MaxVndbEntryAge,
+            item => item.Value.CachedAtUtc,
+            MaxVndbEntryCount);
+        PruneDictionary(
+            document.CandidateSearches,
+            item => now - item.Value.CachedAtUtc <= MaxCandidateSearchAge,
+            item => item.Value.CachedAtUtc,
+            MaxCandidateSearchCount);
+        PruneDictionary(
+            document.BangumiSearches,
+            item => now - item.Value.CachedAtUtc <= MaxBangumiSearchAge,
+            item => item.Value.CachedAtUtc,
+            MaxBangumiSearchCount);
+    }
+
+    private static void PruneDictionary<TValue>(
+        Dictionary<string, TValue> dictionary,
+        Func<KeyValuePair<string, TValue>, bool> keep,
+        Func<KeyValuePair<string, TValue>, DateTimeOffset> orderKey,
+        int maxCount)
+    {
+        foreach (var key in dictionary.Where(item => !keep(item)).Select(item => item.Key).ToList())
+            dictionary.Remove(key);
+
+        if (dictionary.Count <= maxCount)
+            return;
+
+        var keysToRemove = dictionary
+            .OrderBy(orderKey)
+            .Take(dictionary.Count - maxCount)
+            .Select(item => item.Key)
+            .ToList();
+
+        foreach (var key in keysToRemove)
+            dictionary.Remove(key);
+    }
 }
 
 public class VndbRecommendationCacheDocument
 {
     public Dictionary<string, CachedVndbVisualNovel> Entries { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedVndbCandidateSearch> CandidateSearches { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedBangumiSearch> BangumiSearches { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedTagWeight> TagWeights { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public CachedRecommendationProfile? ProfileCache { get; set; }
 
     public void EnsureInitialized()
     {
         Entries ??= new Dictionary<string, CachedVndbVisualNovel>(StringComparer.OrdinalIgnoreCase);
+        CandidateSearches ??= new Dictionary<string, CachedVndbCandidateSearch>(StringComparer.OrdinalIgnoreCase);
+        BangumiSearches ??= new Dictionary<string, CachedBangumiSearch>(StringComparer.OrdinalIgnoreCase);
+        TagWeights ??= new Dictionary<string, CachedTagWeight>(StringComparer.OrdinalIgnoreCase);
+        foreach (var search in CandidateSearches.Values)
+            search.EnsureInitialized();
+        foreach (var search in BangumiSearches.Values)
+            search.EnsureInitialized();
+        foreach (var tagWeight in TagWeights.Values)
+            tagWeight.EnsureInitialized();
         ProfileCache?.EnsureInitialized();
+    }
+}
+
+public class CachedTagWeight
+{
+    public string TagName { get; set; } = string.Empty;
+    public string Category { get; set; } = "Theme";
+    public double Weight { get; set; } = 1.0;
+    public double Confidence { get; set; } = 0.6;
+    public string Source { get; set; } = "heuristic";
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        TagName ??= string.Empty;
+        Category ??= "Theme";
+        Source ??= "heuristic";
+        if (Weight <= 0)
+            Weight = 1.0;
+        if (Confidence <= 0)
+            Confidence = 0.6;
+    }
+}
+
+public class CachedVndbCandidateSearch
+{
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public List<string> VndbIds { get; set; } = [];
+
+    public void EnsureInitialized()
+    {
+        VndbIds ??= [];
+    }
+}
+
+public class CachedBangumiSearch
+{
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public List<MetadataResult> Results { get; set; } = [];
+
+    public void EnsureInitialized()
+    {
+        Results ??= [];
     }
 }
 

@@ -138,59 +138,20 @@ public partial class RecommendationViewModel : ObservableObject
                 ? TranslationService.Instance["Rec_AiStatusEnabled"]
                 : TranslationService.Instance["Rec_AiStatusDisabled"];
 
-            var bangumiEnrichmentTask = _recommendationService.EnrichCandidatesWithBangumiRatingsAsync(_currentCandidates);
+            StartBangumiEnrichmentInBackground();
             SetWorkflowStep(1, "Workflow_Running");
 
             if (!_aiRecommendationService.IsConfigured)
             {
-                await bangumiEnrichmentTask;
                 SetWorkflowStep(1, "Workflow_Done");
                 SetWorkflowStep(2, "Workflow_Skipped");
-                ApplySort();
                 return;
             }
 
-            await bangumiEnrichmentTask;
             SetWorkflowStep(1, "Workflow_Done");
-            ApplySort();
 
             SetWorkflowStep(2, "Workflow_Running");
-            var aiResult = await _aiRecommendationService.ExplainAsync(
-                result.ProfileSummary,
-                SelectCandidatesForAiRerank());
-
-            if (!aiResult.HasExplanations)
-            {
-                AiProfileText = aiResult.UserProfileSummary;
-                AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
-                    ? TranslationService.Instance["Rec_AiStatusFallback"]
-                    : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
-                SetWorkflowStep(2, "Workflow_Fallback");
-                return;
-            }
-
-            foreach (var explanation in aiResult.Explanations)
-            {
-                var candidate = _currentCandidates.FirstOrDefault(item =>
-                    string.Equals(item.VndbId, explanation.CandidateId, StringComparison.OrdinalIgnoreCase));
-                if (candidate == null)
-                    continue;
-
-                if (!string.IsNullOrWhiteSpace(explanation.Reason))
-                    candidate.Reason = explanation.Reason.Trim();
-                if (!string.IsNullOrWhiteSpace(explanation.Caution))
-                    candidate.Caution = explanation.Caution.Trim();
-                if (explanation.MatchingTags.Count > 0)
-                    candidate.MatchingTags = TagUtilities.Normalize(explanation.MatchingTags);
-                if (!string.IsNullOrWhiteSpace(explanation.SellingPoint))
-                    candidate.SellingPoint = explanation.SellingPoint.Trim();
-                if (explanation.AffinityScore.HasValue)
-                    candidate.AiAffinityScore = explanation.AffinityScore.Value;
-            }
-
-            AiProfileText = aiResult.UserProfileSummary;
-            SetWorkflowStep(2, "Workflow_Done");
-            ApplySort();
+            StartAiEnhancementInBackground(result.ProfileSummary);
         }
         catch (Exception ex)
         {
@@ -217,6 +178,109 @@ public partial class RecommendationViewModel : ObservableObject
             return;
 
         WorkflowSteps[index].StatusText = TranslationService.Instance[statusResourceKey];
+    }
+
+    private void StartBangumiEnrichmentInBackground()
+    {
+        var candidates = _currentCandidates.ToList();
+        if (candidates.Count == 0)
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _recommendationService.EnrichCandidatesWithBangumiRatingsAsync(candidates);
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(ApplySort);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Bangumi recommendation enrichment error: {ex.Message}");
+            }
+        });
+    }
+
+    private void StartAiEnhancementInBackground(TasteProfileSummary profileSummary)
+    {
+        var candidates = SelectCandidatesForAiRerank();
+        var tagNames = _currentCandidates
+            .SelectMany(candidate => candidate.Tags
+                .Concat(candidate.MatchingTags)
+                .Concat(candidate.ConflictingTags))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(80)
+            .ToList();
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var tagWeightTask = RefreshAiTagWeightsAsync(tagNames);
+                var aiResult = await _aiRecommendationService.ExplainAsync(profileSummary, candidates);
+                await tagWeightTask;
+
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    if (!aiResult.HasExplanations)
+                    {
+                        AiProfileText = aiResult.UserProfileSummary;
+                        AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
+                            ? TranslationService.Instance["Rec_AiStatusFallback"]
+                            : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
+                        SetWorkflowStep(2, "Workflow_Fallback");
+                        return;
+                    }
+
+                    foreach (var explanation in aiResult.Explanations)
+                    {
+                        var candidate = _currentCandidates.FirstOrDefault(item =>
+                            string.Equals(item.VndbId, explanation.CandidateId, StringComparison.OrdinalIgnoreCase));
+                        if (candidate == null)
+                            continue;
+
+                        if (!string.IsNullOrWhiteSpace(explanation.Reason))
+                            candidate.Reason = explanation.Reason.Trim();
+                        if (!string.IsNullOrWhiteSpace(explanation.Caution))
+                            candidate.Caution = explanation.Caution.Trim();
+                        if (explanation.MatchingTags.Count > 0)
+                            candidate.MatchingTags = TagUtilities.Normalize(explanation.MatchingTags);
+                        if (!string.IsNullOrWhiteSpace(explanation.SellingPoint))
+                            candidate.SellingPoint = explanation.SellingPoint.Trim();
+                        if (explanation.AffinityScore.HasValue)
+                            candidate.AiAffinityScore = explanation.AffinityScore.Value;
+                    }
+
+                    AiProfileText = aiResult.UserProfileSummary;
+                    SetWorkflowStep(2, "Workflow_Done");
+                    ApplySort();
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AI recommendation enhancement error: {ex.Message}");
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    AiStatusText = TranslationService.Instance["Rec_AiStatusFallback"];
+                    SetWorkflowStep(2, "Workflow_Fallback");
+                });
+            }
+        });
+    }
+
+    private async Task RefreshAiTagWeightsAsync(IReadOnlyCollection<string> tagNames)
+    {
+        if (!_aiRecommendationService.IsConfigured || tagNames.Count == 0)
+            return;
+
+        var weights = await _aiRecommendationService.ClassifyTagWeightsAsync(tagNames);
+        if (weights.Count == 0)
+            return;
+
+        var cacheService = new VndbRecommendationCacheService();
+        var cache = await cacheService.LoadAsync();
+        foreach (var (key, value) in weights)
+            cache.TagWeights[key] = value;
+        await cacheService.SaveAsync(cache);
     }
 
     private void MarkFirstWaitingWorkflowStepAsFailed()
@@ -292,7 +356,7 @@ public partial class RecommendationViewModel : ObservableObject
         foreach (var candidate in _currentCandidates
                      .OrderByDescending(candidate => candidate.RecommendationScore)
                      .ThenByDescending(candidate => candidate.TagOverlapScore)
-                     .Take(18))
+                     .Take(6))
         {
             selected[candidate.VndbId] = candidate;
         }
@@ -301,7 +365,7 @@ public partial class RecommendationViewModel : ObservableObject
                      .OrderByDescending(ComputeComprehensiveRankScore)
                      .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
                      .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
-                     .Take(6))
+                     .Take(2))
         {
             selected.TryAdd(candidate.VndbId, candidate);
         }
