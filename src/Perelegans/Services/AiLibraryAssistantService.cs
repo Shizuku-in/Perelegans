@@ -10,6 +10,8 @@ namespace Perelegans.Services;
 
 public class AiLibraryAssistantService
 {
+    private const int AiMatchedContextLimit = 24;
+    private const int AiFallbackContextLimit = 12;
     private readonly AiRecommendationService _aiService;
 
     public AiLibraryAssistantService(HttpClient httpClient, SettingsService settingsService)
@@ -25,16 +27,31 @@ public class AiLibraryAssistantService
         IReadOnlyList<AiAssistantMessage> recentMessages,
         CancellationToken cancellationToken = default)
     {
+        var normalizedQuestion = question.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(normalizedQuestion))
+            return new AiAssistantResponse();
+
+        if (TryResolveGameOpinionQuestion(normalizedQuestion, games, recentMessages, out var opinionGame))
+        {
+            return await AnswerGameOpinionQuestionAsync(question, opinionGame, games, recentMessages, cancellationToken);
+        }
+
         if (TryAnswerLocally(question, games, recentMessages, out var localResponse))
         {
             if (_aiService.IsConfigured && localResponse.ActionKind == AiAssistantActionKind.None)
             {
                 var linkedIds = localResponse.GameLinks.Select(link => link.GameId).ToHashSet();
                 var polishGames = linkedIds.Count == 0
-                    ? games.OrderByDescending(game => game.AccessedDate).Take(24).ToList()
-                    : games.Where(game => linkedIds.Contains(game.Id)).Take(24).ToList();
-                var polishPrompt = $"请只润色这段本地工具已经精确计算出的回答，不要新增事实，不要改变数字和游戏名。原问题：{question}\n本地结果：{localResponse.Answer}";
-                var polished = await _aiService.AnswerLibraryQuestionAsync(polishPrompt, polishGames, BuildLibraryStats(games), cancellationToken);
+                    ? games.OrderByDescending(game => game.AccessedDate).Take(AiFallbackContextLimit).ToList()
+                    : games.Where(game => linkedIds.Contains(game.Id)).Take(AiMatchedContextLimit).ToList();
+                var polishPrompt =
+                    $"请只润色这段本地工具已经精确计算出的回答，不要新增事实，不要改变数字和游戏名。原问题：{question}\n本地结果：{localResponse.Answer}";
+                var polished = await _aiService.AnswerLibraryQuestionAsync(
+                    polishPrompt,
+                    polishGames,
+                    BuildLibraryStats(games),
+                    recentMessages,
+                    cancellationToken);
                 if (!string.IsNullOrWhiteSpace(polished))
                 {
                     localResponse.Answer = polished;
@@ -56,11 +73,8 @@ public class AiLibraryAssistantService
             };
         }
 
-        if (string.IsNullOrWhiteSpace(question))
-            return new AiAssistantResponse();
-
-        var lowerQuestion = question.ToLowerInvariant();
-        var relevantGames = games
+        var lowerQuestion = normalizedQuestion;
+        var scoredGames = games
             .Select(game => new
             {
                 Game = game,
@@ -68,22 +82,71 @@ public class AiLibraryAssistantService
             })
             .OrderByDescending(item => item.Score)
             .ThenByDescending(item => item.Game.AccessedDate)
-            .Take(24)
+            .ToList();
+
+        var relevantGames = scoredGames
+            .Where(item => item.Score > 0)
+            .Take(AiMatchedContextLimit)
             .Select(item => item.Game)
             .ToList();
 
+        var contextDescription = "matched title, brand, status, playtime, IDs, cover and tag fields";
         if (relevantGames.Count == 0)
-            relevantGames = games.OrderByDescending(game => game.AccessedDate).Take(24).ToList();
+        {
+            relevantGames = games
+                .OrderByDescending(game => game.AccessedDate)
+                .Take(AiFallbackContextLimit)
+                .ToList();
+            contextDescription = "recent games, status, playtime, IDs, cover and tag fields";
+        }
 
         cancellationToken.ThrowIfCancellationRequested();
-        var answer = await _aiService.AnswerLibraryQuestionAsync(question, relevantGames, BuildLibraryStats(games), cancellationToken);
+        var answer = await _aiService.AnswerLibraryQuestionAsync(
+            question,
+            relevantGames,
+            BuildLibraryStats(games),
+            recentMessages,
+            cancellationToken);
         return new AiAssistantResponse
         {
             Answer = string.IsNullOrWhiteSpace(answer) ? TranslationService.Instance["Assistant_NoAnswer"] : answer,
-            SourceSummary = BuildSourceSummary(relevantGames, "selected relevant games, status, playtime, IDs, cover and tag fields"),
+            SourceSummary = BuildSourceSummary(relevantGames, contextDescription),
             DebugSummary = $"Intent: AI fallback; local tool: relevance search; AI: called; games: {relevantGames.Count}",
             UsedAi = true
         };
+    }
+
+    private async Task<AiAssistantResponse> AnswerGameOpinionQuestionAsync(
+        string question,
+        Game game,
+        IReadOnlyCollection<Game> games,
+        IReadOnlyList<AiAssistantMessage> recentMessages,
+        CancellationToken cancellationToken)
+    {
+        if (!_aiService.IsConfigured)
+        {
+            return BuildGameListResponse(
+                [game],
+                $"{BuildGameDetails(game)} AI 尚未配置，因此这里只能展示本地元数据，无法给出更完整的评价。",
+                "title, brand, status, playtime, IDs, cover and tag fields",
+                "game opinion fallback");
+        }
+
+        var answer = await _aiService.AnswerLibraryQuestionAsync(
+            $"{question}\n请基于提供的本地元数据评价这部作品适合什么口味、目前数据能说明什么、还缺哪些信息。不要编造剧情细节。",
+            [game],
+            BuildLibraryStats(games),
+            recentMessages,
+            cancellationToken);
+
+        var response = BuildGameListResponse(
+            [game],
+            string.IsNullOrWhiteSpace(answer) ? TranslationService.Instance["Assistant_NoAnswer"] : answer,
+            "one matched game's title, brand, status, playtime, IDs, cover and tag fields",
+            "game opinion");
+        response.UsedAi = !string.IsNullOrWhiteSpace(answer);
+        response.DebugSummary = $"{response.DebugSummary}; AI: {(response.UsedAi ? "called" : "empty")}";
+        return response;
     }
 
     private static bool TryAnswerLocally(
@@ -99,13 +162,13 @@ public class AiLibraryAssistantService
 
         var contextGames = ResolveContextGames(normalized, recentMessages, games);
 
-        if (normalized is "test" or "\u6d4b\u8bd5")
+        if (normalized is "test" or "测试")
         {
             response = BuildResponse(BuildLibraryOverview(games), games, "total count, status fields, total playtime", "overview", usedGames: []);
             return true;
         }
 
-        if (ContainsAny(normalized, "\u6253\u5f00\u7b2c\u4e00\u4e2a", "\u7b2c\u4e00\u4e2a", "first one", "open first"))
+        if (ContainsAny(normalized, "打开第一个", "第一个", "first one", "open first"))
         {
             var first = contextGames.FirstOrDefault();
             if (first == null)
@@ -115,7 +178,8 @@ public class AiLibraryAssistantService
             return true;
         }
 
-        if (ContainsAny(normalized, "\u8fd9\u4e9b", "\u5176\u4e2d", "these", "those") && ContainsAny(normalized, "\u7f3a\u5c01\u9762", "\u6ca1\u6709\u5c01\u9762", "missing cover", "no cover"))
+        if (ContainsAny(normalized, "这些", "其中", "these", "those") &&
+            ContainsAny(normalized, "缺封面", "没有封面", "missing cover", "no cover"))
         {
             var missing = contextGames.Where(game => string.IsNullOrWhiteSpace(game.CoverDisplaySource)).ToList();
             response = BuildGameListResponse(missing, $"这些结果里有 {missing.Count} 部缺封面。", "previous result list and cover fields", "missing cover follow-up");
@@ -124,36 +188,52 @@ public class AiLibraryAssistantService
 
         if (TryBuildNaturalLanguageFilter(normalized, games, out var filterGames, out var filterDescription))
         {
-            response = BuildGameListResponse(filterGames, filterGames.Count == 0 ? "没有找到符合条件的作品。" : $"已筛出 {filterGames.Count} 部作品：{filterDescription}。", "brand, status and tag fields", "natural language filter");
+            response = BuildGameListResponse(
+                filterGames,
+                filterGames.Count == 0 ? "没有找到符合条件的作品。" : $"已筛出 {filterGames.Count} 部作品：{filterDescription}。",
+                "brand, status and tag fields",
+                "natural language filter");
             response.ActionKind = AiAssistantActionKind.FilterGames;
             response.ActionLabel = "只显示这些游戏";
             return true;
         }
 
-        if (ContainsAny(normalized, "\u53ef\u80fd\u7f3a bangumi", "\u7f3a bangumi", "\u6ca1\u6709bangumi", "missing bangumi", "no bangumi"))
+        if (ContainsAny(normalized, "可能缺 bangumi", "缺 bangumi", "没有bangumi", "missing bangumi", "no bangumi"))
         {
             var missing = games.Where(game => string.IsNullOrWhiteSpace(game.BangumiId)).OrderByDescending(game => game.AccessedDate).ToList();
-            response = BuildGameListResponse(missing, missing.Count == 0 ? "当前库内没有缺 Bangumi ID 的游戏。" : $"当前有 {missing.Count} 部游戏缺 Bangumi ID，下面是待确认列表。", "Bangumi ID field", "draft missing Bangumi");
+            response = BuildGameListResponse(
+                missing,
+                missing.Count == 0 ? "当前库内没有缺 Bangumi ID 的游戏。" : $"当前有 {missing.Count} 部游戏缺 Bangumi ID，下面是待确认列表。",
+                "Bangumi ID field",
+                "draft missing Bangumi");
             response.ActionKind = AiAssistantActionKind.DraftBangumiLookup;
             response.ActionLabel = "确认后逐个补全";
             return true;
         }
 
-        if (ContainsAny(normalized, "\u7f3avndb", "\u6ca1\u6709vndb", "missing vndb", "no vndb"))
+        if (ContainsAny(normalized, "缺vndb", "没有vndb", "missing vndb", "no vndb"))
         {
             var missing = games.Where(game => string.IsNullOrWhiteSpace(game.VndbId)).OrderByDescending(game => game.AccessedDate).ToList();
-            response = BuildGameListResponse(missing, missing.Count == 0 ? "当前库内没有缺 VNDB ID 的游戏。" : $"当前有 {missing.Count} 部游戏缺 VNDB ID。", "VNDB ID field", "missing VNDB");
+            response = BuildGameListResponse(
+                missing,
+                missing.Count == 0 ? "当前库内没有缺 VNDB ID 的游戏。" : $"当前有 {missing.Count} 部游戏缺 VNDB ID。",
+                "VNDB ID field",
+                "missing VNDB");
             return true;
         }
 
-        if (ContainsAny(normalized, "\u7f3a\u5c01\u9762", "\u6ca1\u6709\u5c01\u9762", "missing cover", "no cover"))
+        if (ContainsAny(normalized, "缺封面", "没有封面", "missing cover", "no cover"))
         {
             var missing = games.Where(game => string.IsNullOrWhiteSpace(game.CoverDisplaySource)).OrderByDescending(game => game.AccessedDate).ToList();
-            response = BuildGameListResponse(missing, missing.Count == 0 ? "当前库内没有缺封面的游戏。" : $"当前有 {missing.Count} 部游戏缺封面。", "cover path and cover URL fields", "missing cover");
+            response = BuildGameListResponse(
+                missing,
+                missing.Count == 0 ? "当前库内没有缺封面的游戏。" : $"当前有 {missing.Count} 部游戏缺封面。",
+                "cover path and cover URL fields",
+                "missing cover");
             return true;
         }
 
-        if (ContainsAny(normalized, "\u91cd\u590d\u6807\u9898", "\u91cd\u540d", "duplicate title", "duplicates"))
+        if (ContainsAny(normalized, "重复标题", "重名", "duplicate title", "duplicates"))
         {
             var duplicates = games
                 .Where(game => !string.IsNullOrWhiteSpace(game.Title))
@@ -162,18 +242,22 @@ public class AiLibraryAssistantService
                 .SelectMany(group => group)
                 .OrderBy(game => game.Title, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            response = BuildGameListResponse(duplicates, duplicates.Count == 0 ? "没有发现重复标题。" : $"发现 {duplicates.Count} 条可能重复的标题记录。", "title field", "duplicate titles");
+            response = BuildGameListResponse(
+                duplicates,
+                duplicates.Count == 0 ? "没有发现重复标题。" : $"发现 {duplicates.Count} 条可能重复的标题记录。",
+                "title field",
+                "duplicate titles");
             return true;
         }
 
-        if (ContainsAny(normalized, "\u6700\u8fd1\u73a9", "\u6700\u8fd1\u6e38\u73a9", "recently played", "last played"))
+        if (ContainsAny(normalized, "最近玩", "最近游玩", "recently played", "last played"))
         {
             var recent = games.OrderByDescending(game => game.AccessedDate).Take(12).ToList();
             response = BuildGameListResponse(recent, recent.Count == 0 ? "当前库内没有游戏。" : "最近游玩的作品如下。", "accessed date and playtime fields", "recently played");
             return true;
         }
 
-        if (ContainsAny(normalized, "\u5382\u5546", "\u54c1\u724c", "\u4f1a\u793e", "developer", "brand", "studio"))
+        if (ContainsAny(normalized, "厂商", "品牌", "会社", "developer", "brand", "studio"))
         {
             var brands = games
                 .Where(game => !string.IsNullOrWhiteSpace(game.Brand))
@@ -191,7 +275,7 @@ public class AiLibraryAssistantService
             return true;
         }
 
-        if (ContainsAny(normalized, "\u603b\u65f6\u957f", "\u6e38\u73a9\u65f6\u957f", "playtime", "time"))
+        if (ContainsAny(normalized, "总时长", "游玩时长", "playtime", "time"))
         {
             var totalHours = games.Sum(game => game.Playtime.TotalHours);
             var top = games
@@ -206,7 +290,7 @@ public class AiLibraryAssistantService
             return true;
         }
 
-        if (ContainsAny(normalized, "\u6807\u7b7e", "tag", "tags"))
+        if (ContainsAny(normalized, "标签", "tag", "tags"))
         {
             var tags = games
                 .SelectMany(game => TagUtilities.Deserialize(game.Tags))
@@ -231,7 +315,7 @@ public class AiLibraryAssistantService
             return true;
         }
 
-        if (ContainsAny(normalized, "\u72b6\u6001", "\u5b8c\u6210", "\u901a\u5173", "\u8ba1\u5212", "\u5f03\u5751", "\u591a\u5c11", "\u51e0\u90e8", "\u603b\u6570", "status", "completed", "planned", "dropped", "count", "how many"))
+        if (ContainsAny(normalized, "状态", "完成", "通关", "计划", "弃坑", "多少", "几部", "总数", "status", "completed", "planned", "dropped", "count", "how many"))
         {
             response = BuildResponse(BuildLibraryOverview(games), games, "total count, status fields, total playtime", "overview", usedGames: []);
             return true;
@@ -280,7 +364,7 @@ public class AiLibraryAssistantService
 
     private static IReadOnlyList<Game> ResolveContextGames(string normalized, IReadOnlyList<AiAssistantMessage> recentMessages, IReadOnlyCollection<Game> games)
     {
-        if (!ContainsAny(normalized, "\u8fd9\u4e9b", "\u5176\u4e2d", "\u7b2c\u4e00", "these", "those", "first"))
+        if (!ContainsAny(normalized, "这些", "其中", "第一", "这个游戏", "这游戏", "这部", "它", "these", "those", "first", "this game", "it"))
             return [];
 
         var ids = recentMessages
@@ -294,12 +378,58 @@ public class AiLibraryAssistantService
         return games.Where(game => ids.Contains(game.Id)).ToList();
     }
 
+    private static bool TryResolveGameOpinionQuestion(
+        string normalized,
+        IReadOnlyCollection<Game> games,
+        IReadOnlyList<AiAssistantMessage> recentMessages,
+        out Game game)
+    {
+        game = null!;
+        if (!IsGameOpinionQuestion(normalized))
+            return false;
+
+        var mentionedGame = FindMentionedGame(normalized, games);
+        if (mentionedGame != null)
+        {
+            game = mentionedGame;
+            return true;
+        }
+
+        if (!ContainsAny(normalized, "这个游戏", "这游戏", "这部", "它", "this game", "it"))
+            return false;
+
+        var contextGame = ResolveContextGames(normalized, recentMessages, games).FirstOrDefault();
+        if (contextGame == null)
+            return false;
+
+        game = contextGame;
+        return true;
+    }
+
+    private static bool IsGameOpinionQuestion(string normalized)
+    {
+        return ContainsAny(
+            normalized,
+            "怎么样",
+            "如何",
+            "评价",
+            "点评",
+            "值得玩吗",
+            "值得玩",
+            "推荐吗",
+            "好玩吗",
+            "what do you think",
+            "how is",
+            "is it worth",
+            "worth playing");
+    }
+
     private static bool TryBuildNaturalLanguageFilter(string normalized, IReadOnlyCollection<Game> games, out List<Game> filteredGames, out string description)
     {
         filteredGames = [];
         description = string.Empty;
 
-        if (!ContainsAny(normalized, "\u663e\u793a", "\u7b5b\u9009", "show", "filter"))
+        if (!ContainsAny(normalized, "显示", "筛选", "show", "filter"))
             return false;
 
         IEnumerable<Game> query = games;
@@ -316,22 +446,22 @@ public class AiLibraryAssistantService
             parts.Add(matchedBrand!);
         }
 
-        if (ContainsAny(normalized, "\u5df2\u901a\u5173", "\u5df2\u5b8c\u6210", "completed"))
+        if (ContainsAny(normalized, "已通关", "已完成", "completed"))
         {
             query = query.Where(game => game.Status == GameStatus.Completed);
             parts.Add("已通关");
         }
-        else if (ContainsAny(normalized, "\u6e38\u73a9\u4e2d", "\u5728\u73a9", "playing"))
+        else if (ContainsAny(normalized, "游玩中", "在玩", "playing"))
         {
             query = query.Where(game => game.Status == GameStatus.Playing);
             parts.Add("游玩中");
         }
-        else if (ContainsAny(normalized, "\u8ba1\u5212", "planned"))
+        else if (ContainsAny(normalized, "计划", "planned"))
         {
             query = query.Where(game => game.Status == GameStatus.Planned);
             parts.Add("计划中");
         }
-        else if (ContainsAny(normalized, "\u5f03\u5751", "dropped"))
+        else if (ContainsAny(normalized, "弃坑", "dropped"))
         {
             query = query.Where(game => game.Status == GameStatus.Dropped);
             parts.Add("已弃坑");
@@ -367,7 +497,7 @@ public class AiLibraryAssistantService
     private static string BuildGameDetails(Game game)
     {
         var tags = TagUtilities.Deserialize(game.Tags).Take(8).ToList();
-        return $"{game.Title}：厂商 {DisplayValue(game.Brand)}，状态 {StatusText(game.Status)}，游玩时长 {PlaytimeTextFormatter.Format(game.Playtime)}，VNDB {DisplayValue(game.VndbId)}，Bangumi {DisplayValue(game.BangumiId)}，封面{(string.IsNullOrWhiteSpace(game.CoverDisplaySource) ? "缺失" : "已设置")}{(tags.Count > 0 ? $"，标签 {string.Join("、", tags)}" : string.Empty)}。";
+        return $"{game.Title}：厂商 {DisplayValue(game.Brand)}，状态 {StatusText(game.Status)}，游玩时长 {PlaytimeTextFormatter.Format(game.Playtime)}，VNDB {DisplayValue(game.VndbId)}，Bangumi {DisplayValue(game.BangumiId)}，封面 {(string.IsNullOrWhiteSpace(game.CoverDisplaySource) ? "缺失" : "已设置")}{(tags.Count > 0 ? $"，标签 {string.Join("、", tags)}" : string.Empty)}。";
     }
 
     private static string DisplayValue(string? value)
@@ -382,7 +512,7 @@ public class AiLibraryAssistantService
         var planned = games.Count(game => game.Status == GameStatus.Planned);
         var dropped = games.Count(game => game.Status == GameStatus.Dropped);
         var totalHours = games.Sum(game => game.Playtime.TotalHours);
-        return $"您的视觉小说库共有 {games.Count} 部作品（已完成 {completed} 部、游玩中 {playing} 部、计划中 {planned} 部、已弃坑 {dropped} 部），总记录时长为 {FormatHours(totalHours)}。";
+        return $"你的视觉小说库共有 {games.Count} 部作品（已完成 {completed} 部、游玩中 {playing} 部、计划中 {planned} 部、已弃坑 {dropped} 部），总记录时长为 {FormatHours(totalHours)}。";
     }
 
     private static string BuildSourceSummary(IReadOnlyCollection<Game> games, string fields)
@@ -425,9 +555,9 @@ public class AiLibraryAssistantService
                 score += 2;
         }
 
-        if (game.Status == GameStatus.Completed && (question.Contains("\u901a\u5173", StringComparison.Ordinal) || question.Contains("completed", StringComparison.Ordinal)))
+        if (game.Status == GameStatus.Completed && (question.Contains("通关", StringComparison.Ordinal) || question.Contains("completed", StringComparison.Ordinal)))
             score += 1;
-        if (game.Status == GameStatus.Dropped && (question.Contains("\u5f03", StringComparison.Ordinal) || question.Contains("dropped", StringComparison.Ordinal)))
+        if (game.Status == GameStatus.Dropped && (question.Contains("弃", StringComparison.Ordinal) || question.Contains("dropped", StringComparison.Ordinal)))
             score += 1;
         if (!string.IsNullOrWhiteSpace(game.VndbId) || !string.IsNullOrWhiteSpace(game.BangumiId))
             score += 0.2;

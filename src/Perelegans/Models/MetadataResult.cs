@@ -12,6 +12,7 @@ public class MetadataResult
     public string SourceId { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string OriginalTitle { get; set; } = string.Empty;
+    public string ChineseTitle { get; set; } = string.Empty;
     public string Brand { get; set; } = string.Empty;
     public DateTime? ReleaseDate { get; set; }
     public string? ImageUrl { get; set; }

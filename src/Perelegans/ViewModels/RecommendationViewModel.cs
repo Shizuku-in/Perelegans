@@ -15,6 +15,11 @@ namespace Perelegans.ViewModels;
 
 public partial class RecommendationViewModel : ObservableObject
 {
+    private const int VndbRatingConfidenceVotes = 120;
+    private const int BangumiRatingConfidenceVotes = 60;
+    private const int MinimumExploreVndbVotes = 80;
+    private const int MinimumExploreBangumiVotes = 30;
+    private const double MinimumExploreNormalizedRating = 0.68;
     private readonly DatabaseService _dbService;
     private readonly RecommendationService _recommendationService;
     private readonly AiRecommendationService _aiRecommendationService;
@@ -336,10 +341,12 @@ public partial class RecommendationViewModel : ObservableObject
     {
         var sorted = SelectedMode == RecommendationMode.Explore
             ? _currentCandidates
+                .Where(IsExploreQualityCandidate)
                 .OrderByDescending(ComputeExploreScore)
                 .ThenByDescending(ComputeLeaderboardScore)
                 .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
                 .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
+                .ThenByDescending(candidate => (candidate.BangumiVoteCount ?? 0) + (candidate.VndbVoteCount ?? 0))
                 .ThenByDescending(candidate => candidate.RecommendationScore)
                 .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
             : _currentCandidates
@@ -379,14 +386,53 @@ public partial class RecommendationViewModel : ObservableObject
     {
         var bangumi = Math.Max(
             ComputeRankScore(candidate.BangumiRank, 3000),
-            NormalizeRating(candidate.BangumiRating) ?? 0);
+            ComputeWeightedRatingScore(candidate.BangumiRating, candidate.BangumiVoteCount, BangumiRatingConfidenceVotes));
         var vndb = Math.Max(
             ComputeRankScore(candidate.VndbRank, 5000),
-            NormalizeRating(candidate.VndbRating) ?? 0);
+            ComputeWeightedRatingScore(candidate.VndbRating, candidate.VndbVoteCount, VndbRatingConfidenceVotes));
 
         if (bangumi > 0 && vndb > 0)
             return bangumi * 0.5 + vndb * 0.5;
         return Math.Max(bangumi, vndb);
+    }
+
+    private static double ComputeWeightedRatingScore(double? rating, int? voteCount, int confidenceVotes)
+    {
+        var normalizedRating = NormalizeRating(rating);
+        if (!normalizedRating.HasValue || !voteCount.HasValue || voteCount.Value <= 0)
+            return 0;
+
+        var confidence = voteCount.Value / (voteCount.Value + (double)confidenceVotes);
+        return normalizedRating.Value * Math.Clamp(confidence, 0, 1);
+    }
+
+    private static bool IsExploreQualityCandidate(RecommendationCandidate candidate)
+    {
+        if (candidate.VndbRank is > 0 and <= 5000)
+            return true;
+
+        if (candidate.BangumiRank is > 0 and <= 3000)
+            return true;
+
+        return HasCredibleRating(
+                   candidate.VndbRating,
+                   candidate.VndbVoteCount,
+                   MinimumExploreVndbVotes,
+                   MinimumExploreNormalizedRating)
+               || HasCredibleRating(
+                   candidate.BangumiRating,
+                   candidate.BangumiVoteCount,
+                   MinimumExploreBangumiVotes,
+                   MinimumExploreNormalizedRating);
+    }
+
+    private static bool HasCredibleRating(double? rating, int? voteCount, int minimumVotes, double minimumNormalizedRating)
+    {
+        var normalizedRating = NormalizeRating(rating);
+        return normalizedRating.HasValue
+               && normalizedRating.Value >= minimumNormalizedRating
+               && voteCount.HasValue
+               && voteCount.Value >= minimumVotes;
     }
 
     private static double ComputeRankScore(int? rank, int maxRank)

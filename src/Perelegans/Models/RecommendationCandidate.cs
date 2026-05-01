@@ -60,8 +60,24 @@ public partial class RecommendationCandidate : ObservableObject
     [ObservableProperty]
     private string? _bangumiId;
 
+    [ObservableProperty]
+    private string? _chineseTitle;
+
     public string DisplayTitle =>
         string.IsNullOrWhiteSpace(OriginalTitle) ? Title : OriginalTitle;
+
+    public string DisplayTitleWithChineseTranslation
+    {
+        get
+        {
+            var displayTitle = DisplayTitle;
+            var chineseTitle = ChineseTitle?.Trim();
+            if (string.IsNullOrWhiteSpace(chineseTitle) || IsSameTitle(displayTitle, chineseTitle))
+                return displayTitle;
+
+            return $"{displayTitle} ({chineseTitle})";
+        }
+    }
 
     public string ImportTitle => DisplayTitle;
 
@@ -99,5 +115,15 @@ public partial class RecommendationCandidate : ObservableObject
     partial void OnBangumiIdChanged(string? value)
     {
         OnPropertyChanged(nameof(HasBangumiUrl));
+    }
+
+    partial void OnChineseTitleChanged(string? value)
+    {
+        OnPropertyChanged(nameof(DisplayTitleWithChineseTranslation));
+    }
+
+    private static bool IsSameTitle(string? left, string? right)
+    {
+        return string.Equals(left?.Trim(), right?.Trim(), StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -35,6 +35,124 @@
         <converters:LocalizedStringFormatConverter x:Key="LocalizedStringFormatConverter"/>
         <converters:AssistantMessageBrushConverter x:Key="AssistantMessageBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <SolidColorBrush x:Key="ShellSidebarBackgroundBrush" Color="#202126"/>
+        <SolidColorBrush x:Key="ShellHeaderBackgroundBrush" Color="#25272E"/>
+        <SolidColorBrush x:Key="ShellNavigationHoverBrush" Color="#14FFFFFF"/>
+        <SolidColorBrush x:Key="ShellNavigationActiveBrush" Color="#30FFC0CB"/>
+        <SolidColorBrush x:Key="ShellNavigationActiveRailBrush" Color="#FFC0CB"/>
+        <SolidColorBrush x:Key="ShellNavigationForegroundBrush" Color="#B8BEC8"/>
+        <SolidColorBrush x:Key="ShellNavigationActiveForegroundBrush" Color="#F7F9FC"/>
+        <SolidColorBrush x:Key="ShellPrimaryActionBrush" Color="#FFC0CB"/>
+        <SolidColorBrush x:Key="ShellPrimaryActionHoverBrush" Color="#FFD2DA"/>
+        <SolidColorBrush x:Key="ShellPrimaryActionPressedBrush" Color="#EAA8B4"/>
+        <Style x:Key="ShellNavigationButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Foreground" Value="{StaticResource ShellNavigationForegroundBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Border x:Name="ActiveRail"
+                                        Width="2"
+                                        Margin="0,8,0,8"
+                                        HorizontalAlignment="Left"
+                                        Background="{StaticResource ShellNavigationActiveRailBrush}"
+                                        CornerRadius="0"
+                                        Opacity="0"/>
+                                <ContentPresenter Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="True"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource ShellNavigationHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource ShellNavigationActiveForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="#20FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Active">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource ShellNavigationActiveBrush}"/>
+                                <Setter TargetName="ActiveRail" Property="Opacity" Value="1"/>
+                                <Setter Property="Foreground" Value="{StaticResource ShellNavigationActiveForegroundBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ShellAssistantNavigationButtonStyle" TargetType="Button" BasedOn="{StaticResource ShellNavigationButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAssistantPanelVisible}" Value="True">
+                    <Setter Property="Tag" Value="Active"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ShellLibraryNavigationButtonStyle" TargetType="Button" BasedOn="{StaticResource ShellNavigationButtonStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAssistantPanelVisible}" Value="False">
+                    <Setter Property="Tag" Value="Active"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ShellPrimaryActionButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="MinWidth" Value="94"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="{StaticResource ShellPrimaryActionBrush}"/>
+            <Setter Property="BorderBrush" Value="#30FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="0"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource ShellPrimaryActionHoverBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{StaticResource ShellPrimaryActionPressedBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Background" Value="#14FFFFFF"/>
+                                <Setter Property="Foreground" Value="#66FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -202,89 +320,6 @@
             </MenuItem>
         </Menu>
 
-        <ToolBarTray DockPanel.Dock="Top"
-                     Background="{DynamicResource Perelegans.PanelBackground}">
-            <ToolBar Height="36"
-                     Padding="6,3"
-                     Background="{DynamicResource Perelegans.PanelBackground}">
-                <Button x:Name="AddGameToolbarButton"
-                        Height="28"
-                        MinWidth="92"
-                        Margin="0,0,6,0"
-                        Padding="8,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
-                        Click="AddGameToolbarButton_Click">
-                    <Button.ContextMenu>
-                        <ContextMenu Placement="Bottom"
-                                     HorizontalOffset="0"
-                                     VerticalOffset="2">
-                            <MenuItem Header="{i18n:Translate Menu_AddFromProcess}"
-                                      Command="{Binding PlacementTarget.DataContext.AddFromProcessCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                <MenuItem.Icon>
-                                    <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}"
-                                      Command="{Binding PlacementTarget.DataContext.AddFromWebsiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                <MenuItem.Icon>
-                                    <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="PlusBoxOutline" Width="14" Height="14"
-                                                    Margin="0,0,5,0"
-                                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{i18n:Translate Toolbar_AddGame}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Height="28"
-                        MinWidth="92"
-                        Margin="0,0,6,0"
-                        Padding="8,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                        Command="{Binding OpenRecommendationsCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="LightbulbOnOutline" Width="14" Height="14"
-                                                    Margin="0,0,5,0"
-                                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{i18n:Translate Toolbar_Recommendations}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Height="28"
-                        MinWidth="92"
-                        Margin="0,0,6,0"
-                        Padding="8,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                        Command="{Binding PlaytimeStatisticsCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="ChartBar" Width="14" Height="14"
-                                                    Margin="0,0,5,0"
-                                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{i18n:Translate Toolbar_Stats}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Height="28"
-                        MinWidth="92"
-                        Margin="0,0,6,0"
-                        Padding="8,0"
-                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
-                        Style="{DynamicResource MahApps.Styles.Button.Square}"
-                        Command="{Binding OpenAiAssistantCommand}">
-                    <StackPanel Orientation="Horizontal">
-                        <iconPacks:PackIconMaterial Kind="RobotOutline" Width="14" Height="14"
-                                                    Margin="0,0,5,0"
-                                                    VerticalAlignment="Center"/>
-                        <TextBlock Text="{i18n:Translate Toolbar_AiAssistant}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </ToolBar>
-        </ToolBarTray>
-
         <StatusBar DockPanel.Dock="Bottom" Height="22"
                    Background="{DynamicResource Perelegans.StatusBarBackground}"
                    Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
@@ -317,11 +352,159 @@
         </StatusBar>
         <Grid Background="{DynamicResource Perelegans.WindowBackground}">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="ShellColumn" Width="184"/>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition x:Name="AssistantColumn" Width="0"/>
             </Grid.ColumnDefinitions>
 
-            <Grid Grid.Column="0">
+            <Border Grid.Column="0"
+                    Background="{StaticResource ShellSidebarBackgroundBrush}"
+                    BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                    BorderThickness="0,0,1,0"
+                    Padding="12,14">
+                <DockPanel LastChildFill="True">
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Text="LIBRARY"
+                                   Margin="10,0,0,8"
+                                   FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                        <Button Style="{StaticResource ShellLibraryNavigationButtonStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <iconPacks:PackIconMaterial Kind="ViewGridOutline"
+                                                            Width="16"
+                                                            Height="16"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{i18n:Translate Toolbar_Library}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource ShellNavigationButtonStyle}"
+                                Command="{Binding OpenRecommendationsCommand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <iconPacks:PackIconMaterial Kind="LightbulbOnOutline"
+                                                            Width="16"
+                                                            Height="16"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{i18n:Translate Toolbar_Recommendations}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource ShellNavigationButtonStyle}"
+                                Command="{Binding PlaytimeStatisticsCommand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <iconPacks:PackIconMaterial Kind="ChartBar"
+                                                            Width="16"
+                                                            Height="16"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{i18n:Translate Toolbar_Stats}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource ShellAssistantNavigationButtonStyle}"
+                                Command="{Binding OpenAiAssistantCommand}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <iconPacks:PackIconMaterial Kind="RobotOutline"
+                                                            Width="16"
+                                                            Height="16"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1"
+                                           Text="{i18n:Translate Toolbar_AiAssistant}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+
+                </DockPanel>
+            </Border>
+
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="56"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0"
+                        Background="{StaticResource ShellHeaderBackgroundBrush}"
+                        BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="18,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="{i18n:Translate Toolbar_Library}"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Perelegans.ForegroundBrush}"/>
+                            <TextBlock FontSize="11"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                       Margin="0,2,0,0">
+                                <Run Text="{Binding TotalGameCount, Mode=OneWay}"/>
+                                <Run Text="{i18n:Translate Toolbar_LibraryCountSuffix}"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button x:Name="AddGameToolbarButton"
+                                Grid.Column="1"
+                                Style="{StaticResource ShellPrimaryActionButtonStyle}"
+                                Click="AddGameToolbarButton_Click"
+                                VerticalAlignment="Center">
+                            <Button.ContextMenu>
+                                <ContextMenu Placement="Bottom"
+                                             HorizontalOffset="0"
+                                             VerticalOffset="4">
+                                    <MenuItem Header="{i18n:Translate Menu_AddFromProcess}"
+                                              Command="{Binding PlacementTarget.DataContext.AddFromProcessCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="ApplicationCogOutline" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="{i18n:Translate Menu_AddFromWebsite}"
+                                              Command="{Binding PlacementTarget.DataContext.AddFromWebsiteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                        <MenuItem.Icon>
+                                            <iconPacks:PackIconMaterial Kind="Web" Width="14" Height="14"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconMaterial Kind="Plus"
+                                                            Width="14"
+                                                            Height="14"
+                                                            Margin="0,0,5,0"
+                                                            VerticalAlignment="Center"/>
+                                <TextBlock Text="{i18n:Translate Toolbar_AddGame}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
                    Opacity="0.12"
@@ -664,14 +847,15 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+                </Grid>
             </Grid>
 
-            <Border Grid.Column="1"
+            <Border Grid.Column="0"
                     Margin="0,0,0,0"
                     Padding="12"
                     Background="{DynamicResource Perelegans.PanelBackground}"
                     BorderBrush="{DynamicResource Perelegans.BorderBrush}"
-                    BorderThickness="1,0,0,0"
+                    BorderThickness="0,0,1,0"
                     Visibility="{Binding IsAssistantPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid DataContext="{Binding AssistantViewModel}">
                     <Grid.RowDefinitions>

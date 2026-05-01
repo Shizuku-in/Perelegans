@@ -230,6 +230,8 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Meta_SourceNoResults" xml:space="preserve"><value>結果なし</value></data>
   <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} 件</value></data>
   <data name="Meta_AppliedSource" xml:space="preserve"><value>{0} のメタデータを適用しました。</value></data>
+  <data name="Toolbar_Library" xml:space="preserve"><value>&#x30E9;&#x30A4;&#x30D6;&#x30E9;&#x30EA;</value></data>
+  <data name="Toolbar_LibraryCountSuffix" xml:space="preserve"><value> &#x672C;&#x306E;&#x30B2;&#x30FC;&#x30E0;</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>ゲーム追加</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>おすすめ</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>統計</value></data>

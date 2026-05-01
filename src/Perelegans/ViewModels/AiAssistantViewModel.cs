@@ -136,9 +136,9 @@ public partial class AiAssistantViewModel : ObservableObject
             BusyStatusText = "识别问题意图";
             await Task.Delay(90, token);
 
-            BusyStatusText = "查询本地库";
+            BusyStatusText = TranslationService.Instance["Assistant_SearchingLibrary"];
             var recentMessages = Messages.TakeLast(ContextMessageCount).ToList();
-            var cacheKey = BuildCacheKey(question, _games);
+            var cacheKey = BuildCacheKey(question, _games, recentMessages);
             var response = _responseCache.TryGetValue(cacheKey, out var cachedResponse)
                 ? CloneResponse(cachedResponse)
                 : await _assistantService.AskAsync(question, _games, recentMessages, token);
@@ -158,7 +158,7 @@ public partial class AiAssistantViewModel : ObservableObject
             var assistantMessage = BuildAssistantMessage(response);
             Messages.Add(assistantMessage);
 
-            BusyStatusText = response.UsedAi ? "生成回答" : "本地结果流式输出";
+            BusyStatusText = response.UsedAi ? TranslationService.Instance["Assistant_Thinking"] : "输出本地结果";
             var finalAnswer = string.IsNullOrWhiteSpace(response.Answer)
                 ? TranslationService.Instance["Assistant_NoAnswer"]
                 : response.Answer;
@@ -177,7 +177,8 @@ public partial class AiAssistantViewModel : ObservableObject
             Messages.Add(new AiAssistantMessage
             {
                 Role = "assistant",
-                Content = ex.Message
+                Content = BuildFriendlyErrorMessage(ex),
+                DebugSummary = ex.Message
             });
         }
         finally
@@ -206,7 +207,10 @@ public partial class AiAssistantViewModel : ObservableObject
         return message;
     }
 
-    private static string BuildCacheKey(string question, IReadOnlyCollection<Game> games)
+    private static string BuildCacheKey(
+        string question,
+        IReadOnlyCollection<Game> games,
+        IReadOnlyCollection<AiAssistantMessage> recentMessages)
     {
         var maxAccessedTicks = games.Count == 0 ? 0 : games.Max(game => game.AccessedDate.Ticks);
         var totalPlaytimeTicks = games.Sum(game => game.Playtime.Ticks);
@@ -214,7 +218,12 @@ public partial class AiAssistantViewModel : ObservableObject
             (string.IsNullOrWhiteSpace(game.CoverDisplaySource) ? 1 : 0)
             + (string.IsNullOrWhiteSpace(game.BangumiId) ? 3 : 0)
             + (string.IsNullOrWhiteSpace(game.VndbId) ? 7 : 0));
-        return $"{question.Trim().ToLowerInvariant()}|{games.Count}|{maxAccessedTicks}|{totalPlaytimeTicks}|{metadataState}";
+        var conversationState = string.Join(
+            "|",
+            recentMessages
+                .TakeLast(4)
+                .Select(message => $"{message.Role}:{message.Content.GetHashCode(StringComparison.Ordinal)}"));
+        return $"{question.Trim().ToLowerInvariant()}|{games.Count}|{maxAccessedTicks}|{totalPlaytimeTicks}|{metadataState}|{conversationState}";
     }
 
     private static AiAssistantResponse CloneResponse(AiAssistantResponse source)
@@ -253,6 +262,16 @@ public partial class AiAssistantViewModel : ObservableObject
             message.Content += content.Substring(i, length);
             await Task.Delay(12, cancellationToken);
         }
+    }
+
+    private static string BuildFriendlyErrorMessage(Exception ex)
+    {
+        return ex switch
+        {
+            HttpRequestException => "AI 请求失败：无法连接到配置的 API 服务。请检查网络、代理、API 地址和密钥后重试。",
+            TaskCanceledException => "AI 请求超时：服务响应时间过长。可以稍后重试，或在设置中换用响应更快的模型。",
+            _ => "助手处理请求时出错。可以重试一次；如果持续失败，请检查 AI 设置或查看调试信息。"
+        };
     }
 
     partial void OnInputTextChanged(string value)

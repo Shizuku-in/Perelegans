@@ -254,6 +254,8 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Meta_SourceNoResults" xml:space="preserve"><value>No results</value></data>
   <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} result(s)</value></data>
   <data name="Meta_AppliedSource" xml:space="preserve"><value>Applied metadata from {0}.</value></data>
+  <data name="Toolbar_Library" xml:space="preserve"><value>Library</value></data>
+  <data name="Toolbar_LibraryCountSuffix" xml:space="preserve"><value> games in library</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>Add Game</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>Recommendations</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>Stats</value></data>

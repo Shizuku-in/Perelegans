@@ -82,8 +82,9 @@ public class BangumiService
                     result.OriginalTitle = name.GetString() ?? "";
 
                 if (item.TryGetProperty("name_cn", out var nameCn))
-                    result.Title = nameCn.GetString() ?? "";
+                    result.ChineseTitle = nameCn.GetString() ?? "";
 
+                result.Title = result.ChineseTitle;
                 if (string.IsNullOrWhiteSpace(result.Title))
                     result.Title = result.OriginalTitle;
 
@@ -194,6 +195,16 @@ public class BangumiService
             {
                 result.OriginalTitle = originalTitle;
                 result.Title = originalTitle;
+            }
+        }
+
+        if (root.TryGetProperty("name_cn", out var nameCn))
+        {
+            var chineseTitle = nameCn.GetString() ?? "";
+            if (!string.IsNullOrWhiteSpace(chineseTitle))
+            {
+                result.ChineseTitle = chineseTitle;
+                result.Title = chineseTitle;
             }
         }
 

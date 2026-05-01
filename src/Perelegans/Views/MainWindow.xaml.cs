@@ -16,6 +16,7 @@ public partial class MainWindow : MetroWindow
 {
     private const int WmSysCommand = 0x0112;
     private const int ScMinimize = 0xF020;
+    private const double ShellNavigationWidth = 184d;
     private const double AssistantPanelWidth = 420d;
     private ScrollViewer? _gameCardsScrollViewer;
     private HwndSource? _windowSource;
@@ -232,9 +233,9 @@ public partial class MainWindow : MetroWindow
         if (DataContext is not MainViewModel vm)
             return;
 
-        AssistantColumn.Width = vm.IsAssistantPanelVisible
+        ShellColumn.Width = vm.IsAssistantPanelVisible
             ? new GridLength(AssistantPanelWidth)
-            : new GridLength(0);
+            : new GridLength(ShellNavigationWidth);
 
         QueueRefreshPageSize();
     }

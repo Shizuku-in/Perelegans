@@ -154,7 +154,7 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_Title" xml:space="preserve"><value>游戏推荐</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>刷新</value></data>
   <data name="Rec_ModeLabel" xml:space="preserve"><value>模式</value></data>
-  <data name="Rec_ModeTaste" xml:space="preserve"><value>依你所好</value></data>
+  <data name="Rec_ModeTaste" xml:space="preserve"><value>喜好模式</value></data>
   <data name="Rec_ModeExplore" xml:space="preserve"><value>探索模式</value></data>
   <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB/Bangumi 元数据的游戏生成画像。</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>偏好标签: {0}</value></data>
@@ -230,6 +230,8 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Meta_SourceNoResults" xml:space="preserve"><value>无结果</value></data>
   <data name="Meta_SourceResultCount" xml:space="preserve"><value>{0} 条结果</value></data>
   <data name="Meta_AppliedSource" xml:space="preserve"><value>已应用来自 {0} 的元数据。</value></data>
+  <data name="Toolbar_Library" xml:space="preserve"><value>&#x6E38;&#x620F;&#x5E93;</value></data>
+  <data name="Toolbar_LibraryCountSuffix" xml:space="preserve"><value> &#x4E2A;&#x6E38;&#x620F;</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>添加游戏</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>推荐</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>统计</value></data>

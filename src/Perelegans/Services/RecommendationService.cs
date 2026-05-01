@@ -81,17 +81,23 @@ public class RecommendationService
 
         var rankedCandidates = RankCandidates(enrichedCandidates, mode).ToList();
 
+        var filteredCandidates = mode == RecommendationMode.Explore
+            ? rankedCandidates.Where(IsExploreCandidate)
+            : rankedCandidates.Where(IsRelevantCandidate);
+
         result.Candidates = DiversifyCandidates(
-                rankedCandidates.Where(IsRelevantCandidate),
+                filteredCandidates,
                 FinalRecommendationLimit)
             .ToList();
 
         if (result.Candidates.Count == 0)
         {
+            var fallbackCandidates = mode == RecommendationMode.Explore
+                ? rankedCandidates.Where(IsExploreQualityCandidate)
+                : rankedCandidates.Where(candidate => candidate.RecommendationScore > 0);
+
             result.Candidates = DiversifyCandidates(
-                    rankedCandidates
-                        .Where(candidate => candidate.RecommendationScore > 0)
-                        .Take(MinimumFallbackResultCount * 2),
+                    fallbackCandidates.Take(MinimumFallbackResultCount * 2),
                     MinimumFallbackResultCount)
                 .ToList();
         }
@@ -210,14 +216,20 @@ public class RecommendationService
     private static double ComputeBangumiLeaderboardScore(RecommendationCandidate candidate)
     {
         var rankScore = ComputeRankScore(candidate.BangumiRank, 3000);
-        var ratingScore = NormalizeRating(candidate.BangumiRating) ?? 0;
+        var ratingScore = ComputeWeightedRatingScore(
+            candidate.BangumiRating,
+            candidate.BangumiVoteCount,
+            Scoring.BangumiRatingConfidenceVotes);
         return Math.Max(rankScore, ratingScore);
     }
 
     private static double ComputeVndbLeaderboardScore(RecommendationCandidate candidate)
     {
         var rankScore = ComputeRankScore(candidate.VndbRank, 5000);
-        var ratingScore = NormalizeRating(candidate.VndbRating) ?? 0;
+        var ratingScore = ComputeWeightedRatingScore(
+            candidate.VndbRating,
+            candidate.VndbVoteCount,
+            Scoring.VndbRatingConfidenceVotes);
         return Math.Max(rankScore, ratingScore);
     }
 
@@ -1471,6 +1483,31 @@ public class RecommendationService
                || candidate.FeedbackAffinity > 0.15;
     }
 
+    private static bool IsExploreCandidate(RecommendationCandidate candidate)
+    {
+        return IsRelevantCandidate(candidate) && IsExploreQualityCandidate(candidate);
+    }
+
+    private static bool IsExploreQualityCandidate(RecommendationCandidate candidate)
+    {
+        if (candidate.VndbRank is > 0 and <= 5000)
+            return true;
+
+        if (candidate.BangumiRank is > 0 and <= 3000)
+            return true;
+
+        return HasCredibleRating(
+                   candidate.VndbRating,
+                   candidate.VndbVoteCount,
+                   Scoring.MinimumExploreVndbVotes,
+                   Scoring.MinimumExploreNormalizedRating)
+               || HasCredibleRating(
+                   candidate.BangumiRating,
+                   candidate.BangumiVoteCount,
+                   Scoring.MinimumExploreBangumiVotes,
+                   Scoring.MinimumExploreNormalizedRating);
+    }
+
     public async Task EnrichCandidatesWithBangumiRatingsAsync(IReadOnlyList<RecommendationCandidate> candidates)
     {
         if (candidates.Count == 0)
@@ -1506,6 +1543,7 @@ public class RecommendationService
                 candidate.BangumiRating = match.Rating;
                 candidate.BangumiRank = match.Rank;
                 candidate.BangumiVoteCount = match.VoteCount;
+                candidate.ChineseTitle = GetChineseTitle(match);
                 candidate.ExternalRatingScore = ComputeExternalRatingScore(match.Rating, candidate.VndbRating);
             }
             catch
@@ -1642,6 +1680,7 @@ public class RecommendationService
             SourceId = visualNovel.Id,
             Title = visualNovel.Title,
             OriginalTitle = visualNovel.OriginalTitle,
+            ChineseTitle = string.Empty,
             Brand = string.Join(", ", visualNovel.Developers),
             ReleaseDate = visualNovel.ReleaseDate,
             Rating = visualNovel.Rating,
@@ -1668,6 +1707,20 @@ public class RecommendationService
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .Take(5)
             .ToList();
+    }
+
+    private static string GetChineseTitle(MetadataResult metadata)
+    {
+        if (!string.IsNullOrWhiteSpace(metadata.ChineseTitle))
+            return metadata.ChineseTitle.Trim();
+
+        if (!string.IsNullOrWhiteSpace(metadata.Title) &&
+            !string.Equals(metadata.Title.Trim(), metadata.OriginalTitle?.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return metadata.Title.Trim();
+        }
+
+        return string.Empty;
     }
 
     private static void MergeGameMetadataFromResult(Game game, MetadataResult metadata)
@@ -1990,6 +2043,25 @@ public class RecommendationService
             return normalizedVndb.GetValueOrDefault();
 
         return null;
+    }
+
+    private static double ComputeWeightedRatingScore(double? rating, int? voteCount, int confidenceVotes)
+    {
+        var normalizedRating = NormalizeRating(rating);
+        if (!normalizedRating.HasValue || !voteCount.HasValue || voteCount.Value <= 0)
+            return 0;
+
+        var confidence = voteCount.Value / (voteCount.Value + (double)confidenceVotes);
+        return normalizedRating.Value * Math.Clamp(confidence, 0, 1);
+    }
+
+    private static bool HasCredibleRating(double? rating, int? voteCount, int minimumVotes, double minimumNormalizedRating)
+    {
+        var normalizedRating = NormalizeRating(rating);
+        return normalizedRating.HasValue
+               && normalizedRating.Value >= minimumNormalizedRating
+               && voteCount.HasValue
+               && voteCount.Value >= minimumVotes;
     }
 
     private static double? NormalizeRating(double? rating)
@@ -2338,6 +2410,11 @@ public class RecommendationService
         public double ProfileSelectionWeight { get; init; } = 0.68;
         public double ExternalSelectionWeight { get; init; } = 0.32;
         public int BlockingBangumiEnrichmentLimit { get; init; } = 32;
+        public int VndbRatingConfidenceVotes { get; init; } = 120;
+        public int BangumiRatingConfidenceVotes { get; init; } = 60;
+        public int MinimumExploreVndbVotes { get; init; } = 80;
+        public int MinimumExploreBangumiVotes { get; init; } = 30;
+        public double MinimumExploreNormalizedRating { get; init; } = 0.68;
     }
 
     private sealed record RecommendationProfileContext(

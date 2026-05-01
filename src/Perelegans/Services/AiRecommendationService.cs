@@ -524,6 +524,7 @@ public class AiRecommendationService
         string question,
         IReadOnlyCollection<Game> relevantGames,
         object libraryStats,
+        IReadOnlyList<AiAssistantMessage>? recentMessages = null,
         System.Threading.CancellationToken cancellationToken = default)
     {
         if (!IsConfigured || string.IsNullOrWhiteSpace(question) || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
@@ -538,6 +539,15 @@ public class AiRecommendationService
             {
                 question,
                 libraryStats,
+                recentMessages = recentMessages?
+                    .Where(message => !string.IsNullOrWhiteSpace(message.Content))
+                    .TakeLast(8)
+                    .Select(message => new
+                    {
+                        role = message.IsUser ? "user" : "assistant",
+                        content = message.Content,
+                        linkedGameIds = message.GameLinks.Select(link => link.GameId).Take(12)
+                    }),
                 games = relevantGames.Select(game => new
                 {
                     game.Id,
@@ -555,7 +565,7 @@ public class AiRecommendationService
             };
             var prompt =
                 $"Answer the user's question about their local visual novel library in {outputLanguage}. " +
-                "Use only the provided library data. If the data is insufficient, say what is missing. " +
+                "Use only the provided library data and recent conversation context. If the data is insufficient, say what is missing. " +
                 "Return JSON only: {\"answer\":\"...\"}. Keep the answer concise and actionable. " +
                 $"Data: {JsonSerializer.Serialize(payload)}";
             var json = await SendJsonPromptAsync(

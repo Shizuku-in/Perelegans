@@ -122,7 +122,7 @@
                   Background="Transparent"
                   Visibility="{Binding HasRecommendations, Converter={StaticResource BooleanToVisibilityConverter}}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{i18n:Translate Rec_ColTitle}" Binding="{Binding DisplayTitle}" Width="1.6*"/>
+                <DataGridTextColumn Header="{i18n:Translate Rec_ColTitle}" Binding="{Binding DisplayTitleWithChineseTranslation}" Width="1.6*"/>
                 <DataGridTextColumn Header="{i18n:Translate Rec_ColBrand}" Binding="{Binding Brand}" Width="1.2*"/>
                 <DataGridTextColumn Header="{i18n:Translate Rec_ColDate}" Binding="{Binding ReleaseDate, StringFormat=yyyy-MM-dd}" Width="110"/>
                 <DataGridTextColumn Header="{i18n:Translate Rec_ColScore}" Binding="{Binding RecommendationScore, StringFormat=F2}" Width="90"/>
