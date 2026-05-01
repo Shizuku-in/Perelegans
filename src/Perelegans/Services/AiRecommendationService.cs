@@ -15,8 +15,8 @@ namespace Perelegans.Services;
 public class AiRecommendationService
 {
     private const string AnthropicVersion = "2023-06-01";
-    private static readonly TimeSpan AiRequestTimeout = TimeSpan.FromSeconds(18);
-    private static readonly TimeSpan TagWeightRequestTimeout = TimeSpan.FromSeconds(12);
+    private static readonly TimeSpan AiRequestTimeout = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan TagWeightRequestTimeout = TimeSpan.FromSeconds(60);
     private readonly HttpClient _httpClient;
     private readonly SettingsService _settingsService;
 
@@ -171,50 +171,50 @@ public class AiRecommendationService
 
     public async Task<Dictionary<string, CachedTagWeight>> ClassifyTagWeightsAsync(IEnumerable<string> tagNames)
     {
+        var analysis = await ClassifyTagSemanticsAsync(tagNames);
+        return analysis.TagWeights;
+    }
+
+    public async Task<AiTagSemanticAnalysisResult> ClassifyTagSemanticsAsync(IEnumerable<string> tagNames)
+    {
         var tags = tagNames
             .Where(tag => !string.IsNullOrWhiteSpace(tag))
             .Select(tag => tag.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(40)
+            .Take(60)
             .ToList();
 
         if (!IsConfigured || tags.Count == 0)
-            return [];
+            return new AiTagSemanticAnalysisResult();
 
         if (!Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
-            return [];
+            return new AiTagSemanticAnalysisResult();
 
         try
         {
             var provider = ResolveProvider(baseUri);
             var payload = new { tags };
             var prompt =
-                "Classify visual novel tags into semantic categories and assign recommendation weights. " +
-                "Return JSON only: {\"tags\":[{\"tagName\":\"...\",\"category\":\"Genre|Theme|Character|Setting|Tone|ContentWarning|Structure|Technical|Meta\",\"weight\":1.0,\"confidence\":0.8}]}. " +
+                "Classify visual novel tags into semantic categories, merge equivalent concepts, and assign recommendation weights. " +
+                "Return JSON only: {\"tags\":[{\"tagName\":\"...\",\"canonicalTag\":\"...\",\"aliases\":[\"...\"],\"category\":\"Genre|Theme|Character|Setting|Tone|ContentWarning|Structure|Technical|Meta\",\"weight\":1.0,\"confidence\":0.8}]}. " +
                 "Weights should be 0.25-1.6. Genre, theme, tone, setting and content warnings are usually more important. Route structure, technical, metadata, protagonist/heroine implementation details are usually lower. " +
                 $"Data: {JsonSerializer.Serialize(payload)}";
 
-            using var request = BuildJsonRequest(
-            provider,
-            baseUri,
-            prompt,
-            "You classify visual novel tags for a deterministic recommender. Return JSON only.",
-            maxTokens: 700);
-            using var timeoutCts = new System.Threading.CancellationTokenSource(TagWeightRequestTimeout);
-            using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
-            if (!response.IsSuccessStatusCode)
-                return [];
-
-            var responseBody = await response.Content.ReadAsStringAsync();
-            var content = ExtractAssistantContent(responseBody, provider);
-            if (string.IsNullOrWhiteSpace(content) || !TryExtractJsonPayload(content, out var json))
-                return [];
+            var json = await SendJsonPromptAsync(
+                provider,
+                baseUri,
+                prompt,
+                "You classify visual novel tags for a deterministic recommender. Return JSON only.",
+                maxTokens: 1100,
+                TagWeightRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return new AiTagSemanticAnalysisResult();
 
             using var document = JsonDocument.Parse(json);
             if (!document.RootElement.TryGetProperty("tags", out var tagArray) || tagArray.ValueKind != JsonValueKind.Array)
-                return [];
+                return new AiTagSemanticAnalysisResult();
 
-            var result = new Dictionary<string, CachedTagWeight>(StringComparer.OrdinalIgnoreCase);
+            var result = new AiTagSemanticAnalysisResult();
             foreach (var item in tagArray.EnumerateArray())
             {
                 var tagName = item.TryGetProperty("tagName", out var tagNameElement)
@@ -223,6 +223,9 @@ public class AiRecommendationService
                 if (string.IsNullOrWhiteSpace(tagName))
                     continue;
 
+                var canonicalTag = item.TryGetProperty("canonicalTag", out var canonicalElement)
+                    ? canonicalElement.GetString() ?? tagName
+                    : tagName;
                 var category = item.TryGetProperty("category", out var categoryElement)
                     ? categoryElement.GetString() ?? "Theme"
                     : "Theme";
@@ -233,7 +236,7 @@ public class AiRecommendationService
                     ? parsedConfidence
                     : 0.7;
 
-                result[RecommendationService.BuildTagWeightKey(tagName)] = new CachedTagWeight
+                var cachedWeight = new CachedTagWeight
                 {
                     TagName = tagName.Trim(),
                     Category = category.Trim(),
@@ -242,14 +245,374 @@ public class AiRecommendationService
                     Source = "ai",
                     CachedAtUtc = DateTimeOffset.UtcNow
                 };
+                result.TagWeights[RecommendationService.BuildTagWeightKey(tagName)] = cachedWeight;
+
+                var aliases = item.TryGetProperty("aliases", out var aliasArray) && aliasArray.ValueKind == JsonValueKind.Array
+                    ? aliasArray.EnumerateArray()
+                        .Where(alias => alias.ValueKind == JsonValueKind.String)
+                        .Select(alias => alias.GetString())
+                        .Where(alias => !string.IsNullOrWhiteSpace(alias))
+                        .Select(alias => alias!.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Take(8)
+                        .ToList()
+                    : [];
+
+                result.TagAliases[RecommendationService.BuildTagWeightKey(tagName)] = new CachedTagAlias
+                {
+                    TagName = tagName.Trim(),
+                    CanonicalTag = string.IsNullOrWhiteSpace(canonicalTag) ? tagName.Trim() : canonicalTag.Trim(),
+                    Aliases = aliases,
+                    Category = category.Trim(),
+                    Weight = Math.Clamp(weight, 0.25, 1.6),
+                    Confidence = Math.Clamp(confidence, 0.35, 1.0),
+                    CachedAtUtc = DateTimeOffset.UtcNow
+                };
             }
 
             return result;
         }
         catch
         {
+            return new AiTagSemanticAnalysisResult();
+        }
+    }
+
+    public async Task<string> GenerateProfileSummaryAsync(TasteProfileSummary summary)
+    {
+        if (!IsConfigured || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return string.Empty;
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var languageCode = TranslationService.NormalizeLanguageCode(_settingsService.Settings.Language);
+            var outputLanguage = languageCode == "zh-Hans" ? "Simplified Chinese" : languageCode == "ja-JP" ? "Japanese" : "English";
+            var prompt =
+                $"Write one concise user taste profile summary in {outputLanguage}. Return JSON only: {{\"summary\":\"...\"}}. " +
+                "Mention preferred themes/tags, avoided content, developers, and play pattern if present. Keep it under 60 words. " +
+                $"Data: {JsonSerializer.Serialize(summary)}";
+            var json = await SendJsonPromptAsync(provider, baseUri, prompt, "You summarize visual novel taste profiles. Return JSON only.", 260, AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return string.Empty;
+
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.TryGetProperty("summary", out var element)
+                ? element.GetString()?.Trim() ?? string.Empty
+                : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    public async Task<List<string>> GenerateSearchQueriesAsync(string title, string? brand = null)
+    {
+        if (!IsConfigured || string.IsNullOrWhiteSpace(title) || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return [];
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var payload = new { title, brand };
+            var prompt =
+                "Generate search queries for VNDB/Bangumi visual novel metadata lookup. Include likely Japanese title, romanization, English title, and common shortened title if inferable. " +
+                "Return JSON only: {\"queries\":[\"...\"]}. Keep 3-8 unique queries, no explanations. " +
+                $"Data: {JsonSerializer.Serialize(payload)}";
+            var json = await SendJsonPromptAsync(provider, baseUri, prompt, "You generate metadata search aliases. Return JSON only.", 360, AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return [];
+
+            using var document = JsonDocument.Parse(json);
+            if (!document.RootElement.TryGetProperty("queries", out var array) || array.ValueKind != JsonValueKind.Array)
+                return [];
+
+            return array.EnumerateArray()
+                .Where(item => item.ValueKind == JsonValueKind.String)
+                .Select(item => item.GetString())
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Select(item => item!.Trim())
+                .Where(item => !string.Equals(item, title, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(8)
+                .ToList();
+        }
+        catch
+        {
             return [];
         }
+    }
+
+    public async Task<CachedMetadataConflict?> DetectMetadataConflictAsync(Game game, MetadataResult left, MetadataResult right)
+    {
+        if (!IsConfigured || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return null;
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var payload = new
+            {
+                game = new { game.Title, game.Brand, game.ReleaseDate, game.VndbId, game.BangumiId },
+                left,
+                right
+            };
+            var prompt =
+                "Decide whether two visual novel metadata records are likely mismatched. Return JSON only: {\"hasConflict\":false,\"confidence\":0.8,\"reason\":\"...\"}. " +
+                "Use title similarity, developer/brand, release date, and source IDs. Keep reason short. " +
+                $"Data: {JsonSerializer.Serialize(payload)}";
+            var json = await SendJsonPromptAsync(provider, baseUri, prompt, "You detect metadata mismatches. Return JSON only.", 360, AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            return new CachedMetadataConflict
+            {
+                Key = $"{left.Source}:{left.SourceId}|{right.Source}:{right.SourceId}",
+                HasConflict = root.TryGetProperty("hasConflict", out var hasConflict) && hasConflict.ValueKind == JsonValueKind.True,
+                Confidence = root.TryGetProperty("confidence", out var confidence) && confidence.TryGetDouble(out var parsedConfidence)
+                    ? Math.Clamp(parsedConfidence, 0, 1)
+                    : 0.5,
+                Reason = root.TryGetProperty("reason", out var reason) ? reason.GetString() ?? string.Empty : string.Empty,
+                CachedAtUtc = DateTimeOffset.UtcNow
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<string> GenerateCompletionNoteAsync(Game game)
+    {
+        if (!IsConfigured || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return string.Empty;
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var languageCode = TranslationService.NormalizeLanguageCode(_settingsService.Settings.Language);
+            var outputLanguage = languageCode == "zh-Hans" ? "Simplified Chinese" : languageCode == "ja-JP" ? "Japanese" : "English";
+            var payload = new
+            {
+                game.Title,
+                game.Brand,
+                game.ReleaseDate,
+                Status = game.Status.ToString(),
+                PlaytimeHours = Math.Round(game.Playtime.TotalHours, 1),
+                Tags = TagUtilities.Deserialize(game.Tags).Take(16)
+            };
+            var prompt =
+                $"Draft a short editable personal completion note in {outputLanguage}. Return JSON only: {{\"note\":\"...\"}}. " +
+                "Do not pretend to know plot details beyond provided tags. Keep it under 80 words. " +
+                $"Data: {JsonSerializer.Serialize(payload)}";
+            var json = await SendJsonPromptAsync(provider, baseUri, prompt, "You draft visual novel library notes. Return JSON only.", 320, AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return string.Empty;
+
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.TryGetProperty("note", out var note)
+                ? note.GetString()?.Trim() ?? string.Empty
+                : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    public async Task<AiLibraryInsightsResult> AnalyzeLibraryAsync(IReadOnlyCollection<Game> games)
+    {
+        var result = new AiLibraryInsightsResult();
+        if (!IsConfigured || games.Count == 0 || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return result;
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var languageCode = TranslationService.NormalizeLanguageCode(_settingsService.Settings.Language);
+            var outputLanguage = languageCode == "zh-Hans" ? "Simplified Chinese" : languageCode == "ja-JP" ? "Japanese" : "English";
+            var payload = games
+                .OrderByDescending(game => game.AccessedDate)
+                .Take(80)
+                .Select(game => new
+                {
+                    game.Id,
+                    game.Title,
+                    game.Brand,
+                    game.ReleaseDate,
+                    Status = game.Status.ToString(),
+                    PlaytimeHours = Math.Round(game.Playtime.TotalHours, 1),
+                    game.VndbId,
+                    game.BangumiId,
+                    game.ErogameSpaceId,
+                    HasCover = !string.IsNullOrWhiteSpace(game.CoverDisplaySource),
+                    Tags = TagUtilities.Deserialize(game.Tags).Take(24)
+                });
+
+            var prompt =
+                $"Analyze this local visual novel library in {outputLanguage}. Return JSON only with this shape: " +
+                "{\"report\":\"...\",\"dataIssues\":[\"...\"],\"normalizationSuggestions\":[\"...\"],\"metadataMergeSuggestions\":[\"...\"],\"tagCleanupSuggestions\":[\"...\"],\"gameSummaries\":[{\"gameId\":1,\"summary\":\"...\"}],\"titleAliases\":[{\"gameId\":1,\"queries\":[\"...\"]}]}. " +
+                "Cover metadata merge conflicts, title aliases, tag cleanup/translation/merging, short game summaries, play habit report, data health issues, and naming normalization. " +
+                "Do not recommend new games. Keep each list item short and actionable. " +
+                $"Data: {JsonSerializer.Serialize(payload)}";
+            var json = await SendJsonPromptAsync(
+                provider,
+                baseUri,
+                prompt,
+                "You are a local visual novel library data assistant. Return JSON only.",
+                maxTokens: 1800,
+                AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return result;
+
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            result.Report = root.TryGetProperty("report", out var report) ? report.GetString() ?? string.Empty : string.Empty;
+            result.DataIssues = ReadStringList(root, "dataIssues", 12);
+            result.NormalizationSuggestions = ReadStringList(root, "normalizationSuggestions", 12);
+            result.MetadataMergeSuggestions = ReadStringList(root, "metadataMergeSuggestions", 12);
+            result.TagCleanupSuggestions = ReadStringList(root, "tagCleanupSuggestions", 12);
+
+            if (root.TryGetProperty("gameSummaries", out var summaries) && summaries.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in summaries.EnumerateArray())
+                {
+                    if (!item.TryGetProperty("gameId", out var idElement) || !idElement.TryGetInt32(out var gameId))
+                        continue;
+                    var summary = item.TryGetProperty("summary", out var summaryElement)
+                        ? summaryElement.GetString() ?? string.Empty
+                        : string.Empty;
+                    if (!string.IsNullOrWhiteSpace(summary))
+                        result.GameSummaries[gameId] = summary.Trim();
+                }
+            }
+
+            if (root.TryGetProperty("titleAliases", out var aliases) && aliases.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var item in aliases.EnumerateArray())
+                {
+                    if (!item.TryGetProperty("gameId", out var idElement) || !idElement.TryGetInt32(out var gameId))
+                        continue;
+                    if (!item.TryGetProperty("queries", out var queriesElement) || queriesElement.ValueKind != JsonValueKind.Array)
+                        continue;
+
+                    var queries = queriesElement.EnumerateArray()
+                        .Where(query => query.ValueKind == JsonValueKind.String)
+                        .Select(query => query.GetString())
+                        .Where(query => !string.IsNullOrWhiteSpace(query))
+                        .Select(query => query!.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .Take(8)
+                        .ToList();
+                    if (queries.Count > 0)
+                        result.TitleAliases[gameId] = queries;
+                }
+            }
+
+            return result;
+        }
+        catch
+        {
+            return result;
+        }
+    }
+
+    public async Task<string> AnswerLibraryQuestionAsync(
+        string question,
+        IReadOnlyCollection<Game> relevantGames,
+        object libraryStats)
+    {
+        if (!IsConfigured || string.IsNullOrWhiteSpace(question) || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
+            return string.Empty;
+
+        try
+        {
+            var provider = ResolveProvider(baseUri);
+            var languageCode = TranslationService.NormalizeLanguageCode(_settingsService.Settings.Language);
+            var outputLanguage = languageCode == "zh-Hans" ? "Simplified Chinese" : languageCode == "ja-JP" ? "Japanese" : "English";
+            var payload = new
+            {
+                question,
+                libraryStats,
+                games = relevantGames.Select(game => new
+                {
+                    game.Id,
+                    game.Title,
+                    game.Brand,
+                    game.ReleaseDate,
+                    Status = game.Status.ToString(),
+                    PlaytimeHours = Math.Round(game.Playtime.TotalHours, 1),
+                    LastPlayed = game.AccessedDate,
+                    game.VndbId,
+                    game.BangumiId,
+                    HasCover = !string.IsNullOrWhiteSpace(game.CoverDisplaySource),
+                    Tags = TagUtilities.Deserialize(game.Tags).Take(18)
+                })
+            };
+            var prompt =
+                $"Answer the user's question about their local visual novel library in {outputLanguage}. " +
+                "Use only the provided library data. If the data is insufficient, say what is missing. " +
+                "Return JSON only: {\"answer\":\"...\"}. Keep the answer concise and actionable. " +
+                $"Data: {JsonSerializer.Serialize(payload)}";
+            var json = await SendJsonPromptAsync(
+                provider,
+                baseUri,
+                prompt,
+                "You are a local library assistant. Do not invent facts beyond the supplied data. Return JSON only.",
+                maxTokens: 700,
+                AiRequestTimeout);
+            if (string.IsNullOrWhiteSpace(json))
+                return string.Empty;
+
+            using var document = JsonDocument.Parse(json);
+            return document.RootElement.TryGetProperty("answer", out var answerElement)
+                ? answerElement.GetString()?.Trim() ?? string.Empty
+                : string.Empty;
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
+    private static List<string> ReadStringList(JsonElement root, string propertyName, int maxCount)
+    {
+        if (!root.TryGetProperty(propertyName, out var array) || array.ValueKind != JsonValueKind.Array)
+            return [];
+
+        return array.EnumerateArray()
+            .Where(item => item.ValueKind == JsonValueKind.String)
+            .Select(item => item.GetString())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => item!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(maxCount)
+            .ToList();
+    }
+
+    private async Task<string> SendJsonPromptAsync(
+        AiProvider provider,
+        Uri baseUri,
+        string prompt,
+        string systemPrompt,
+        int maxTokens,
+        TimeSpan timeout)
+    {
+        using var request = BuildJsonRequest(provider, baseUri, prompt, systemPrompt, maxTokens);
+        using var timeoutCts = new System.Threading.CancellationTokenSource(timeout);
+        using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
+        if (!response.IsSuccessStatusCode)
+            return string.Empty;
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var content = ExtractAssistantContent(responseBody, provider);
+        if (string.IsNullOrWhiteSpace(content) || !TryExtractJsonPayload(content, out var json))
+            return string.Empty;
+
+        return json;
     }
 
     private HttpRequestMessage BuildJsonRequest(
@@ -964,4 +1327,30 @@ public class AiRecommendationService
         var singleLine = value.Replace('\r', ' ').Replace('\n', ' ').Trim();
         return singleLine.Length <= 180 ? singleLine : $"{singleLine[..180]}...";
     }
+}
+
+public sealed class AiTagSemanticAnalysisResult
+{
+    public Dictionary<string, CachedTagWeight> TagWeights { get; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedTagAlias> TagAliases { get; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class AiLibraryInsightsResult
+{
+    public string Report { get; set; } = string.Empty;
+    public List<string> DataIssues { get; set; } = [];
+    public List<string> NormalizationSuggestions { get; set; } = [];
+    public List<string> MetadataMergeSuggestions { get; set; } = [];
+    public List<string> TagCleanupSuggestions { get; set; } = [];
+    public Dictionary<int, string> GameSummaries { get; } = new();
+    public Dictionary<int, List<string>> TitleAliases { get; } = new();
+
+    public bool HasContent =>
+        !string.IsNullOrWhiteSpace(Report) ||
+        DataIssues.Count > 0 ||
+        NormalizationSuggestions.Count > 0 ||
+        MetadataMergeSuggestions.Count > 0 ||
+        TagCleanupSuggestions.Count > 0 ||
+        GameSummaries.Count > 0 ||
+        TitleAliases.Count > 0;
 }

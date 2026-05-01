@@ -79,9 +79,42 @@ public class CoverArtService
             var normalizedTitle = title.Trim();
             AddCandidates(candidates, seenImageUrls, await vndbService.SearchAsync(normalizedTitle));
             AddCandidates(candidates, seenImageUrls, await bangumiService.SearchAsync(normalizedTitle));
+
+            foreach (var query in await GetCachedSearchAliasesAsync(normalizedTitle))
+            {
+                AddCandidates(candidates, seenImageUrls, await vndbService.SearchAsync(query));
+                AddCandidates(candidates, seenImageUrls, await bangumiService.SearchAsync(query));
+            }
         }
 
         return candidates;
+    }
+
+    private static async Task<IReadOnlyList<string>> GetCachedSearchAliasesAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return [];
+
+        try
+        {
+            var cacheService = new VndbRecommendationCacheService();
+            var cache = await cacheService.LoadAsync();
+            var key = RecommendationService.BuildTagWeightKey(title);
+            if (!cache.SearchAliases.TryGetValue(key, out var aliases))
+                return [];
+
+            return aliases.Queries
+                .Where(query => !string.IsNullOrWhiteSpace(query))
+                .Select(query => query.Trim())
+                .Where(query => !string.Equals(query, title, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(6)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     public async Task PopulateCandidatePreviewSourcesAsync(
@@ -258,17 +291,15 @@ public class CoverArtService
 
     public async Task<string?> ResolveAndCacheCoverAsync(Game game)
     {
-        var hasCanonicalVndbCover = !string.IsNullOrWhiteSpace(game.CoverImageUrl)
-            && game.CoverImageUrl.Contains("t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase);
-        var shouldRefreshExistingCover = !string.IsNullOrWhiteSpace(game.VndbId) && !hasCanonicalVndbCover;
-
-        if (!shouldRefreshExistingCover &&
-            !string.IsNullOrWhiteSpace(game.CoverImagePath) &&
+        if (!string.IsNullOrWhiteSpace(game.CoverImagePath) &&
             File.Exists(game.CoverImagePath))
         {
             UpdateCoverMetadataFromFile(game, game.CoverImagePath);
             return game.CoverImagePath;
         }
+
+        if (!string.IsNullOrWhiteSpace(game.CoverImageUrl))
+            return game.CoverImageUrl;
 
         var coverUrl = await ResolveCoverUrlAsync(game);
         if (string.IsNullOrWhiteSpace(coverUrl))
@@ -362,7 +393,7 @@ public class CoverArtService
             }
 
             var sanitizedKey = SanitizeCacheKey(cacheKey);
-            var cachedPath = Path.Combine(CoverCacheDir, $"{sanitizedKey}{extension}");
+            var cachedPath = Path.Combine(CoverCacheDir, BuildVersionedCacheFileName(sanitizedKey, extension));
 
             if (!string.Equals(sourcePath, cachedPath, StringComparison.OrdinalIgnoreCase))
             {
@@ -389,7 +420,7 @@ public class CoverArtService
 
             var extension = GetExtensionFromUrl(coverUrl);
             var sanitizedKey = SanitizeCacheKey(cacheKey);
-            var filePath = Path.Combine(CoverCacheDir, $"{sanitizedKey}{extension}");
+            var filePath = Path.Combine(CoverCacheDir, BuildVersionedCacheFileName(sanitizedKey, extension));
 
             using var response = await _httpClient.GetAsync(coverUrl, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
@@ -544,6 +575,15 @@ public class CoverArtService
         return string.IsNullOrWhiteSpace(sanitized)
             ? "cover"
             : sanitized;
+    }
+
+    private static string BuildVersionedCacheFileName(string sanitizedKey, string extension)
+    {
+        var normalizedExtension = string.IsNullOrWhiteSpace(extension) || extension.Length > 5
+            ? ".jpg"
+            : extension;
+
+        return $"{sanitizedKey}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds():x}{normalizedExtension}";
     }
 }
 

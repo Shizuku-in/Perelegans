@@ -5,10 +5,10 @@ using Perelegans.Services;
 
 namespace Perelegans.Models;
 
-public enum RecommendationSortMode
+public enum RecommendationMode
 {
-    Smart,
-    ComprehensiveRank
+    Taste,
+    Explore
 }
 
 public partial class RecommendationCandidate : ObservableObject

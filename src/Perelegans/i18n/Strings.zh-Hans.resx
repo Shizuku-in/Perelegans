@@ -153,6 +153,9 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>模型名:</value></data>
   <data name="Rec_Title" xml:space="preserve"><value>游戏推荐</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>刷新</value></data>
+  <data name="Rec_ModeLabel" xml:space="preserve"><value>模式</value></data>
+  <data name="Rec_ModeTaste" xml:space="preserve"><value>依你所好</value></data>
+  <data name="Rec_ModeExplore" xml:space="preserve"><value>探索模式</value></data>
   <data name="Rec_ProfileSummary" xml:space="preserve"><value>已使用 {0} / {1} 个带 VNDB/Bangumi 元数据的游戏生成画像。</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>偏好标签: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>回避标签: {0}</value></data>
@@ -202,9 +205,6 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_LocalReasonSource" xml:space="preserve"><value>和你库里的这些作品比较接近：{0}。</value></data>
   <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>相近作品曾得到你的正向反馈。</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>相近推荐此前收到过你的负向反馈。</value></data>
-  <data name="Rec_SortLabel" xml:space="preserve"><value>排序</value></data>
-  <data name="Rec_SortSmart" xml:space="preserve"><value>智能推荐</value></data>
-  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>综合排名</value></data>
   <data name="Settings_AiTestButton" xml:space="preserve"><value>测试</value></data>
   <data name="Settings_AiTestRunning" xml:space="preserve"><value>正在测试 AI 连接...</value></data>
   <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI 测试成功。返回: {0}</value></data>
@@ -233,7 +233,16 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>添加游戏</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>推荐</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>统计</value></data>
+  <data name="Toolbar_AiAssistant" xml:space="preserve"><value>助手</value></data>
   <data name="Toolbar_Settings" xml:space="preserve"><value>设置</value></data>
+  <data name="Assistant_Title" xml:space="preserve"><value>库助手</value></data>
+  <data name="Assistant_Hint" xml:space="preserve"><value>询问本地游戏库相关问题。助手只会使用你已保存的游戏数据。</value></data>
+  <data name="Assistant_Welcome" xml:space="preserve"><value>可以问我游戏库、元数据、缺失封面、游玩时长、标签或具体作品相关问题。</value></data>
+  <data name="Assistant_Send" xml:space="preserve"><value>发送</value></data>
+  <data name="Assistant_SearchingLibrary" xml:space="preserve"><value>正在查询本地库...</value></data>
+  <data name="Assistant_Thinking" xml:space="preserve"><value>正在思考...</value></data>
+  <data name="Assistant_NotConfigured" xml:space="preserve"><value>AI 尚未配置。请先在设置中填写 API 地址、密钥和模型。</value></data>
+  <data name="Assistant_NoAnswer" xml:space="preserve"><value>AI 没有返回可用回答。</value></data>
   <data name="Toolbar_ManageGames" xml:space="preserve"><value>管理游戏</value></data>
   <data name="Rec_ProfileStyleDeveloperStrong" xml:space="preserve"><value>厂商偏好较强，同厂商或相近厂商会获得适度加分</value></data>
   <data name="Rec_ProfileStyleDeveloperBalanced" xml:space="preserve"><value>厂商偏好和题材标签共同驱动</value></data>

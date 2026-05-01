@@ -121,6 +121,9 @@
 
   <data name="Rec_Title" xml:space="preserve"><value>Game Recommendations</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Rec_ModeLabel" xml:space="preserve"><value>Mode</value></data>
+  <data name="Rec_ModeTaste" xml:space="preserve"><value>For You</value></data>
+  <data name="Rec_ModeExplore" xml:space="preserve"><value>Explore</value></data>
   <data name="Rec_ProfileSummary" xml:space="preserve"><value>Using {0} of {1} library games with VNDB/Bangumi metadata.</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>Top tags: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>Avoid tags: {0}</value></data>
@@ -158,9 +161,6 @@
   <data name="Rec_LocalCautionTags" xml:space="preserve"><value>May overlap with tags you often drop: {0}.</value></data>
   <data name="Rec_LocalCautionYear" xml:space="preserve"><value>The release period is farther from your usual picks.</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>Similar recommendations previously drew negative feedback.</value></data>
-  <data name="Rec_SortLabel" xml:space="preserve"><value>Sort</value></data>
-  <data name="Rec_SortSmart" xml:space="preserve"><value>Smart</value></data>
-  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>Comprehensive Rank</value></data>
 
   <data name="Log_Title" xml:space="preserve"><value>Play Session Logs</value></data>
   <data name="Log_ColSession" xml:space="preserve"><value>Session ID</value></data>
@@ -257,7 +257,16 @@ Please set it in the Metadata editor to start the game directly.</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>Add Game</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>Recommendations</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>Stats</value></data>
+  <data name="Toolbar_AiAssistant" xml:space="preserve"><value>Assistant</value></data>
   <data name="Toolbar_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Assistant_Title" xml:space="preserve"><value>Library Assistant</value></data>
+  <data name="Assistant_Hint" xml:space="preserve"><value>Ask about your local library. The assistant only uses your stored game data.</value></data>
+  <data name="Assistant_Welcome" xml:space="preserve"><value>Ask me about your library, metadata, missing covers, playtime, tags, or specific games.</value></data>
+  <data name="Assistant_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="Assistant_SearchingLibrary" xml:space="preserve"><value>Searching local library...</value></data>
+  <data name="Assistant_Thinking" xml:space="preserve"><value>Thinking...</value></data>
+  <data name="Assistant_NotConfigured" xml:space="preserve"><value>AI is not configured. Set the API URL, key, and model in Settings first.</value></data>
+  <data name="Assistant_NoAnswer" xml:space="preserve"><value>AI did not return a usable answer.</value></data>
   <data name="Toolbar_ManageGames" xml:space="preserve"><value>Manage Games</value></data>
   <data name="Rec_ProfileStyleDeveloperStrong" xml:space="preserve"><value>developer affinity is strong, so familiar studios get a moderate bonus</value></data>
   <data name="Rec_ProfileStyleDeveloperBalanced" xml:space="preserve"><value>balanced between preferred studios and shared themes</value></data>

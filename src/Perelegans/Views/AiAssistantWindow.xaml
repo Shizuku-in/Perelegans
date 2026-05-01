@@ -1,0 +1,165 @@
+<mah:MetroWindow x:Class="Perelegans.Views.AiAssistantWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:i18n="clr-namespace:Perelegans.i18n"
+        xmlns:converters="clr-namespace:Perelegans.Converters"
+        Title="{i18n:Translate Assistant_Title}"
+        TitleCharacterCasing="Normal"
+        Height="660" Width="820"
+        MinHeight="500" MinWidth="620"
+        WindowStartupLocation="CenterOwner"
+        ShowTitleBar="True"
+        TitleBarHeight="28"
+        BorderThickness="1"
+        WindowTitleBrush="#FFC0CB"
+        NonActiveWindowTitleBrush="#FFC0CB"
+        GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
+        Background="{DynamicResource Perelegans.WindowBackground}"
+        Foreground="{DynamicResource Perelegans.ForegroundBrush}">
+
+    <mah:MetroWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:AssistantMessageAlignmentConverter x:Key="AssistantMessageAlignmentConverter"/>
+        <converters:AssistantMessageBrushConverter x:Key="AssistantMessageBrushConverter"/>
+    </mah:MetroWindow.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Padding="14,12"
+                Margin="0,0,0,10"
+                Background="{DynamicResource Perelegans.PanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border Width="34" Height="34"
+                        CornerRadius="17"
+                        Background="{DynamicResource Perelegans.AccentBrush}"
+                        VerticalAlignment="Top">
+                    <TextBlock Text="AI"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="White"/>
+                </Border>
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                    <TextBlock Text="{i18n:Translate Assistant_Title}"
+                               FontSize="18"
+                               FontWeight="SemiBold"/>
+                    <TextBlock Text="{i18n:Translate Assistant_Hint}"
+                               TextWrapping="Wrap"
+                               Margin="0,4,0,0"
+                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Background="{DynamicResource Perelegans.PanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Image Source="pack://application:,,,/Images/sho02A_101.png"
+                       Stretch="Uniform"
+                       Opacity="0.10"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Bottom"
+                       MaxHeight="460"
+                       MaxWidth="320"
+                       IsHitTestVisible="False"
+                       RenderOptions.BitmapScalingMode="LowQuality"/>
+                <Border Background="#14000000"
+                        IsHitTestVisible="False"/>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14">
+                    <ItemsControl ItemsSource="{Binding Messages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,12">
+                                    <Border MaxWidth="560"
+                                            HorizontalAlignment="{Binding IsUser, Converter={StaticResource AssistantMessageAlignmentConverter}}"
+                                            Padding="12,10"
+                                            CornerRadius="14"
+                                            Background="{Binding IsUser, Converter={StaticResource AssistantMessageBrushConverter}}"
+                                            BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                            BorderThickness="1">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Role}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Opacity="0.72"
+                                                       Margin="0,0,0,5"/>
+                                            <TextBlock Text="{Binding Content}"
+                                                       TextWrapping="Wrap"
+                                                       LineHeight="20"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <Border VerticalAlignment="Bottom"
+                        HorizontalAlignment="Left"
+                        Margin="14"
+                        Padding="10,7"
+                        CornerRadius="12"
+                        Background="{DynamicResource Perelegans.CardBackgroundBrush}"
+                        BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                        BorderThickness="1"
+                        Visibility="{Binding HasBusyStatus, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <ProgressBar Width="44"
+                                     Height="4"
+                                     IsIndeterminate="True"
+                                     VerticalAlignment="Center"
+                                     Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding BusyStatusText}"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2"
+                Margin="0,10,0,0"
+                Padding="10"
+                Background="{DynamicResource Perelegans.PanelBackground}"
+                BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         MinHeight="64"
+                         MaxHeight="112"
+                         TextWrapping="Wrap"
+                         AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto"
+                         IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
+                         Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Grid.Column="1"
+                        Width="96"
+                        MinHeight="64"
+                        Margin="8,0,0,0"
+                        Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                        Content="{i18n:Translate Assistant_Send}"
+                        Command="{Binding SendCommand}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</mah:MetroWindow>

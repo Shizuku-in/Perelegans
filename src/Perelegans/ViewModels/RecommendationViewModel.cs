@@ -22,17 +22,17 @@ public partial class RecommendationViewModel : ObservableObject
     private readonly Action<Game>? _onGameImported;
     private List<RecommendationCandidate> _currentCandidates = [];
 
-    public IReadOnlyList<RecommendationSortModeOption> SortModeOptions { get; } =
+    public IReadOnlyList<RecommendationModeOption> ModeOptions { get; } =
     [
-        new(RecommendationSortMode.Smart, TranslationService.Instance["Rec_SortSmart"]),
-        new(RecommendationSortMode.ComprehensiveRank, TranslationService.Instance["Rec_SortComprehensiveRank"])
+        new(RecommendationMode.Taste, TranslationService.Instance["Rec_ModeTaste"]),
+        new(RecommendationMode.Explore, TranslationService.Instance["Rec_ModeExplore"])
     ];
 
     [ObservableProperty]
     private ObservableCollection<RecommendationCandidate> _recommendations = new();
 
     [ObservableProperty]
-    private RecommendationSortMode _sortMode = RecommendationSortMode.Smart;
+    private RecommendationMode _selectedMode = RecommendationMode.Taste;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -100,7 +100,7 @@ public partial class RecommendationViewModel : ObservableObject
 
         try
         {
-            var result = await _recommendationService.GetRecommendationsAsync();
+            var result = await _recommendationService.GetRecommendationsAsync(SelectedMode);
             UpdateSummary(result.ProfileSummary);
             SetWorkflowStep(0, "Workflow_Done");
 
@@ -215,15 +215,17 @@ public partial class RecommendationViewModel : ObservableObject
         {
             try
             {
-                var tagWeightTask = RefreshAiTagWeightsAsync(tagNames);
+                var knowledgeTask = RefreshAiRecommendationKnowledgeAsync(profileSummary, tagNames);
                 var aiResult = await _aiRecommendationService.ExplainAsync(profileSummary, candidates);
-                await tagWeightTask;
+                var aiProfileSummary = await knowledgeTask;
 
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     if (!aiResult.HasExplanations)
                     {
-                        AiProfileText = aiResult.UserProfileSummary;
+                        AiProfileText = !string.IsNullOrWhiteSpace(aiProfileSummary)
+                            ? aiProfileSummary
+                            : aiResult.UserProfileSummary;
                         AiStatusText = string.IsNullOrWhiteSpace(aiResult.ErrorMessage)
                             ? TranslationService.Instance["Rec_AiStatusFallback"]
                             : string.Format(TranslationService.Instance["Rec_AiStatusFallbackWithReason"], aiResult.ErrorMessage);
@@ -250,7 +252,9 @@ public partial class RecommendationViewModel : ObservableObject
                             candidate.AiAffinityScore = explanation.AffinityScore.Value;
                     }
 
-                    AiProfileText = aiResult.UserProfileSummary;
+                    AiProfileText = !string.IsNullOrWhiteSpace(aiProfileSummary)
+                        ? aiProfileSummary
+                        : aiResult.UserProfileSummary;
                     SetWorkflowStep(2, "Workflow_Done");
                     ApplySort();
                 });
@@ -267,20 +271,50 @@ public partial class RecommendationViewModel : ObservableObject
         });
     }
 
-    private async Task RefreshAiTagWeightsAsync(IReadOnlyCollection<string> tagNames)
+    private async Task<string> RefreshAiRecommendationKnowledgeAsync(
+        TasteProfileSummary profileSummary,
+        IReadOnlyCollection<string> tagNames)
     {
-        if (!_aiRecommendationService.IsConfigured || tagNames.Count == 0)
-            return;
+        if (!_aiRecommendationService.IsConfigured)
+            return string.Empty;
 
-        var weights = await _aiRecommendationService.ClassifyTagWeightsAsync(tagNames);
-        if (weights.Count == 0)
-            return;
+        var tagTask = tagNames.Count == 0
+            ? Task.FromResult(new AiTagSemanticAnalysisResult())
+            : _aiRecommendationService.ClassifyTagSemanticsAsync(tagNames);
+        var profileTask = _aiRecommendationService.GenerateProfileSummaryAsync(profileSummary);
+        var aliasTasks = _currentCandidates
+            .Take(8)
+            .Select(candidate => _aiRecommendationService.GenerateSearchQueriesAsync(candidate.DisplayTitle, candidate.Brand))
+            .ToList();
 
         var cacheService = new VndbRecommendationCacheService();
+        var tagAnalysis = await tagTask;
+        var profileText = await profileTask;
+        var aliases = await Task.WhenAll(aliasTasks);
+
         var cache = await cacheService.LoadAsync();
-        foreach (var (key, value) in weights)
+        foreach (var (key, value) in tagAnalysis.TagWeights)
             cache.TagWeights[key] = value;
+        foreach (var (key, value) in tagAnalysis.TagAliases)
+            cache.TagAliases[key] = value;
+
+        for (var i = 0; i < aliases.Length && i < _currentCandidates.Count; i++)
+        {
+            var queries = aliases[i];
+            if (queries.Count == 0)
+                continue;
+
+            var title = _currentCandidates[i].DisplayTitle;
+            cache.SearchAliases[RecommendationService.BuildTagWeightKey(title)] = new CachedSearchAlias
+            {
+                Title = title,
+                Queries = queries,
+                CachedAtUtc = DateTimeOffset.UtcNow
+            };
+        }
+
         await cacheService.SaveAsync(cache);
+        return profileText;
     }
 
     private void MarkFirstWaitingWorkflowStepAsFailed()
@@ -292,32 +326,33 @@ public partial class RecommendationViewModel : ObservableObject
             step.StatusText = TranslationService.Instance["Workflow_Failed"];
     }
 
-    partial void OnSortModeChanged(RecommendationSortMode value)
+    partial void OnSelectedModeChanged(RecommendationMode value)
     {
-        ApplySort();
+        if (!IsLoading)
+            _ = RefreshAsync();
     }
 
     public void ApplySort()
     {
-        IEnumerable<RecommendationCandidate> sorted = SortMode switch
-        {
-            RecommendationSortMode.ComprehensiveRank => _currentCandidates
-                .OrderByDescending(ComputeComprehensiveRankScore)
+        var sorted = SelectedMode == RecommendationMode.Explore
+            ? _currentCandidates
+                .OrderByDescending(ComputeExploreScore)
+                .ThenByDescending(ComputeLeaderboardScore)
                 .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
                 .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
-                .ThenByDescending(candidate => (candidate.BangumiVoteCount ?? 0) + (candidate.VndbVoteCount ?? 0))
                 .ThenByDescending(candidate => candidate.RecommendationScore)
-                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase),
-            _ => _currentCandidates
-                .OrderByDescending(ComputeSmartScore)
-                .ThenByDescending(ComputeComprehensiveRankScore)
+                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
+            : _currentCandidates
+                .OrderByDescending(candidate => candidate.RecommendationScore)
                 .ThenByDescending(candidate => candidate.TagOverlapScore)
                 .ThenByDescending(candidate => candidate.FeedbackAffinity)
                 .ThenByDescending(candidate => candidate.DeveloperBonus)
                 .ThenByDescending(candidate => candidate.YearAffinity)
+                .ThenByDescending(ComputeExternalRatingScore)
+                .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
+                .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
                 .ThenByDescending(candidate => candidate.ReleaseDate ?? DateTime.MinValue)
-                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase)
-        };
+                .ThenBy(candidate => candidate.DisplayTitle, StringComparer.OrdinalIgnoreCase);
 
         Recommendations.Clear();
         foreach (var candidate in sorted)
@@ -326,7 +361,7 @@ public partial class RecommendationViewModel : ObservableObject
         HasRecommendations = Recommendations.Count > 0;
     }
 
-    private static double ComputeComprehensiveRankScore(RecommendationCandidate candidate)
+    private static double ComputeExternalRatingScore(RecommendationCandidate candidate)
     {
         return candidate.ExternalRatingScore
                ?? NormalizeRating(candidate.BangumiRating)
@@ -334,19 +369,32 @@ public partial class RecommendationViewModel : ObservableObject
                ?? 0.0;
     }
 
-    private static double ComputeSmartScore(RecommendationCandidate candidate)
+    private static double ComputeExploreScore(RecommendationCandidate candidate)
     {
-        var externalScore = ComputeComprehensiveRankScore(candidate);
+        return ComputeLeaderboardScore(candidate) * 0.75
+               + Math.Clamp(candidate.RecommendationScore, 0, 1) * 0.25;
+    }
 
-        if (!candidate.AiAffinityScore.HasValue)
-        {
-            return candidate.RecommendationScore * 0.70
-                   + externalScore * 0.30;
-        }
+    private static double ComputeLeaderboardScore(RecommendationCandidate candidate)
+    {
+        var bangumi = Math.Max(
+            ComputeRankScore(candidate.BangumiRank, 3000),
+            NormalizeRating(candidate.BangumiRating) ?? 0);
+        var vndb = Math.Max(
+            ComputeRankScore(candidate.VndbRank, 5000),
+            NormalizeRating(candidate.VndbRating) ?? 0);
 
-        return candidate.RecommendationScore * 0.48
-               + candidate.AiAffinityScore.Value * 0.22
-               + externalScore * 0.30;
+        if (bangumi > 0 && vndb > 0)
+            return bangumi * 0.5 + vndb * 0.5;
+        return Math.Max(bangumi, vndb);
+    }
+
+    private static double ComputeRankScore(int? rank, int maxRank)
+    {
+        if (!rank.HasValue || rank.Value <= 0)
+            return 0;
+
+        return Math.Clamp(1d - (rank.Value - 1d) / maxRank, 0, 1);
     }
 
     private List<RecommendationCandidate> SelectCandidatesForAiRerank()
@@ -362,7 +410,7 @@ public partial class RecommendationViewModel : ObservableObject
         }
 
         foreach (var candidate in _currentCandidates
-                     .OrderByDescending(ComputeComprehensiveRankScore)
+                     .OrderByDescending(ComputeExternalRatingScore)
                      .ThenBy(candidate => candidate.BangumiRank ?? int.MaxValue)
                      .ThenBy(candidate => candidate.VndbRank ?? int.MaxValue)
                      .Take(2))
@@ -592,8 +640,9 @@ public partial class RecommendationViewModel : ObservableObject
     }
 }
 
-public sealed class RecommendationSortModeOption(RecommendationSortMode value, string label)
+public sealed class RecommendationModeOption(RecommendationMode value, string label)
 {
-    public RecommendationSortMode Value { get; } = value;
+    public RecommendationMode Value { get; } = value;
     public string Label { get; } = label;
 }
+

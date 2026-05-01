@@ -153,6 +153,9 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>モデル:</value></data>
   <data name="Rec_Title" xml:space="preserve"><value>ゲームおすすめ</value></data>
   <data name="Rec_Refresh" xml:space="preserve"><value>更新</value></data>
+  <data name="Rec_ModeLabel" xml:space="preserve"><value>モード</value></data>
+  <data name="Rec_ModeTaste" xml:space="preserve"><value>好みに合わせる</value></data>
+  <data name="Rec_ModeExplore" xml:space="preserve"><value>探索</value></data>
   <data name="Rec_ProfileSummary" xml:space="preserve"><value>VNDB/Bangumi メタデータ付きの {1} 件中 {0} 件を使って好みを分析しています。</value></data>
   <data name="Rec_TopTags" xml:space="preserve"><value>好みのタグ: {0}</value></data>
   <data name="Rec_AvoidTags" xml:space="preserve"><value>避けたいタグ: {0}</value></data>
@@ -202,9 +205,6 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Rec_LocalReasonSource" xml:space="preserve"><value>ライブラリ内の次の作品に近い候補です: {0}。</value></data>
   <data name="Rec_LocalReasonFeedback" xml:space="preserve"><value>近い候補はこれまで好意的な反応を受けています。</value></data>
   <data name="Rec_LocalCautionFeedback" xml:space="preserve"><value>近い候補は以前に否定的な反応を受けています。</value></data>
-  <data name="Rec_SortLabel" xml:space="preserve"><value>並び替え</value></data>
-  <data name="Rec_SortSmart" xml:space="preserve"><value>スマート</value></data>
-  <data name="Rec_SortComprehensiveRank" xml:space="preserve"><value>総合ランキング</value></data>
   <data name="Settings_AiTestButton" xml:space="preserve"><value>テスト</value></data>
   <data name="Settings_AiTestRunning" xml:space="preserve"><value>AI 接続をテストしています...</value></data>
   <data name="Settings_AiTestSuccess" xml:space="preserve"><value>AI テストに成功しました。応答: {0}</value></data>
@@ -233,7 +233,16 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Toolbar_AddGame" xml:space="preserve"><value>ゲーム追加</value></data>
   <data name="Toolbar_Recommendations" xml:space="preserve"><value>おすすめ</value></data>
   <data name="Toolbar_Stats" xml:space="preserve"><value>統計</value></data>
+  <data name="Toolbar_AiAssistant" xml:space="preserve"><value>アシスタント</value></data>
   <data name="Toolbar_Settings" xml:space="preserve"><value>設定</value></data>
+  <data name="Assistant_Title" xml:space="preserve"><value>ライブラリアシスタント</value></data>
+  <data name="Assistant_Hint" xml:space="preserve"><value>ローカルライブラリについて質問できます。保存済みのゲームデータのみを使用します。</value></data>
+  <data name="Assistant_Welcome" xml:space="preserve"><value>ライブラリ、メタデータ、表紙不足、プレイ時間、タグ、特定の作品について質問できます。</value></data>
+  <data name="Assistant_Send" xml:space="preserve"><value>送信</value></data>
+  <data name="Assistant_SearchingLibrary" xml:space="preserve"><value>ローカルライブラリを検索中...</value></data>
+  <data name="Assistant_Thinking" xml:space="preserve"><value>考えています...</value></data>
+  <data name="Assistant_NotConfigured" xml:space="preserve"><value>AI が設定されていません。設定で API URL、キー、モデルを入力してください。</value></data>
+  <data name="Assistant_NoAnswer" xml:space="preserve"><value>AI から利用可能な回答が返されませんでした。</value></data>
   <data name="Toolbar_ManageGames" xml:space="preserve"><value>ゲーム管理</value></data>
   <data name="Rec_ProfileStyleDeveloperStrong" xml:space="preserve"><value>ブランド嗜好が強く、同じまたは近いブランドに適度な加点</value></data>
   <data name="Rec_ProfileStyleDeveloperBalanced" xml:space="preserve"><value>ブランド嗜好とテーマ傾向の両方を重視</value></data>

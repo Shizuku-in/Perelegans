@@ -19,6 +19,7 @@ public partial class MetadataViewModel : ObservableObject
     private readonly ErogameSpaceService _egsService;
     private readonly DatabaseService _dbService;
     private readonly CoverArtService _coverArtService;
+    private readonly AiRecommendationService? _aiRecommendationService;
     private readonly bool _isNewGame;
     private readonly string _coverCacheKey;
     private bool _suppressCoverFieldSync;
@@ -114,6 +115,7 @@ public partial class MetadataViewModel : ObservableObject
         Game game,
         HttpClient httpClient,
         DatabaseService dbService,
+        SettingsService? settingsService = null,
         bool isNewGame = false,
         bool isSearchEnabled = true)
     {
@@ -121,6 +123,7 @@ public partial class MetadataViewModel : ObservableObject
         _dbService = dbService;
         _isNewGame = isNewGame;
         _coverArtService = new CoverArtService(httpClient);
+        _aiRecommendationService = settingsService == null ? null : new AiRecommendationService(httpClient, settingsService);
         _coverCacheKey = game.Id > 0 ? $"game-{game.Id}" : $"draft-{Guid.NewGuid():N}";
         _vndbService = new VndbService(httpClient);
         _bangumiService = new BangumiService(httpClient);
@@ -241,6 +244,28 @@ public partial class MetadataViewModel : ObservableObject
                 _ => new List<MetadataResult>()
             };
 
+            foreach (var alias in await GetCachedSearchAliasesAsync(SearchQuery))
+            {
+                var aliasResults = SelectedSource switch
+                {
+                    "VNDB" => await _vndbService.SearchAsync(alias),
+                    "Bangumi" => await _bangumiService.SearchAsync(alias),
+                    _ => []
+                };
+
+                foreach (var result in aliasResults)
+                {
+                    if (results.Any(existing =>
+                            string.Equals(existing.Source, result.Source, StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(existing.SourceId, result.SourceId, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    results.Add(result);
+                }
+            }
+
             foreach (var result in results)
             {
                 SearchResults.Add(result);
@@ -317,6 +342,54 @@ public partial class MetadataViewModel : ObservableObject
                 aspectRatio: null,
                 statusText: TranslationService.Instance["Meta_CoverAppliedFromResult"]);
         }
+
+        StartMetadataConflictCheckInBackground(SelectedResult);
+    }
+
+    private void StartMetadataConflictCheckInBackground(MetadataResult selectedResult)
+    {
+        if (_aiRecommendationService is not { IsConfigured: true })
+            return;
+
+        var selected = selectedResult;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                MetadataResult? paired = null;
+                if (selected.Source == "VNDB" && !string.IsNullOrWhiteSpace(EditBangumiId))
+                    paired = await _bangumiService.GetByIdAsync(EditBangumiId);
+                else if (selected.Source == "Bangumi" && !string.IsNullOrWhiteSpace(EditVndbId))
+                    paired = await _vndbService.GetByIdAsync(EditVndbId);
+
+                if (paired == null)
+                    return;
+
+                var conflict = await _aiRecommendationService.DetectMetadataConflictAsync(
+                    TargetGame,
+                    selected,
+                    paired);
+                if (conflict == null)
+                    return;
+
+                var cacheService = new VndbRecommendationCacheService();
+                var cache = await cacheService.LoadAsync();
+                cache.MetadataConflicts[conflict.Key] = conflict;
+                await cacheService.SaveAsync(cache);
+
+                if (!conflict.HasConflict)
+                    return;
+
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    MetadataStatusText = $"AI metadata warning: {conflict.Reason}";
+                });
+            }
+            catch
+            {
+                // Advisory only; never block applying metadata.
+            }
+        });
     }
 
     [RelayCommand]
@@ -392,6 +465,21 @@ public partial class MetadataViewModel : ObservableObject
         {
             CoverStatusText = TranslationService.Instance["Meta_CoverFetchFailed"];
             return;
+        }
+
+        var previewSource = candidate.PreviewSource?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(previewSource) && File.Exists(previewSource))
+        {
+            var importedPreview = _coverArtService.ImportLocalCoverToCache(previewSource, _coverCacheKey);
+            if (!string.IsNullOrWhiteSpace(importedPreview?.CachedPath))
+            {
+                SetCoverFields(
+                    path: importedPreview.CachedPath,
+                    url: candidate.ImageUrl,
+                    aspectRatio: importedPreview.AspectRatio,
+                    statusText: TranslationService.Instance["Meta_CoverFetchSuccessCached"]);
+                return;
+            }
         }
 
         var result = await _coverArtService.CacheCoverFromUrlAsync(candidate.ImageUrl, _coverCacheKey);
@@ -573,6 +661,32 @@ public partial class MetadataViewModel : ObservableObject
         return uri.Scheme == Uri.UriSchemeHttp ||
                uri.Scheme == Uri.UriSchemeHttps ||
                uri.Scheme == Uri.UriSchemeFile;
+    }
+
+    private static async Task<IReadOnlyList<string>> GetCachedSearchAliasesAsync(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return [];
+
+        try
+        {
+            var cacheService = new VndbRecommendationCacheService();
+            var cache = await cacheService.LoadAsync();
+            if (!cache.SearchAliases.TryGetValue(RecommendationService.BuildTagWeightKey(title), out var aliases))
+                return [];
+
+            return aliases.Queries
+                .Where(query => !string.IsNullOrWhiteSpace(query))
+                .Select(query => query.Trim())
+                .Where(query => !string.Equals(query, title, StringComparison.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(6)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 }
 

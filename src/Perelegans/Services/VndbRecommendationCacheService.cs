@@ -119,6 +119,12 @@ public class VndbRecommendationCacheDocument
     public Dictionary<string, CachedVndbCandidateSearch> CandidateSearches { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, CachedBangumiSearch> BangumiSearches { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, CachedTagWeight> TagWeights { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedTagAlias> TagAliases { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedSearchAlias> SearchAliases { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedMetadataConflict> MetadataConflicts { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedCompletionNote> CompletionNotes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, CachedGameSummary> GameSummaries { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public CachedLibraryInsights? LibraryInsights { get; set; }
     public CachedRecommendationProfile? ProfileCache { get; set; }
 
     public void EnsureInitialized()
@@ -127,12 +133,28 @@ public class VndbRecommendationCacheDocument
         CandidateSearches ??= new Dictionary<string, CachedVndbCandidateSearch>(StringComparer.OrdinalIgnoreCase);
         BangumiSearches ??= new Dictionary<string, CachedBangumiSearch>(StringComparer.OrdinalIgnoreCase);
         TagWeights ??= new Dictionary<string, CachedTagWeight>(StringComparer.OrdinalIgnoreCase);
+        TagAliases ??= new Dictionary<string, CachedTagAlias>(StringComparer.OrdinalIgnoreCase);
+        SearchAliases ??= new Dictionary<string, CachedSearchAlias>(StringComparer.OrdinalIgnoreCase);
+        MetadataConflicts ??= new Dictionary<string, CachedMetadataConflict>(StringComparer.OrdinalIgnoreCase);
+        CompletionNotes ??= new Dictionary<string, CachedCompletionNote>(StringComparer.OrdinalIgnoreCase);
+        GameSummaries ??= new Dictionary<string, CachedGameSummary>(StringComparer.OrdinalIgnoreCase);
         foreach (var search in CandidateSearches.Values)
             search.EnsureInitialized();
         foreach (var search in BangumiSearches.Values)
             search.EnsureInitialized();
         foreach (var tagWeight in TagWeights.Values)
             tagWeight.EnsureInitialized();
+        foreach (var tagAlias in TagAliases.Values)
+            tagAlias.EnsureInitialized();
+        foreach (var searchAlias in SearchAliases.Values)
+            searchAlias.EnsureInitialized();
+        foreach (var conflict in MetadataConflicts.Values)
+            conflict.EnsureInitialized();
+        foreach (var note in CompletionNotes.Values)
+            note.EnsureInitialized();
+        foreach (var summary in GameSummaries.Values)
+            summary.EnsureInitialized();
+        LibraryInsights?.EnsureInitialized();
         ProfileCache?.EnsureInitialized();
     }
 }
@@ -155,6 +177,102 @@ public class CachedTagWeight
             Weight = 1.0;
         if (Confidence <= 0)
             Confidence = 0.6;
+    }
+}
+
+public class CachedTagAlias
+{
+    public string TagName { get; set; } = string.Empty;
+    public string CanonicalTag { get; set; } = string.Empty;
+    public string Category { get; set; } = "Theme";
+    public List<string> Aliases { get; set; } = [];
+    public double Weight { get; set; } = 1.0;
+    public double Confidence { get; set; } = 0.6;
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        TagName ??= string.Empty;
+        CanonicalTag ??= TagName;
+        Category ??= "Theme";
+        Aliases ??= [];
+        if (Weight <= 0)
+            Weight = 1.0;
+        if (Confidence <= 0)
+            Confidence = 0.6;
+    }
+}
+
+public class CachedSearchAlias
+{
+    public string Title { get; set; } = string.Empty;
+    public List<string> Queries { get; set; } = [];
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        Title ??= string.Empty;
+        Queries ??= [];
+    }
+}
+
+public class CachedMetadataConflict
+{
+    public string Key { get; set; } = string.Empty;
+    public bool HasConflict { get; set; }
+    public double Confidence { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        Key ??= string.Empty;
+        Reason ??= string.Empty;
+    }
+}
+
+public class CachedCompletionNote
+{
+    public int GameId { get; set; }
+    public string Note { get; set; } = string.Empty;
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        Note ??= string.Empty;
+    }
+}
+
+public class CachedGameSummary
+{
+    public int GameId { get; set; }
+    public string Summary { get; set; } = string.Empty;
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        Summary ??= string.Empty;
+    }
+}
+
+public class CachedLibraryInsights
+{
+    public string Signature { get; set; } = string.Empty;
+    public string Report { get; set; } = string.Empty;
+    public List<string> DataIssues { get; set; } = [];
+    public List<string> NormalizationSuggestions { get; set; } = [];
+    public List<string> MetadataMergeSuggestions { get; set; } = [];
+    public List<string> TagCleanupSuggestions { get; set; } = [];
+    public DateTimeOffset CachedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+
+    public void EnsureInitialized()
+    {
+        Signature ??= string.Empty;
+        Report ??= string.Empty;
+        DataIssues ??= [];
+        NormalizationSuggestions ??= [];
+        MetadataMergeSuggestions ??= [];
+        TagCleanupSuggestions ??= [];
     }
 }
 
@@ -208,6 +326,7 @@ public class CachedRecommendationProfileData
     public double MaxPositiveOverlap { get; set; }
     public double MaxRecentOverlap { get; set; }
     public List<CachedSourceGameProfile> SourceGames { get; set; } = [];
+    public Dictionary<string, CachedTagAlias> TagAliases { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public double DeveloperPreferenceWeight { get; set; }
 
     public void EnsureInitialized()
@@ -221,9 +340,12 @@ public class CachedRecommendationProfileData
         DeveloperScores ??= new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
         PreferredDevelopers ??= [];
         SourceGames ??= [];
+        TagAliases ??= new Dictionary<string, CachedTagAlias>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var sourceGame in SourceGames)
             sourceGame.EnsureInitialized();
+        foreach (var alias in TagAliases.Values)
+            alias.EnsureInitialized();
     }
 }
 

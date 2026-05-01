@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -352,11 +354,7 @@ public partial class MainViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(game.CoverDisplaySource))
             return true;
 
-        if (string.IsNullOrWhiteSpace(game.VndbId))
-            return false;
-
-        return string.IsNullOrWhiteSpace(game.CoverImageUrl)
-            || !game.CoverImageUrl.Contains("t.vndb.org/cv/", StringComparison.OrdinalIgnoreCase);
+        return false;
     }
 
     public void UpdatePageSize(double viewportWidth, double viewportHeight)
@@ -422,7 +420,7 @@ public partial class MainViewModel : ObservableObject
     private async Task AddFromWebsite()
     {
         var newGame = new Game { Title = TranslationService.Instance["Game_DefaultTitle"] };
-        var vm = new MetadataViewModel(newGame, _httpClient, _dbService, isNewGame: true, isSearchEnabled: true);
+        var vm = new MetadataViewModel(newGame, _httpClient, _dbService, _settingsService, isNewGame: true, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -566,6 +564,19 @@ public partial class MainViewModel : ObservableObject
         win.ShowDialog();
     }
 
+    [RelayCommand]
+    private void OpenAiAssistant()
+    {
+        var vm = new AiAssistantViewModel(_httpClient, _settingsService, Games.ToList());
+        var win = new AiAssistantWindow
+        {
+            DataContext = vm,
+            Owner = Application.Current.MainWindow
+        };
+
+        win.ShowDialog();
+    }
+
     public async Task OpenGameManagementAsync()
     {
         try
@@ -686,7 +697,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null) return;
         var targetGame = SelectedGame;
-        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: true);
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, _settingsService, isNewGame: false, isSearchEnabled: true);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -704,7 +715,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (SelectedGame == null) return;
         var targetGame = SelectedGame;
-        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, isNewGame: false, isSearchEnabled: false);
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, _settingsService, isNewGame: false, isSearchEnabled: false);
         var win = new MetadataWindow
         {
             DataContext = vm,
@@ -807,6 +818,9 @@ public partial class MainViewModel : ObservableObject
             RefreshStats();
             _processMonitor.UpdateMonitoredGames(Games);
             QueueRecommendationProfileRefresh();
+
+            if (status == GameStatus.Completed && previousStatus != GameStatus.Completed)
+                StartAiCompletionNoteInBackground(SelectedGame);
         }
         catch (Exception ex)
         {
@@ -816,6 +830,66 @@ public partial class MainViewModel : ObservableObject
                 TranslationService.Instance["Msg_ErrorTitle"],
                 ex.Message);
         }
+    }
+
+    private void StartAiCompletionNoteInBackground(Game game)
+    {
+        if (game.Id <= 0)
+            return;
+
+        var snapshot = new Game
+        {
+            Id = game.Id,
+            Title = game.Title,
+            Brand = game.Brand,
+            ReleaseDate = game.ReleaseDate,
+            Status = game.Status,
+            Playtime = game.Playtime,
+            Tags = game.Tags
+        };
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var aiService = new AiRecommendationService(_httpClient, _settingsService);
+                if (!aiService.IsConfigured)
+                    return;
+
+                var cacheService = new VndbRecommendationCacheService();
+                var cache = await cacheService.LoadAsync();
+                var cacheKey = snapshot.Id.ToString(CultureInfo.InvariantCulture);
+                if (cache.CompletionNotes.TryGetValue(cacheKey, out var cached) &&
+                    !string.IsNullOrWhiteSpace(cached.Note))
+                {
+                    return;
+                }
+
+                var note = await aiService.GenerateCompletionNoteAsync(snapshot);
+                if (string.IsNullOrWhiteSpace(note))
+                    return;
+
+                cache.CompletionNotes[cacheKey] = new CachedCompletionNote
+                {
+                    GameId = snapshot.Id,
+                    Note = note,
+                    CachedAtUtc = DateTimeOffset.UtcNow
+                };
+                await cacheService.SaveAsync(cache);
+
+                await Application.Current.Dispatcher.InvokeAsync(async () =>
+                {
+                    await _dialogCoordinator.ShowMessageAsync(
+                        this,
+                        "AI Note",
+                        note);
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AI completion note error: {ex.Message}");
+            }
+        });
     }
 
     [RelayCommand]

@@ -267,6 +267,20 @@
                         <TextBlock Text="{i18n:Translate Toolbar_Stats}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
+                <Button Height="28"
+                        MinWidth="92"
+                        Margin="0,0,6,0"
+                        Padding="8,0"
+                        BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                        Style="{DynamicResource MahApps.Styles.Button.Square}"
+                        Command="{Binding OpenAiAssistantCommand}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconMaterial Kind="RobotOutline" Width="14" Height="14"
+                                                    Margin="0,0,5,0"
+                                                    VerticalAlignment="Center"/>
+                        <TextBlock Text="{i18n:Translate Toolbar_AiAssistant}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
             </ToolBar>
         </ToolBarTray>
 

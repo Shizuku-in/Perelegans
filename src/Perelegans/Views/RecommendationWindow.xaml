@@ -47,16 +47,16 @@
                         Orientation="Horizontal"
                         Margin="12,0,0,0"
                         VerticalAlignment="Top">
-                <TextBlock Text="{i18n:Translate Rec_SortLabel}"
+                <TextBlock Text="{i18n:Translate Rec_ModeLabel}"
                            VerticalAlignment="Center"
                            Margin="0,0,6,0"/>
                 <ComboBox Width="132"
                           Height="30"
                           Margin="0,0,8,0"
-                          ItemsSource="{Binding SortModeOptions}"
+                          ItemsSource="{Binding ModeOptions}"
                           DisplayMemberPath="Label"
                           SelectedValuePath="Value"
-                          SelectedValue="{Binding SortMode, Mode=TwoWay}"/>
+                          SelectedValue="{Binding SelectedMode, Mode=TwoWay}"/>
                 <Button Width="108" Height="30"
                         BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
                         Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
