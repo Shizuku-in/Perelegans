@@ -523,7 +523,8 @@ public class AiRecommendationService
     public async Task<string> AnswerLibraryQuestionAsync(
         string question,
         IReadOnlyCollection<Game> relevantGames,
-        object libraryStats)
+        object libraryStats,
+        System.Threading.CancellationToken cancellationToken = default)
     {
         if (!IsConfigured || string.IsNullOrWhiteSpace(question) || !Uri.TryCreate(_settingsService.Settings.AiApiBaseUrl.Trim(), UriKind.Absolute, out var baseUri))
             return string.Empty;
@@ -563,7 +564,8 @@ public class AiRecommendationService
                 prompt,
                 "You are a local library assistant. Do not invent facts beyond the supplied data. Return JSON only.",
                 maxTokens: 700,
-                AiRequestTimeout);
+                AiRequestTimeout,
+                cancellationToken);
             if (string.IsNullOrWhiteSpace(json))
                 return string.Empty;
 
@@ -599,11 +601,13 @@ public class AiRecommendationService
         string prompt,
         string systemPrompt,
         int maxTokens,
-        TimeSpan timeout)
+        TimeSpan timeout,
+        System.Threading.CancellationToken cancellationToken = default)
     {
         using var request = BuildJsonRequest(provider, baseUri, prompt, systemPrompt, maxTokens);
         using var timeoutCts = new System.Threading.CancellationTokenSource(timeout);
-        using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
+        using var linkedCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, linkedCts.Token);
         if (!response.IsSuccessStatusCode)
             return string.Empty;
 

@@ -33,6 +33,7 @@
         <converters:CoverAspectRatioToStretchConverter x:Key="CoverAspectRatioToStretchConverter"/>
         <converters:StatusIconConverter x:Key="StatusIconConverter"/>
         <converters:LocalizedStringFormatConverter x:Key="LocalizedStringFormatConverter"/>
+        <converters:AssistantMessageBrushConverter x:Key="AssistantMessageBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style x:Key="CardTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
             <Setter Property="Foreground" Value="White"/>
@@ -314,7 +315,13 @@
                 </StackPanel>
             </StatusBarItem>
         </StatusBar>
-<Grid Background="{DynamicResource Perelegans.WindowBackground}">
+        <Grid Background="{DynamicResource Perelegans.WindowBackground}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition x:Name="AssistantColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
             <Image Source="pack://application:,,,/Images/sho02A_101.png"
                    Stretch="Uniform"
                    Opacity="0.12"
@@ -328,6 +335,7 @@
 
             <ListBox x:Name="GameCards"
                      ItemsSource="{Binding VisibleRows}"
+                     SizeChanged="GameCards_SizeChanged"
                      ScrollViewer.ScrollChanged="GameCards_ScrollChanged"
                      Background="Transparent"
                      BorderThickness="0"
@@ -656,6 +664,222 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            </Grid>
+
+            <Border Grid.Column="1"
+                    Margin="0,0,0,0"
+                    Padding="12"
+                    Background="{DynamicResource Perelegans.PanelBackground}"
+                    BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                    BorderThickness="1,0,0,0"
+                    Visibility="{Binding IsAssistantPanelVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Grid DataContext="{Binding AssistantViewModel}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="{i18n:Translate Assistant_Title}"
+                                       FontSize="17"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="{i18n:Translate Assistant_Hint}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,4,0,0"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Width="28"
+                                Height="28"
+                                Padding="0"
+                                Command="{Binding DataContext.CloseAssistantPanelCommand, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}"
+                                Style="{DynamicResource MahApps.Styles.Button.Square}">
+                            <iconPacks:PackIconMaterial Kind="Close" Width="14" Height="14"/>
+                        </Button>
+                    </Grid>
+
+                    <ItemsControl Grid.Row="1"
+                                  ItemsSource="{Binding QuickQuestions}"
+                                  Margin="0,0,0,10">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}"
+                                        Margin="0,0,6,6"
+                                        Padding="8,4"
+                                        FontSize="11"
+                                        Command="{Binding DataContext.AskQuickQuestionCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{DynamicResource MahApps.Styles.Button.Square}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Grid.Row="2"
+                            Background="{DynamicResource Perelegans.WindowBackground}"
+                            BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                            BorderThickness="1">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10">
+                                <ItemsControl ItemsSource="{Binding Messages}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="0,0,0,10"
+                                                    Padding="10"
+                                                    Background="{Binding IsUser, Converter={StaticResource AssistantMessageBrushConverter}}"
+                                                    BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="4">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Role}"
+                                                               FontSize="10"
+                                                               FontWeight="SemiBold"
+                                                               Opacity="0.68"
+                                                               Margin="0,0,0,4"/>
+                                                    <TextBlock Text="{Binding Content}"
+                                                               TextWrapping="Wrap"
+                                                               LineHeight="19"/>
+                                                    <ItemsControl ItemsSource="{Binding GameLinks}"
+                                                                  Visibility="{Binding HasGameLinks, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                  Margin="0,8,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,6">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <Button Grid.Column="0"
+                                                                            HorizontalContentAlignment="Left"
+                                                                            Padding="8,5"
+                                                                            Command="{Binding DataContext.AssistantViewModel.SelectGameCommand, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Style="{DynamicResource MahApps.Styles.Button.Square}">
+                                                                        <StackPanel>
+                                                                            <TextBlock Text="{Binding Title}"
+                                                                                       TextTrimming="CharacterEllipsis"
+                                                                                       FontSize="12"
+                                                                                       FontWeight="SemiBold"/>
+                                                                            <TextBlock Text="{Binding Subtitle}"
+                                                                                       TextTrimming="CharacterEllipsis"
+                                                                                       FontSize="10"
+                                                                                       Opacity="0.7"/>
+                                                                        </StackPanel>
+                                                                    </Button>
+                                                                    <Button Grid.Column="1"
+                                                                            Width="30"
+                                                                            Margin="4,0,0,0"
+                                                                            Padding="0"
+                                                                            Command="{Binding DataContext.AssistantViewModel.OpenGameMetadataCommand, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}"
+                                                                            CommandParameter="{Binding}"
+                                                                            Style="{DynamicResource MahApps.Styles.Button.Square}">
+                                                                        <iconPacks:PackIconMaterial Kind="PencilOutline" Width="14" Height="14"/>
+                                                                    </Button>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <Button Content="{Binding ActionLabel}"
+                                                            Margin="0,4,0,0"
+                                                            HorizontalAlignment="Left"
+                                                            Padding="8,4"
+                                                            Visibility="{Binding HasAction, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                            Command="{Binding DataContext.AssistantViewModel.RunMessageActionCommand, RelativeSource={RelativeSource AncestorType=mah:MetroWindow}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"/>
+                                                    <TextBlock Text="{Binding SourceSummary}"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,8,0,0"
+                                                               FontSize="10"
+                                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                                               Visibility="{Binding HasSourceSummary, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding DebugSummary}"
+                                                               TextWrapping="Wrap"
+                                                               Margin="0,3,0,0"
+                                                               FontSize="10"
+                                                               Opacity="0.55"
+                                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                                               Visibility="{Binding HasDebugSummary, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Border VerticalAlignment="Bottom"
+                                    HorizontalAlignment="Left"
+                                    Margin="10"
+                                    Padding="10,7"
+                                    CornerRadius="4"
+                                    Background="{DynamicResource Perelegans.CardBackgroundBrush}"
+                                    BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                                    BorderThickness="1"
+                                    Visibility="{Binding HasBusyStatus, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <ProgressBar Width="42"
+                                                 Height="4"
+                                                 IsIndeterminate="True"
+                                                 VerticalAlignment="Center"
+                                                 Margin="0,0,8,0"/>
+                                    <TextBlock Text="{Binding BusyStatusText}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3"
+                            Margin="0,10,0,0"
+                            Padding="8"
+                            Background="{DynamicResource Perelegans.WindowBackground}"
+                            BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                            BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0"
+                                     MinHeight="54"
+                                     MaxHeight="96"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     PreviewKeyDown="AssistantInput_PreviewKeyDown"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Text="{Binding InputText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <Button Grid.Column="1"
+                                    Width="62"
+                                    Margin="6,0,0,0"
+                                    Content="{i18n:Translate Assistant_Send}"
+                                    Command="{Binding SendCommand}"
+                                    Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"/>
+                            <Button Grid.Column="2"
+                                    Width="32"
+                                    Margin="6,0,0,0"
+                                    Padding="0"
+                                    Command="{Binding CancelCommand}"
+                                    Style="{DynamicResource MahApps.Styles.Button.Square}">
+                                <iconPacks:PackIconMaterial Kind="Stop" Width="14" Height="14"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
         </Grid>
 
     </DockPanel>

@@ -36,6 +36,7 @@ public partial class MainViewModel : ObservableObject
     private int _materializedGameCount;
     private int _visibleRefreshVersion;
     private int _profileRefreshVersion;
+    private HashSet<int>? _assistantFilterIds;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
@@ -48,6 +49,12 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _isAboutOverlayVisible;
+
+    [ObservableProperty]
+    private bool _isAssistantPanelVisible;
+
+    [ObservableProperty]
+    private AiAssistantViewModel? _assistantViewModel;
 
     [ObservableProperty]
     private int _currentPage = 1;
@@ -72,7 +79,7 @@ public partial class MainViewModel : ObservableObject
 
     public int CompletedCount => Games.Count(g => g.Status == GameStatus.Completed);
     public int TotalGameCount => Games.Count;
-    public bool CanLoadMoreGames => _materializedGameCount < Games.Count;
+    public bool CanLoadMoreGames => _materializedGameCount < GetDisplayGames().Count;
 
     public MainViewModel(
         DatabaseService dbService,
@@ -223,7 +230,8 @@ public partial class MainViewModel : ObservableObject
 
     private void RebuildVisibleRows()
     {
-        var targetCount = Math.Min(Games.Count, Math.Max(PageSize, _loadedGameCount));
+        var displayGames = GetDisplayGames();
+        var targetCount = Math.Min(displayGames.Count, Math.Max(PageSize, _loadedGameCount));
         var version = Interlocked.Increment(ref _visibleRefreshVersion);
         _loadedGameCount = targetCount;
         VisibleRows.Clear();
@@ -245,7 +253,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         var appendedGames = new List<Game>();
-        foreach (var game in Games.Skip(_materializedGameCount).Take(targetCount - _materializedGameCount))
+        foreach (var game in GetDisplayGames().Skip(_materializedGameCount).Take(targetCount - _materializedGameCount))
         {
             currentRow ??= AddRow();
             currentRow.Add(game);
@@ -366,10 +374,10 @@ public partial class MainViewModel : ObservableObject
         var rows = Math.Max(1, (int)Math.Floor((viewportHeight + 14) / 292d));
         var targetPageSize = Math.Clamp(columns * Math.Max(2, rows + 1), 8, 24);
 
-        if (targetPageSize == PageSize)
+        var previousColumns = ColumnCount;
+        if (targetPageSize == PageSize && columns == previousColumns)
             return;
 
-        var previousColumns = ColumnCount;
         ColumnCount = columns;
         PageSize = targetPageSize;
         _loadedGameCount = Math.Max(_loadedGameCount, PageSize);
@@ -379,7 +387,7 @@ public partial class MainViewModel : ObservableObject
         }
         else
         {
-            AppendVisibleGames(Math.Min(Games.Count, _loadedGameCount), _visibleRefreshVersion);
+            AppendVisibleGames(Math.Min(GetDisplayGames().Count, _loadedGameCount), _visibleRefreshVersion);
         }
     }
 
@@ -388,8 +396,16 @@ public partial class MainViewModel : ObservableObject
         if (!CanLoadMoreGames)
             return;
 
-        _loadedGameCount = Math.Min(Games.Count, _loadedGameCount + PageSize);
+        _loadedGameCount = Math.Min(GetDisplayGames().Count, _loadedGameCount + PageSize);
         AppendVisibleGames(_loadedGameCount, _visibleRefreshVersion);
+    }
+
+    private IReadOnlyList<Game> GetDisplayGames()
+    {
+        if (_assistantFilterIds == null)
+            return Games;
+
+        return Games.Where(game => _assistantFilterIds.Contains(game.Id)).ToList();
     }
 
     // ---- Menu Commands (File) ----
@@ -567,14 +583,81 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenAiAssistant()
     {
-        var vm = new AiAssistantViewModel(_httpClient, _settingsService, Games.ToList());
-        var win = new AiAssistantWindow
-        {
-            DataContext = vm,
-            Owner = Application.Current.MainWindow
-        };
+        EnsureAssistantViewModel();
+        IsAssistantPanelVisible = !IsAssistantPanelVisible;
+    }
 
-        win.ShowDialog();
+    [RelayCommand]
+    private void CloseAssistantPanel()
+    {
+        IsAssistantPanelVisible = false;
+    }
+
+    private void EnsureAssistantViewModel()
+    {
+        AssistantViewModel ??= new AiAssistantViewModel(
+            _httpClient,
+            _settingsService,
+            Games,
+            SelectAssistantGame,
+            OpenAssistantGameMetadata,
+            ApplyAssistantGameFilter);
+    }
+
+    private void SelectAssistantGame(int gameId)
+    {
+        var game = Games.FirstOrDefault(item => item.Id == gameId);
+        if (game == null)
+            return;
+
+        if (_assistantFilterIds != null && !_assistantFilterIds.Contains(game.Id))
+        {
+            _assistantFilterIds = null;
+            RebuildVisibleRows();
+        }
+
+        EnsureGameVisible(game);
+        SelectedGame = game;
+    }
+
+    private void OpenAssistantGameMetadata(int gameId)
+    {
+        var game = Games.FirstOrDefault(item => item.Id == gameId);
+        if (game == null)
+            return;
+
+        SelectAssistantGame(gameId);
+        OpenMetadataForGame(game, isSearchEnabled: false);
+    }
+
+    private void ApplyAssistantGameFilter(IReadOnlyCollection<int> gameIds)
+    {
+        _assistantFilterIds = gameIds.Count == 0 ? null : gameIds.ToHashSet();
+        _loadedGameCount = Math.Max(PageSize, Math.Min(GetDisplayGames().Count, _loadedGameCount));
+        RebuildVisibleRows();
+        SelectedGame = GetDisplayGames().FirstOrDefault();
+    }
+
+    private void EnsureGameVisible(Game game)
+    {
+        var displayGames = GetDisplayGames();
+        var index = -1;
+        for (var i = 0; i < displayGames.Count; i++)
+        {
+            if (ReferenceEquals(displayGames[i], game) || displayGames[i].Id == game.Id)
+            {
+                index = i;
+                break;
+            }
+        }
+        if (index < 0)
+            return;
+
+        if (index < _materializedGameCount)
+            return;
+
+        _loadedGameCount = Math.Min(displayGames.Count, Math.Max(_loadedGameCount, index + 1));
+        AppendVisibleGames(_loadedGameCount, _visibleRefreshVersion);
     }
 
     public async Task OpenGameManagementAsync()
@@ -658,6 +741,11 @@ public partial class MainViewModel : ObservableObject
             var previousClient = _httpClient;
             _httpClient = MetadataHttpClientFactory.Create(settings);
             previousClient.Dispose();
+            AssistantViewModel = null;
+            if (IsAssistantPanelVisible)
+            {
+                EnsureAssistantViewModel();
+            }
 
             if (settings.MonitorEnabled && !_processMonitor.IsRunning)
                 _processMonitor.Start();
@@ -696,26 +784,19 @@ public partial class MainViewModel : ObservableObject
     private void FetchMetadata()
     {
         if (SelectedGame == null) return;
-        var targetGame = SelectedGame;
-        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, _settingsService, isNewGame: false, isSearchEnabled: true);
-        var win = new MetadataWindow
-        {
-            DataContext = vm,
-            Owner = Application.Current.MainWindow
-        };
-
-        if (win.ShowDialog() == true)
-        {
-            HandleMetadataSaved(targetGame);
-        }
+        OpenMetadataForGame(SelectedGame, isSearchEnabled: true);
     }
 
     [RelayCommand]
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        var targetGame = SelectedGame;
-        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, _settingsService, isNewGame: false, isSearchEnabled: false);
+        OpenMetadataForGame(SelectedGame, isSearchEnabled: false);
+    }
+
+    private void OpenMetadataForGame(Game targetGame, bool isSearchEnabled)
+    {
+        var vm = new MetadataViewModel(targetGame, _httpClient, _dbService, _settingsService, isNewGame: false, isSearchEnabled: isSearchEnabled);
         var win = new MetadataWindow
         {
             DataContext = vm,

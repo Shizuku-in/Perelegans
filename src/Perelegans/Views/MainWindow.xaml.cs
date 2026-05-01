@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Interop;
@@ -15,8 +16,10 @@ public partial class MainWindow : MetroWindow
 {
     private const int WmSysCommand = 0x0112;
     private const int ScMinimize = 0xF020;
+    private const double AssistantPanelWidth = 420d;
     private ScrollViewer? _gameCardsScrollViewer;
     private HwndSource? _windowSource;
+    private MainViewModel? _observedViewModel;
 
     private readonly DispatcherTimer _refreshTimer = new()
     {
@@ -29,6 +32,7 @@ public partial class MainWindow : MetroWindow
 
         Loaded += OnLoaded;
         Closed += OnClosed;
+        DataContextChanged += OnDataContextChanged;
         SizeChanged += OnWindowSizeChanged;
         SourceInitialized += OnSourceInitialized;
         _refreshTimer.Tick += OnRefreshTimerTick;
@@ -135,6 +139,8 @@ public partial class MainWindow : MetroWindow
 
         RefreshPageSize();
         _gameCardsScrollViewer = FindDescendant<ScrollViewer>(GameCards);
+        AttachViewModel(DataContext as MainViewModel);
+        UpdateAssistantLayout();
     }
 
     private void OnClosed(object? sender, EventArgs e)
@@ -149,8 +155,10 @@ public partial class MainWindow : MetroWindow
         _refreshTimer.Tick -= OnRefreshTimerTick;
         Loaded -= OnLoaded;
         Closed -= OnClosed;
+        DataContextChanged -= OnDataContextChanged;
         SizeChanged -= OnWindowSizeChanged;
         SourceInitialized -= OnSourceInitialized;
+        AttachViewModel(null);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
@@ -190,7 +198,45 @@ public partial class MainWindow : MetroWindow
             return;
         }
 
-        RefreshPageSize();
+        QueueRefreshPageSize();
+    }
+
+    private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+    {
+        AttachViewModel(e.NewValue as MainViewModel);
+        UpdateAssistantLayout();
+    }
+
+    private void AttachViewModel(MainViewModel? viewModel)
+    {
+        if (ReferenceEquals(_observedViewModel, viewModel))
+            return;
+
+        if (_observedViewModel != null)
+            _observedViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+
+        _observedViewModel = viewModel;
+
+        if (_observedViewModel != null)
+            _observedViewModel.PropertyChanged += OnViewModelPropertyChanged;
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MainViewModel.IsAssistantPanelVisible))
+            UpdateAssistantLayout();
+    }
+
+    private void UpdateAssistantLayout()
+    {
+        if (DataContext is not MainViewModel vm)
+            return;
+
+        AssistantColumn.Width = vm.IsAssistantPanelVisible
+            ? new GridLength(AssistantPanelWidth)
+            : new GridLength(0);
+
+        QueueRefreshPageSize();
     }
 
     private void RefreshPageSize()
@@ -201,6 +247,12 @@ public partial class MainWindow : MetroWindow
         }
 
         vm.UpdatePageSize(GameCards.ActualWidth, GameCards.ActualHeight);
+    }
+
+    private void QueueRefreshPageSize()
+    {
+        Dispatcher.BeginInvoke(RefreshPageSize, DispatcherPriority.Loaded);
+        Dispatcher.BeginInvoke(RefreshPageSize, DispatcherPriority.Render);
     }
 
     private void GameCard_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -270,6 +322,14 @@ public partial class MainWindow : MetroWindow
         vm.LoadMoreGames();
     }
 
+    private void GameCards_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!IsLoaded)
+            return;
+
+        RefreshPageSize();
+    }
+
     private void CardRow_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         var scrollViewer = _gameCardsScrollViewer ??= FindDescendant<ScrollViewer>(GameCards);
@@ -298,6 +358,21 @@ public partial class MainWindow : MetroWindow
         button.ContextMenu.PlacementTarget = button;
         button.ContextMenu.IsOpen = true;
         e.Handled = true;
+    }
+
+    private void AssistantInput_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter || Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+            return;
+
+        if (sender is not FrameworkElement { DataContext: AiAssistantViewModel vm })
+            return;
+
+        if (vm.SendCommand.CanExecute(null))
+        {
+            vm.SendCommand.Execute(null);
+            e.Handled = true;
+        }
     }
 
     private static T? FindDescendant<T>(DependencyObject? root) where T : DependencyObject
