@@ -840,17 +840,10 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void FetchMetadata()
-    {
-        if (SelectedGame == null) return;
-        OpenMetadataForGame(SelectedGame, isSearchEnabled: true);
-    }
-
-    [RelayCommand]
     private void EditMetadata()
     {
         if (SelectedGame == null) return;
-        OpenMetadataForGame(SelectedGame, isSearchEnabled: false);
+        OpenMetadataForGame(SelectedGame, isSearchEnabled: true);
     }
 
     private void OpenMetadataForGame(Game targetGame, bool isSearchEnabled)

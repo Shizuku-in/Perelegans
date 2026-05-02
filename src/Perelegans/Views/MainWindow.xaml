@@ -597,14 +597,11 @@
                                                         <iconPacks:PackIconMaterial Kind="Play" Width="14" Height="14"/>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
-                                                <MenuItem Header="{i18n:Translate Context_Metadata}">
+                                                <MenuItem Header="{i18n:Translate Context_EditMetadata}"
+                                                          Command="{Binding PlacementTarget.Tag.EditMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                     <MenuItem.Icon>
                                                         <iconPacks:PackIconMaterial Kind="DatabaseOutline" Width="14" Height="14"/>
                                                     </MenuItem.Icon>
-                                                    <MenuItem Header="{i18n:Translate Context_FetchMetadata}"
-                                                              Command="{Binding PlacementTarget.Tag.FetchMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                    <MenuItem Header="{i18n:Translate Context_EditMetadata}"
-                                                              Command="{Binding PlacementTarget.Tag.EditMetadataCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                 </MenuItem>
                                                 <MenuItem Header="{i18n:Translate Context_Open}">
                                                     <MenuItem.Icon>
