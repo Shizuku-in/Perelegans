@@ -64,6 +64,8 @@
   <data name="Meta_FieldBrand" xml:space="preserve"><value>厂商/品牌:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>首发日期:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>游玩进度:</value></data>
+  <data name="Meta_FieldBangumiRating" xml:space="preserve"><value>BGM 评分:</value></data>
+  <data name="Meta_FieldBangumiComment" xml:space="preserve"><value>BGM 评论:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>官网主页:</value></data>
   <data name="Meta_FieldCover" xml:space="preserve"><value>封面:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>标签:</value></data>
@@ -148,6 +150,40 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>退出程序</value></data>
   <data name="Menu_Recommendations" xml:space="preserve"><value>推荐游戏 (_R)</value></data>
   <data name="Settings_Ai" xml:space="preserve"><value>AI 推荐</value></data>
+  <data name="Settings_Bangumi" xml:space="preserve"><value>Bangumi 账号</value></data>
+  <data name="Settings_BangumiClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="Settings_BangumiClientSecret" xml:space="preserve"><value>Client Secret</value></data>
+  <data name="Settings_BangumiRedirectUri" xml:space="preserve"><value>回调地址</value></data>
+  <data name="Settings_BangumiOAuthHint" xml:space="preserve"><value>最简登录方式：创建一次 Bangumi OAuth 应用，把下方回调地址填进去，再把 client ID 和 secret 粘贴到这里；之后只需要点击 OAuth 登录。</value></data>
+  <data name="Settings_BangumiToken" xml:space="preserve"><value>访问令牌</value></data>
+  <data name="Settings_BangumiTokenWatermark" xml:space="preserve"><value>粘贴 Bangumi access token</value></data>
+  <data name="Settings_BangumiUser" xml:space="preserve"><value>账号</value></data>
+  <data name="Settings_BangumiSync" xml:space="preserve"><value>拉取同步</value></data>
+  <data name="Settings_BangumiSyncMinutes" xml:space="preserve"><value>分钟</value></data>
+  <data name="Settings_BangumiPush" xml:space="preserve"><value>保存时回写</value></data>
+  <data name="Settings_BangumiTestButton" xml:space="preserve"><value>测试登录</value></data>
+  <data name="Settings_BangumiOAuthButton" xml:space="preserve"><value>OAuth 登录</value></data>
+  <data name="Settings_BangumiRefreshButton" xml:space="preserve"><value>刷新</value></data>
+  <data name="Settings_BangumiTestMissingToken" xml:space="preserve"><value>请先输入 Bangumi 访问令牌。</value></data>
+  <data name="Settings_BangumiTestRunning" xml:space="preserve"><value>正在检查 Bangumi 账号...</value></data>
+  <data name="Settings_BangumiTestSuccess" xml:space="preserve"><value>已连接为 {0}。</value></data>
+  <data name="Settings_BangumiTestFailed" xml:space="preserve"><value>Bangumi 登录检查失败。</value></data>
+  <data name="Settings_BangumiTestFailedWithReason" xml:space="preserve"><value>Bangumi 登录检查失败: {0}</value></data>
+  <data name="Settings_BangumiOAuthWaiting" xml:space="preserve"><value>正在打开浏览器进行 Bangumi 授权...</value></data>
+  <data name="Settings_BangumiOAuthSuccess" xml:space="preserve"><value>OAuth 登录成功，已连接为 {0}。</value></data>
+  <data name="Settings_BangumiOAuthFailed" xml:space="preserve"><value>OAuth 登录失败: {0}</value></data>
+  <data name="Settings_BangumiOAuthRefreshing" xml:space="preserve"><value>正在刷新 Bangumi token...</value></data>
+  <data name="Settings_BangumiOAuthRefreshSuccess" xml:space="preserve"><value>Bangumi token 已刷新。</value></data>
+  <data name="Settings_BangumiOAuthUnknownUser" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Settings_BangumiOAuthMissingClientId" xml:space="preserve"><value>请先输入 Bangumi OAuth client ID。</value></data>
+  <data name="Settings_BangumiOAuthMissingClientSecret" xml:space="preserve"><value>请先输入 Bangumi OAuth client secret。</value></data>
+  <data name="Settings_BangumiOAuthStateMismatch" xml:space="preserve"><value>OAuth state 校验失败。</value></data>
+  <data name="Settings_BangumiOAuthMissingCode" xml:space="preserve"><value>Bangumi 没有返回授权码。</value></data>
+  <data name="Settings_BangumiOAuthMissingRefreshToken" xml:space="preserve"><value>没有可用的 Bangumi refresh token。</value></data>
+  <data name="Settings_BangumiOAuthMissingAccessToken" xml:space="preserve"><value>Bangumi 没有返回 access token。</value></data>
+  <data name="Settings_BangumiManualRunning" xml:space="preserve"><value>正在请求 Bangumi API 并同步收藏信息...</value></data>
+  <data name="Settings_BangumiManualSuccess" xml:space="preserve"><value>Bangumi API 请求完成。本地 Bangumi ID: {0} 个；API 返回收藏: {1} 条；匹配收藏: {2} 条；更新本地记录: {3} 条。</value></data>
+  <data name="Settings_BangumiManualFailed" xml:space="preserve"><value>Bangumi API 请求失败: {0}</value></data>
   <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API 地址:</value></data>
   <data name="Settings_AiApiKey" xml:space="preserve"><value>API 密钥:</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>模型名:</value></data>

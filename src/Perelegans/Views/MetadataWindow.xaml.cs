@@ -35,6 +35,14 @@ public partial class MetadataWindow : MetroWindow
         try
         {
             await vm.SaveCommand.ExecuteAsync(null);
+            
+            if (!string.IsNullOrWhiteSpace(vm.BangumiPushStatusText) && 
+                !vm.BangumiPushStatusText.Contains("成功") &&
+                !vm.BangumiPushStatusText.Contains("已跳过"))
+            {
+                await this.ShowMessageAsync("Bangumi 推送提示", vm.BangumiPushStatusText);
+            }
+            
             DialogResult = true;
             Close();
         }

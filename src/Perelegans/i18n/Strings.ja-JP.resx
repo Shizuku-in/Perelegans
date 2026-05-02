@@ -64,6 +64,8 @@
   <data name="Meta_FieldBrand" xml:space="preserve"><value>ブランド:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>発売日:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>進行状況:</value></data>
+  <data name="Meta_FieldBangumiRating" xml:space="preserve"><value>BGM 評価:</value></data>
+  <data name="Meta_FieldBangumiComment" xml:space="preserve"><value>BGM コメント:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>公式サイト:</value></data>
   <data name="Meta_FieldCover" xml:space="preserve"><value>表紙:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>タグ:</value></data>
@@ -148,6 +150,40 @@ Copyright 2026 gkouen. All Lolis Reserved</value></data>
   <data name="Tray_Exit" xml:space="preserve"><value>終了</value></data>
   <data name="Menu_Recommendations" xml:space="preserve"><value>おすすめ (_R)</value></data>
   <data name="Settings_Ai" xml:space="preserve"><value>AI おすすめ</value></data>
+  <data name="Settings_Bangumi" xml:space="preserve"><value>Bangumi アカウント</value></data>
+  <data name="Settings_BangumiClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="Settings_BangumiClientSecret" xml:space="preserve"><value>Client Secret</value></data>
+  <data name="Settings_BangumiRedirectUri" xml:space="preserve"><value>リダイレクトURI</value></data>
+  <data name="Settings_BangumiOAuthHint" xml:space="preserve"><value>最も簡単なログイン: Bangumi OAuth アプリを一度作成し、下のリダイレクトURIを設定して、client ID と secret をここに貼り付けます。その後は OAuth ログインを押すだけです。</value></data>
+  <data name="Settings_BangumiToken" xml:space="preserve"><value>アクセストークン</value></data>
+  <data name="Settings_BangumiTokenWatermark" xml:space="preserve"><value>Bangumi access token を貼り付け</value></data>
+  <data name="Settings_BangumiUser" xml:space="preserve"><value>アカウント</value></data>
+  <data name="Settings_BangumiSync" xml:space="preserve"><value>同期取得</value></data>
+  <data name="Settings_BangumiSyncMinutes" xml:space="preserve"><value>分</value></data>
+  <data name="Settings_BangumiPush" xml:space="preserve"><value>保存時に反映</value></data>
+  <data name="Settings_BangumiTestButton" xml:space="preserve"><value>ログイン確認</value></data>
+  <data name="Settings_BangumiOAuthButton" xml:space="preserve"><value>OAuth ログイン</value></data>
+  <data name="Settings_BangumiRefreshButton" xml:space="preserve"><value>更新</value></data>
+  <data name="Settings_BangumiTestMissingToken" xml:space="preserve"><value>Bangumi アクセストークンを入力してください。</value></data>
+  <data name="Settings_BangumiTestRunning" xml:space="preserve"><value>Bangumi アカウントを確認しています...</value></data>
+  <data name="Settings_BangumiTestSuccess" xml:space="preserve"><value>{0} として接続しました。</value></data>
+  <data name="Settings_BangumiTestFailed" xml:space="preserve"><value>Bangumi ログイン確認に失敗しました。</value></data>
+  <data name="Settings_BangumiTestFailedWithReason" xml:space="preserve"><value>Bangumi ログイン確認に失敗しました: {0}</value></data>
+  <data name="Settings_BangumiOAuthWaiting" xml:space="preserve"><value>Bangumi 認証のためブラウザーを開いています...</value></data>
+  <data name="Settings_BangumiOAuthSuccess" xml:space="preserve"><value>OAuth ログインに成功しました。{0} として接続しました。</value></data>
+  <data name="Settings_BangumiOAuthFailed" xml:space="preserve"><value>OAuth ログインに失敗しました: {0}</value></data>
+  <data name="Settings_BangumiOAuthRefreshing" xml:space="preserve"><value>Bangumi token を更新しています...</value></data>
+  <data name="Settings_BangumiOAuthRefreshSuccess" xml:space="preserve"><value>Bangumi token を更新しました。</value></data>
+  <data name="Settings_BangumiOAuthUnknownUser" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Settings_BangumiOAuthMissingClientId" xml:space="preserve"><value>Bangumi OAuth client ID を入力してください。</value></data>
+  <data name="Settings_BangumiOAuthMissingClientSecret" xml:space="preserve"><value>Bangumi OAuth client secret を入力してください。</value></data>
+  <data name="Settings_BangumiOAuthStateMismatch" xml:space="preserve"><value>OAuth state の検証に失敗しました。</value></data>
+  <data name="Settings_BangumiOAuthMissingCode" xml:space="preserve"><value>Bangumi から認可コードが返されませんでした。</value></data>
+  <data name="Settings_BangumiOAuthMissingRefreshToken" xml:space="preserve"><value>利用可能な Bangumi refresh token がありません。</value></data>
+  <data name="Settings_BangumiOAuthMissingAccessToken" xml:space="preserve"><value>Bangumi から access token が返されませんでした。</value></data>
+  <data name="Settings_BangumiManualRunning" xml:space="preserve"><value>Bangumi API をリクエストし、コレクション情報を同期しています...</value></data>
+  <data name="Settings_BangumiManualSuccess" xml:space="preserve"><value>Bangumi API リクエストが完了しました。ローカル Bangumi ID: {0} 件、API コレクション: {1} 件、コレクション一致: {2} 件、ローカル更新: {3} 件。</value></data>
+  <data name="Settings_BangumiManualFailed" xml:space="preserve"><value>Bangumi API リクエストに失敗しました: {0}</value></data>
   <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API ベースURL:</value></data>
   <data name="Settings_AiApiKey" xml:space="preserve"><value>API キー:</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>モデル:</value></data>

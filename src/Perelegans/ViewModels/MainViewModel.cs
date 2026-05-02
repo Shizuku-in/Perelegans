@@ -10,6 +10,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MahApps.Metro.Controls.Dialogs;
@@ -37,6 +38,7 @@ public partial class MainViewModel : ObservableObject
     private int _visibleRefreshVersion;
     private int _profileRefreshVersion;
     private HashSet<int>? _assistantFilterIds;
+    private bool _isBangumiSyncRunning;
 
     [ObservableProperty]
     private ObservableCollection<Game> _games = new();
@@ -55,6 +57,8 @@ public partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private AiAssistantViewModel? _assistantViewModel;
+
+    private readonly DispatcherTimer _bangumiSyncTimer = new();
 
     [ObservableProperty]
     private int _currentPage = 1;
@@ -99,6 +103,7 @@ public partial class MainViewModel : ObservableObject
         // Subscribe to process monitor events
         _processMonitor.PlaytimeUpdated += OnPlaytimeUpdated;
         _processMonitor.GameDetectionChanged += OnGameDetectionChanged;
+        _bangumiSyncTimer.Tick += OnBangumiSyncTimerTick;
         TranslationService.Instance.PropertyChanged += OnTranslationChanged;
         AttachGamesCollection(Games);
     }
@@ -119,6 +124,57 @@ public partial class MainViewModel : ObservableObject
         if (settings.MonitorEnabled)
         {
             _processMonitor.Start();
+        }
+
+        ConfigureBangumiSyncTimer();
+        _ = PullBangumiCollectionsAsync();
+    }
+
+    private void OnBangumiSyncTimerTick(object? sender, EventArgs e)
+    {
+        _ = PullBangumiCollectionsAsync();
+    }
+
+    private void ConfigureBangumiSyncTimer()
+    {
+        _bangumiSyncTimer.Stop();
+
+        var settings = _settingsService.Settings;
+        if (!settings.BangumiSyncEnabled || string.IsNullOrWhiteSpace(settings.BangumiAccessToken))
+            return;
+
+        var interval = Math.Clamp(settings.BangumiSyncIntervalMinutes, 5, 1440);
+        _bangumiSyncTimer.Interval = TimeSpan.FromMinutes(interval);
+        _bangumiSyncTimer.Start();
+    }
+
+    private async Task PullBangumiCollectionsAsync()
+    {
+        if (_isBangumiSyncRunning)
+            return;
+
+        var settings = _settingsService.Settings;
+        if (!settings.BangumiSyncEnabled || string.IsNullOrWhiteSpace(settings.BangumiAccessToken))
+            return;
+
+        _isBangumiSyncRunning = true;
+        try
+        {
+            var syncService = new BangumiSyncService(_httpClient, _dbService, _settingsService);
+            var changed = await syncService.PullCollectionsAsync(Games);
+            if (changed > 0)
+            {
+                SortGamesForDisplay();
+                RefreshStats();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bangumi sync error: {ex.Message}");
+        }
+        finally
+        {
+            _isBangumiSyncRunning = false;
         }
     }
 
@@ -726,7 +782,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void OpenSettings()
     {
-        var settingsVm = new SettingsViewModel(_themeService, _settingsService, new StartupRegistrationService());
+        var settingsVm = new SettingsViewModel(_themeService, _settingsService, new StartupRegistrationService(), _dbService);
         var settingsWindow = new SettingsWindow
         {
             DataContext = settingsVm,
@@ -751,6 +807,9 @@ public partial class MainViewModel : ObservableObject
                 _processMonitor.Start();
             else if (!settings.MonitorEnabled && _processMonitor.IsRunning)
                 _processMonitor.Stop();
+
+            ConfigureBangumiSyncTimer();
+            _ = PullBangumiCollectionsAsync();
         }
     }
 
@@ -892,6 +951,7 @@ public partial class MainViewModel : ObservableObject
 
         var previousStatus = SelectedGame.Status;
         SelectedGame.Status = status;
+        SelectedGame.BangumiCollectionType = BangumiService.MapGameStatusToCollectionType(status);
 
         try
         {
@@ -899,6 +959,7 @@ public partial class MainViewModel : ObservableObject
             RefreshStats();
             _processMonitor.UpdateMonitoredGames(Games);
             QueueRecommendationProfileRefresh();
+            await TryPushBangumiCollectionAsync(SelectedGame);
 
             if (status == GameStatus.Completed && previousStatus != GameStatus.Completed)
                 StartAiCompletionNoteInBackground(SelectedGame);
@@ -910,6 +971,37 @@ public partial class MainViewModel : ObservableObject
                 this,
                 TranslationService.Instance["Msg_ErrorTitle"],
                 ex.Message);
+        }
+    }
+
+    private async Task TryPushBangumiCollectionAsync(Game game)
+    {
+        var settings = _settingsService.Settings;
+        if (!settings.BangumiPushOnMetadataSave ||
+            string.IsNullOrWhiteSpace(settings.BangumiAccessToken) ||
+            string.IsNullOrWhiteSpace(game.BangumiId))
+        {
+            return;
+        }
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        try
+        {
+            var syncService = new BangumiSyncService(_httpClient, _dbService, _settingsService);
+            if (await syncService.PushCollectionAsync(game, cts.Token))
+            {
+                game.BangumiLastSyncedAt = DateTime.Now;
+                game.BangumiCollectionUpdatedAt = DateTime.Now;
+                await _dbService.UpdateGameAsync(game);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Debug.WriteLine("Bangumi collection push timed out");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Bangumi collection push error: {ex.GetType().Name}: {ex.Message}");
         }
     }
 

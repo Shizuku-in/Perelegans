@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,12 +19,15 @@ public partial class MetadataViewModel : ObservableObject
     private readonly BangumiService _bangumiService;
     private readonly ErogameSpaceService _egsService;
     private readonly DatabaseService _dbService;
+    private readonly SettingsService? _settingsService;
+    private readonly HttpClient _httpClient;
     private readonly CoverArtService _coverArtService;
     private readonly AiRecommendationService? _aiRecommendationService;
     private readonly bool _isNewGame;
     private readonly string _coverCacheKey;
     private bool _suppressCoverFieldSync;
     private double? _editCoverAspectRatio;
+    private int _bangumiCollectionLoadVersion;
 
     [ObservableProperty]
     private string _searchQuery = string.Empty;
@@ -62,6 +66,12 @@ public partial class MetadataViewModel : ObservableObject
     private string _editBangumiId = string.Empty;
 
     [ObservableProperty]
+    private int? _editBangumiRating;
+
+    [ObservableProperty]
+    private string _editBangumiComment = string.Empty;
+
+    [ObservableProperty]
     private string _editEgsId = string.Empty;
 
     [ObservableProperty]
@@ -90,6 +100,9 @@ public partial class MetadataViewModel : ObservableObject
 
     [ObservableProperty]
     private string _egsSourceStatusText = string.Empty;
+
+    [ObservableProperty]
+    private string _bangumiPushStatusText = string.Empty;
 
     [ObservableProperty]
     private string _editTagsText = string.Empty;
@@ -121,6 +134,8 @@ public partial class MetadataViewModel : ObservableObject
     {
         TargetGame = game;
         _dbService = dbService;
+        _settingsService = settingsService;
+        _httpClient = httpClient;
         _isNewGame = isNewGame;
         _coverArtService = new CoverArtService(httpClient);
         _aiRecommendationService = settingsService == null ? null : new AiRecommendationService(httpClient, settingsService);
@@ -137,6 +152,8 @@ public partial class MetadataViewModel : ObservableObject
         _editStatus = game.Status;
         _editVndbId = game.VndbId ?? string.Empty;
         _editBangumiId = game.BangumiId ?? string.Empty;
+        _editBangumiRating = game.BangumiRating;
+        _editBangumiComment = game.BangumiComment ?? string.Empty;
         _editEgsId = game.ErogameSpaceId ?? string.Empty;
         _editWebsite = game.OfficialWebsite ?? string.Empty;
         _editCoverImagePath = game.CoverImagePath ?? string.Empty;
@@ -148,6 +165,12 @@ public partial class MetadataViewModel : ObservableObject
 
         RefreshCoverPreview();
         ResetSourceStatuses();
+        QueueBangumiCollectionLoad();
+    }
+
+    partial void OnEditBangumiIdChanged(string value)
+    {
+        QueueBangumiCollectionLoad();
     }
 
     partial void OnSelectedSourceChanged(string value)
@@ -566,6 +589,9 @@ public partial class MetadataViewModel : ObservableObject
         TargetGame.Status = EditStatus;
         TargetGame.VndbId = NullIfWhiteSpace(EditVndbId);
         TargetGame.BangumiId = NullIfWhiteSpace(EditBangumiId);
+        TargetGame.BangumiRating = EditBangumiRating is >= 1 and <= 10 ? EditBangumiRating : null;
+        TargetGame.BangumiComment = NullIfWhiteSpace(EditBangumiComment);
+        TargetGame.BangumiCollectionType = BangumiService.MapGameStatusToCollectionType(EditStatus);
         TargetGame.ErogameSpaceId = NullIfWhiteSpace(EditEgsId);
         TargetGame.OfficialWebsite = NullIfWhiteSpace(EditWebsite);
         TargetGame.Tags = TagUtilities.Serialize(TagUtilities.ParseMultilineText(EditTagsText));
@@ -579,6 +605,90 @@ public partial class MetadataViewModel : ObservableObject
         if (!_isNewGame)
         {
             await _dbService.UpdateGameAsync(TargetGame);
+            await TryPushBangumiCollectionAsync();
+        }
+    }
+
+    private async Task TryPushBangumiCollectionAsync()
+    {
+        var settings = _settingsService?.Settings;
+        if (settings is null ||
+            string.IsNullOrWhiteSpace(settings.BangumiAccessToken) ||
+            string.IsNullOrWhiteSpace(TargetGame.BangumiId))
+        {
+            var hasToken = settings?.BangumiAccessToken is { Length: > 0 };
+            var hasBangumiId = !string.IsNullOrWhiteSpace(TargetGame.BangumiId);
+            BangumiPushStatusText = $"Bangumi 推送已跳过 (Token: {(hasToken ? "已设置" : "未设置")}, Bangumi ID: {(hasBangumiId ? "已设置" : "未设置")})";
+            System.Diagnostics.Debug.WriteLine($"Bangumi push skipped: Token={(hasToken ? "present" : "empty")}, BangumiId={TargetGame.BangumiId}");
+            return;
+        }
+
+        BangumiPushStatusText = "正在推送到 Bangumi...";
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        try
+        {
+            System.Diagnostics.Debug.WriteLine($"Bangumi push starting for game {TargetGame.Title} (ID: {TargetGame.BangumiId}), Status: {TargetGame.Status}, Rating: {TargetGame.BangumiRating}, Comment: {TargetGame.BangumiComment}");
+            var syncService = new BangumiSyncService(_httpClient, _dbService, _settingsService);
+            var success = await syncService.PushCollectionAsync(TargetGame, cts.Token);
+            System.Diagnostics.Debug.WriteLine($"Bangumi push result: {(success ? "success" : "failed")}");
+            if (success)
+            {
+                TargetGame.BangumiLastSyncedAt = DateTime.Now;
+                TargetGame.BangumiCollectionUpdatedAt = DateTime.Now;
+                await _dbService.UpdateGameAsync(TargetGame);
+                BangumiPushStatusText = "Bangumi 推送成功";
+            }
+            else
+            {
+                BangumiPushStatusText = "Bangumi 推送失败 (API 返回错误)，请检查输出窗口了解详情";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            BangumiPushStatusText = "Bangumi 推送超时，请检查网络连接";
+            System.Diagnostics.Debug.WriteLine("Bangumi collection push cancelled/timed out");
+        }
+        catch (Exception ex)
+        {
+            BangumiPushStatusText = $"Bangumi 推送异常: {ex.Message}";
+            System.Diagnostics.Debug.WriteLine($"Bangumi collection push error: {ex.GetType().Name}: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    private void QueueBangumiCollectionLoad()
+    {
+        var bangumiId = EditBangumiId.Trim();
+        var version = Interlocked.Increment(ref _bangumiCollectionLoadVersion);
+        if (string.IsNullOrWhiteSpace(bangumiId) ||
+            _settingsService?.Settings is not { } settings ||
+            string.IsNullOrWhiteSpace(settings.BangumiAccessToken))
+        {
+            return;
+        }
+
+        _ = LoadBangumiCollectionStateAsync(bangumiId, version);
+    }
+
+    private async Task LoadBangumiCollectionStateAsync(string bangumiId, int version)
+    {
+        try
+        {
+            var syncService = new BangumiSyncService(_httpClient, _dbService, _settingsService!);
+            var collection = await syncService.GetCollectionStateAsync(bangumiId);
+            if (collection == null || version != _bangumiCollectionLoadVersion)
+                return;
+
+            EditStatus = BangumiService.MapCollectionTypeToGameStatus(collection.Type);
+            EditBangumiRating = collection.Rating is >= 1 and <= 10 ? collection.Rating : null;
+            EditBangumiComment = collection.Comment ?? string.Empty;
+            BangumiSourceStatusText = string.Format(
+                TranslationService.Instance["Meta_AppliedSource"],
+                "Bangumi");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bangumi collection load error: {ex.Message}");
         }
     }
 

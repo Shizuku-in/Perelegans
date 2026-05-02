@@ -39,6 +39,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <GroupBox Grid.Row="0" Header="{i18n:Translate Settings_Appearance}" Margin="0,0,0,8"
@@ -195,7 +196,155 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Grid.Row="4" Header="{i18n:Translate Settings_System}" Margin="0,0,0,8"
+            <GroupBox Grid.Row="4" Header="{i18n:Translate Settings_Bangumi}" Margin="0,0,0,8"
+                      Padding="8,6" FontSize="12"
+                      BorderBrush="{DynamicResource Perelegans.BorderBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="6"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Row="0" Grid.ColumnSpan="2"
+                            Padding="8,6"
+                            Background="{DynamicResource Perelegans.PanelBackground}"
+                            BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                            BorderThickness="1">
+                        <TextBlock Text="{i18n:Translate Settings_BangumiOAuthHint}"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                   FontSize="11"/>
+                    </Border>
+
+                    <TextBlock Grid.Row="2" Text="{i18n:Translate Settings_BangumiRedirectUri}" VerticalAlignment="Center" FontSize="12"/>
+                    <TextBox Grid.Row="2" Grid.Column="1" Height="26" FontSize="12"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding BangumiOAuthRedirectUri, Mode=OneWay}"/>
+
+                    <TextBlock Grid.Row="4" Text="{i18n:Translate Settings_BangumiClientId}" VerticalAlignment="Center" FontSize="12"/>
+                    <TextBox Grid.Row="4" Grid.Column="1" Height="26" FontSize="12"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding BangumiClientId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Grid.Row="6" Text="{i18n:Translate Settings_BangumiClientSecret}" VerticalAlignment="Center" FontSize="12"/>
+                    <TextBox Grid.Row="6" Grid.Column="1" Height="26" FontSize="12"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding BangumiClientSecret, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                    <TextBlock Grid.Row="8" Text="OAuth:" VerticalAlignment="Center" FontSize="12"/>
+                    <Button Grid.Row="8" Grid.Column="1"
+                            Width="96" Height="28"
+                            HorizontalAlignment="Left"
+                            BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                            Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                            Content="{i18n:Translate Settings_BangumiOAuthButton}"
+                            Command="{Binding LoginBangumiOAuthCommand}"/>
+
+                    <TextBlock Grid.Row="10" Text="{i18n:Translate Settings_BangumiToken}" VerticalAlignment="Center" FontSize="12"/>
+                    <TextBox Grid.Row="10" Grid.Column="1" Height="26" FontSize="12"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding BangumiAccessToken, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             mah:TextBoxHelper.Watermark="{i18n:Translate Settings_BangumiTokenWatermark}"/>
+
+                    <TextBlock Grid.Row="12" Text="{i18n:Translate Settings_BangumiUser}" VerticalAlignment="Center" FontSize="12"/>
+                    <TextBox Grid.Row="12" Grid.Column="1" Height="26" FontSize="12"
+                             IsReadOnly="True"
+                             VerticalContentAlignment="Center"
+                             Text="{Binding BangumiUsername, Mode=TwoWay}"/>
+
+                    <TextBlock Grid.Row="14" Text="{i18n:Translate Settings_BangumiSync}" VerticalAlignment="Center" FontSize="12"/>
+                    <StackPanel Grid.Row="14" Grid.Column="1" Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding BangumiSyncEnabled, Mode=TwoWay}"
+                                  VerticalAlignment="Center"/>
+                        <mah:NumericUpDown Value="{Binding BangumiSyncIntervalMinutes, Mode=TwoWay}"
+                                           Minimum="5" Maximum="1440" Interval="5"
+                                           Width="80"
+                                           Height="26"
+                                           Margin="12,0,0,0"
+                                           FontSize="12"
+                                           NumericInputMode="Numbers"/>
+                        <TextBlock Text="{i18n:Translate Settings_BangumiSyncMinutes}"
+                                   Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="16" Text="{i18n:Translate Settings_BangumiPush}" VerticalAlignment="Center" FontSize="12"/>
+                    <CheckBox Grid.Row="16" Grid.Column="1"
+                              IsChecked="{Binding BangumiPushOnMetadataSave, Mode=TwoWay}"
+                              VerticalAlignment="Center"/>
+
+                    <TextBlock Grid.Row="18" Text="API:" VerticalAlignment="Center" FontSize="12"/>
+                    <WrapPanel Grid.Row="18" Grid.Column="1">
+                        <Button Width="60" Height="28"
+                                Margin="0,0,6,0"
+                                BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                Content="{i18n:Translate Settings_BangumiRefreshButton}"
+                                Command="{Binding RefreshBangumiOAuthCommand}"/>
+                        <Button Width="72" Height="28"
+                                Margin="0,0,6,0"
+                                BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                Style="{DynamicResource MahApps.Styles.Button.Square}"
+                                Content="{i18n:Translate Settings_BangumiTestButton}"
+                                Command="{Binding TestBangumiCommand}"/>
+                        <Button Width="104" Height="28"
+                                Margin="0,0,6,0"
+                                BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                                Content="手动请求API"
+                                Command="{Binding ManualRequestBangumiApiCommand}"/>
+                        <Button Width="80" Height="28"
+                                Margin="0,0,0,0"
+                                BorderBrush="{DynamicResource Perelegans.ButtonBorderBrush}"
+                                Style="{DynamicResource MahApps.Styles.Button.Square.Accent}"
+                                Content="测试推送"
+                                Command="{Binding TestBangumiPushCommand}"/>
+                    </WrapPanel>
+                    <Border Grid.Row="20" Grid.Column="1"
+                            Padding="8,5"
+                            Background="{DynamicResource Perelegans.PanelBackground}"
+                            BorderBrush="{DynamicResource Perelegans.BorderBrush}"
+                            BorderThickness="1"
+                            Visibility="{Binding HasBangumiTestStatus, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            MaxHeight="300">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding BangumiTestStatusText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource Perelegans.SubtleForegroundBrush}"
+                                       FontSize="11"
+                                       FontFamily="Consolas"/>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Row="5" Header="{i18n:Translate Settings_System}" Margin="0,0,0,8"
                       Padding="8,6" FontSize="12"
                       BorderBrush="{DynamicResource Perelegans.BorderBrush}">
                 <Grid>
@@ -223,7 +372,7 @@
                 </Grid>
             </GroupBox>
 
-            <StackPanel Grid.Row="5" Orientation="Horizontal"
+            <StackPanel Grid.Row="6" Orientation="Horizontal"
                         HorizontalAlignment="Right" Margin="0,4,0,0">
                 <Button Content="{i18n:Translate Btn_Save}" Width="80" Height="28" FontSize="12"
                         Margin="0,0,8,0"

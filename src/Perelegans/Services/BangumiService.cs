@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Perelegans.Models;
@@ -18,20 +20,20 @@ public class BangumiService
     private const string ApiBase = "https://api.bgm.tv";
     private static readonly string[] PreferredBrandKeys =
     [
-        "ブランド",
-        "品牌",
-        "厂商",
-        "社团",
-        "开发",
-        "开发商",
-        "游戏开发商",
-        "制作",
-        "制作公司"
+        "\u30d6\u30e9\u30f3\u30c9",
+        "\u54c1\u724c",
+        "\u5382\u5546",
+        "\u793e\u56e2",
+        "\u5f00\u53d1",
+        "\u5f00\u53d1\u5546",
+        "\u6e38\u620f\u5f00\u53d1\u5546",
+        "\u5236\u4f5c",
+        "\u5236\u4f5c\u516c\u53f8"
     ];
     private static readonly string[] FallbackBrandKeys =
     [
-        "发行",
-        "发行商",
+        "\u53d1\u884c",
+        "\u53d1\u884c\u5546",
         "publisher"
     ];
 
@@ -146,6 +148,212 @@ public class BangumiService
         }
     }
 
+    public async Task<BangumiAccount?> GetCurrentAccountAsync(string accessToken)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+            return null;
+
+        using var request = BuildAuthenticatedRequest(HttpMethod.Get, $"{ApiBase}/v0/me", accessToken);
+        using var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseJson);
+        var root = doc.RootElement;
+
+        return new BangumiAccount
+        {
+            Id = TryReadInt64(root, "id") ?? 0,
+            Username = TryReadString(root, "username") ?? string.Empty,
+            Nickname = TryReadString(root, "nickname") ?? string.Empty
+        };
+    }
+
+    public async Task<BangumiCollectionState?> GetCollectionAsync(string bangumiId, string accessToken)
+    {
+        if (!int.TryParse(bangumiId?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var subjectId) ||
+            string.IsNullOrWhiteSpace(accessToken))
+        {
+            return null;
+        }
+
+        using var request = BuildAuthenticatedRequest(HttpMethod.Get, $"{ApiBase}/v0/users/-/collections/{subjectId}", accessToken);
+        using var response = await _httpClient.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+        using var doc = JsonDocument.Parse(responseJson);
+        return ParseCollectionState(doc.RootElement, subjectId);
+    }
+
+    public async Task<List<BangumiCollectionState>> GetGameCollectionsAsync(string accessToken)
+    {
+        var results = new List<BangumiCollectionState>();
+        if (string.IsNullOrWhiteSpace(accessToken))
+            return results;
+
+        var account = await GetCurrentAccountAsync(accessToken);
+        var userKeys = new List<string> { "-" };
+        if (!string.IsNullOrWhiteSpace(account?.Username))
+            userKeys.Add(account.Username);
+        if (account?.Id > 0)
+            userKeys.Add(account.Id.ToString(CultureInfo.InvariantCulture));
+
+        foreach (var userKey in userKeys.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            foreach (var query in new[] { "subject_type=4", "type=4", string.Empty })
+            {
+                results = await GetCollectionsPageByPageAsync(userKey, query, accessToken);
+                if (results.Count > 0)
+                    return results;
+            }
+        }
+
+        return results;
+    }
+
+    private async Task<List<BangumiCollectionState>> GetCollectionsPageByPageAsync(
+        string userKey,
+        string query,
+        string accessToken)
+    {
+        var results = new List<BangumiCollectionState>();
+        const int limit = 50;
+        var offset = 0;
+        var encodedUser = Uri.EscapeDataString(userKey);
+
+        while (true)
+        {
+            var paging = string.IsNullOrWhiteSpace(query)
+                ? $"limit={limit}&offset={offset}"
+                : $"{query}&limit={limit}&offset={offset}";
+
+            using var request = BuildAuthenticatedRequest(
+                HttpMethod.Get,
+                $"{ApiBase}/v0/users/{encodedUser}/collections?{paging}",
+                accessToken);
+            using var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+                return results;
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(responseJson);
+            if (!doc.RootElement.TryGetProperty("data", out var data) ||
+                data.ValueKind != JsonValueKind.Array)
+            {
+                return results;
+            }
+
+            var pageCount = 0;
+            foreach (var item in data.EnumerateArray())
+            {
+                var collection = ParseCollectionState(item, fallbackSubjectId: 0);
+                if (collection is { SubjectId: > 0 })
+                    results.Add(collection);
+                pageCount++;
+            }
+
+            offset += pageCount;
+            var total = TryReadInt32(doc.RootElement, "total");
+            if (pageCount == 0 || pageCount < limit || (total.HasValue && offset >= total.Value))
+                return results;
+        }
+    }
+
+    public async Task<bool> UpdateCollectionAsync(
+        string bangumiId,
+        string accessToken,
+        GameStatus status,
+        int? rating,
+        string? comment,
+        CancellationToken cancellationToken = default)
+    {
+        var (success, _, _) = await UpdateCollectionAsyncWithDebug(bangumiId, accessToken, status, rating, comment, cancellationToken);
+        return success;
+    }
+
+    public async Task<(bool success, string requestInfo, string responseInfo)> UpdateCollectionAsyncWithDebug(
+        string bangumiId,
+        string accessToken,
+        GameStatus status,
+        int? rating,
+        string? comment,
+        CancellationToken cancellationToken = default)
+    {
+        if (!int.TryParse(bangumiId?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var subjectId) ||
+            string.IsNullOrWhiteSpace(accessToken))
+        {
+            var info = $"参数无效 - bangumiId={bangumiId}, accessToken={(string.IsNullOrWhiteSpace(accessToken) ? "empty" : "present")}";
+            return (false, info, "N/A");
+        }
+
+        var collectionType = MapGameStatusToCollectionType(status);
+        var payload = new Dictionary<string, object?>
+        {
+            ["type"] = collectionType,
+            ["rate"] = rating is >= 1 and <= 10 ? rating.Value : 0,
+            ["comment"] = comment?.Trim() ?? string.Empty
+        };
+
+        var payloadJson = JsonSerializer.Serialize(payload);
+        var url = $"{ApiBase}/v0/users/-/collections/{subjectId}";
+        var requestInfo = $"PATCH {url}\nPayload: {payloadJson}\nToken: {accessToken.Substring(0, Math.Min(20, accessToken.Length))}...";
+
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        cts.CancelAfter(TimeSpan.FromSeconds(15));
+
+        using var request = BuildAuthenticatedRequest(HttpMethod.Patch, url, accessToken);
+        var content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        request.Content = content;
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(request, cts.Token);
+            var responseContent = await response.Content.ReadAsStringAsync(cts.Token);
+            var responseInfo = $"Status: {(int)response.StatusCode} {response.ReasonPhrase}\nBody: {responseContent}";
+
+            // Fallback: If subject is not collected, create it via old API
+            if ((int)response.StatusCode == 404 && responseContent.Contains("subject not collected", StringComparison.OrdinalIgnoreCase))
+            {
+                requestInfo += "\n[Fallback] Subject not collected, retrying with old API to create collection...";
+                
+                // Old Bangumi API: POST /collection/{subject_id}/add?type={type}
+                var oldApiUrl = $"{ApiBase}/collection/{subjectId}/add?type={collectionType}";
+                
+                // Add rate and comment as form data if present
+                var formContent = new List<KeyValuePair<string, string>>();
+                if (rating is >= 1 and <= 10)
+                    formContent.Add(new KeyValuePair<string, string>("rate", rating.Value.ToString()));
+                if (!string.IsNullOrWhiteSpace(comment))
+                    formContent.Add(new KeyValuePair<string, string>("comment", comment.Trim()));
+
+                using var postRequest = BuildAuthenticatedRequest(HttpMethod.Post, oldApiUrl, accessToken);
+                if (formContent.Count > 0)
+                {
+                    postRequest.Content = new FormUrlEncodedContent(formContent);
+                }
+
+                using var postResponse = await _httpClient.SendAsync(postRequest, cts.Token);
+                var postResponseContent = await postResponse.Content.ReadAsStringAsync(cts.Token);
+                responseInfo = $"[POST Old API] Status: {(int)postResponse.StatusCode} {postResponse.ReasonPhrase}\nBody: {postResponseContent}";
+                return (postResponse.IsSuccessStatusCode, requestInfo, responseInfo);
+            }
+
+            return (response.IsSuccessStatusCode, requestInfo, responseInfo);
+        }
+        catch (OperationCanceledException)
+        {
+            return (false, requestInfo, "请求超时 (15秒)");
+        }
+        catch (Exception ex)
+        {
+            return (false, requestInfo, $"异常: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
     private async Task PopulateSubjectDetailsAsync(MetadataResult result)
     {
         try
@@ -164,6 +372,60 @@ public class BangumiService
         {
             System.Diagnostics.Debug.WriteLine($"Bangumi subject detail error: {ex.Message}");
         }
+    }
+
+    public static GameStatus MapCollectionTypeToGameStatus(int collectionType)
+    {
+        return collectionType switch
+        {
+            1 => GameStatus.Planned,
+            2 => GameStatus.Completed,
+            3 => GameStatus.Playing,
+            5 => GameStatus.Dropped,
+            _ => GameStatus.Planned
+        };
+    }
+
+    public static int MapGameStatusToCollectionType(GameStatus status)
+    {
+        return status switch
+        {
+            GameStatus.Planned => 1,
+            GameStatus.Completed => 2,
+            GameStatus.Playing => 3,
+            GameStatus.Dropped => 5,
+            _ => 1
+        };
+    }
+
+    private static HttpRequestMessage BuildAuthenticatedRequest(HttpMethod method, string url, string accessToken)
+    {
+        var request = new HttpRequestMessage(method, url);
+        request.Headers.Add("User-Agent", "Perelegans/0.2 (https://github.com/Shizuku-in/Perelegans)");
+        request.Headers.Add("Accept", "application/json");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Trim());
+        return request;
+    }
+
+    private static BangumiCollectionState? ParseCollectionState(JsonElement root, int fallbackSubjectId)
+    {
+        var type = TryReadInt32(root, "type") ??
+                   TryReadNestedInt32(root, "type", "id") ??
+                   TryReadCollectionTypeString(root, "type") ??
+                   TryReadCollectionTypeString(root, "status") ??
+                   TryReadCollectionTypeString(root, "collection_status") ??
+                   2;
+
+        return new BangumiCollectionState
+        {
+            SubjectId = TryReadInt32(root, "subject_id") ??
+                        TryReadNestedInt32(root, "subject", "id") ??
+                        fallbackSubjectId,
+            Type = type,
+            Rating = TryReadInt32(root, "rate") ?? TryReadInt32(root, "rating"),
+            Comment = TryReadString(root, "comment"),
+            UpdatedAt = TryReadDateTime(root, "updated_at") ?? TryReadDateTime(root, "updatedAt")
+        };
     }
 
     private static MetadataResult ParseSubjectResult(JsonElement root, string sourceId)
@@ -292,6 +554,67 @@ public class BangumiService
 
         value = 0;
         return false;
+    }
+
+    private static int? TryReadInt32(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) && TryReadInt32(element, out var value)
+            ? value
+            : null;
+    }
+
+    private static long? TryReadInt64(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out var element))
+            return null;
+
+        if (element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var value))
+            return value;
+
+        if (element.ValueKind == JsonValueKind.String &&
+            long.TryParse(element.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out value))
+        {
+            return value;
+        }
+
+        return null;
+    }
+
+    private static int? TryReadNestedInt32(JsonElement root, string propertyName, string nestedPropertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) &&
+               element.ValueKind == JsonValueKind.Object
+            ? TryReadInt32(element, nestedPropertyName)
+            : null;
+    }
+
+    private static string? TryReadString(JsonElement root, string propertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) && element.ValueKind == JsonValueKind.String
+            ? element.GetString()
+            : null;
+    }
+
+    private static int? TryReadCollectionTypeString(JsonElement root, string propertyName)
+    {
+        var value = TryReadString(root, propertyName);
+        return value?.Trim().ToLowerInvariant() switch
+        {
+            "wish" => 1,
+            "collect" => 2,
+            "doing" => 3,
+            "on_hold" => 4,
+            "dropped" => 5,
+            _ => null
+        };
+    }
+
+    private static DateTime? TryReadDateTime(JsonElement root, string propertyName)
+    {
+        var value = TryReadString(root, propertyName);
+        return DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var date)
+            ? date
+            : null;
     }
 
     private static bool TryParseFlexibleDate(string? value, out DateTime date)

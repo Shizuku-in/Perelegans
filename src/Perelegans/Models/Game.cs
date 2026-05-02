@@ -28,6 +28,11 @@ public class Game : INotifyPropertyChanged
     private string? _vndbId;
     private string? _erogameSpaceId;
     private string? _bangumiId;
+    private string? _bangumiComment;
+    private int? _bangumiRating;
+    private int? _bangumiCollectionType;
+    private DateTime? _bangumiCollectionUpdatedAt;
+    private DateTime? _bangumiLastSyncedAt;
     private string? _officialWebsite;
     private string? _tags;
     private bool _isDetectedRunning;
@@ -107,6 +112,36 @@ public class Game : INotifyPropertyChanged
     {
         get => _bangumiId;
         set => SetField(ref _bangumiId, value);
+    }
+
+    public string? BangumiComment
+    {
+        get => _bangumiComment;
+        set => SetField(ref _bangumiComment, value);
+    }
+
+    public int? BangumiRating
+    {
+        get => _bangumiRating;
+        set => SetField(ref _bangumiRating, value);
+    }
+
+    public int? BangumiCollectionType
+    {
+        get => _bangumiCollectionType;
+        set => SetField(ref _bangumiCollectionType, value);
+    }
+
+    public DateTime? BangumiCollectionUpdatedAt
+    {
+        get => _bangumiCollectionUpdatedAt;
+        set => SetField(ref _bangumiCollectionUpdatedAt, value);
+    }
+
+    public DateTime? BangumiLastSyncedAt
+    {
+        get => _bangumiLastSyncedAt;
+        set => SetField(ref _bangumiLastSyncedAt, value);
     }
 
     public string? OfficialWebsite

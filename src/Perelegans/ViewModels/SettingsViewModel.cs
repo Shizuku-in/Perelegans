@@ -17,6 +17,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly ThemeService _themeService;
     private readonly SettingsService _settingsService;
     private readonly StartupRegistrationService _startupRegistrationService;
+    private readonly DatabaseService _dbService;
     private const string AnthropicVersion = "2023-06-01";
 
     [ObservableProperty]
@@ -58,7 +59,42 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _isTestingAi;
 
+    [ObservableProperty]
+    private string _bangumiAccessToken = string.Empty;
+
+    [ObservableProperty]
+    private string _bangumiRefreshToken = string.Empty;
+
+    [ObservableProperty]
+    private string _bangumiClientId = string.Empty;
+
+    [ObservableProperty]
+    private string _bangumiClientSecret = string.Empty;
+
+    [ObservableProperty]
+    private int _bangumiOAuthCallbackPort = 45127;
+
+    [ObservableProperty]
+    private string _bangumiUsername = string.Empty;
+
+    [ObservableProperty]
+    private bool _bangumiSyncEnabled;
+
+    [ObservableProperty]
+    private int _bangumiSyncIntervalMinutes = 15;
+
+    [ObservableProperty]
+    private bool _bangumiPushOnMetadataSave = true;
+
+    [ObservableProperty]
+    private string _bangumiTestStatusText = string.Empty;
+
+    [ObservableProperty]
+    private bool _isTestingBangumi;
+
     public bool HasAiTestStatus => !string.IsNullOrWhiteSpace(AiTestStatusText);
+    public bool HasBangumiTestStatus => !string.IsNullOrWhiteSpace(BangumiTestStatusText);
+    public string BangumiOAuthRedirectUri => $"http://127.0.0.1:{Math.Clamp(BangumiOAuthCallbackPort, 1024, 65535)}/bangumi/oauth/callback/";
 
     public string[] LanguageOptions { get; } = ["zh-Hans", "en-US", "ja-JP"];
     public IReadOnlyList<AppCloseBehaviorOption> CloseBehaviorOptions { get; } =
@@ -106,11 +142,13 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(
         ThemeService themeService,
         SettingsService settingsService,
-        StartupRegistrationService startupRegistrationService)
+        StartupRegistrationService startupRegistrationService,
+        DatabaseService dbService)
     {
         _themeService = themeService;
         _settingsService = settingsService;
         _startupRegistrationService = startupRegistrationService;
+        _dbService = dbService;
 
         var s = settingsService.Settings;
         _selectedTheme = s.Theme;
@@ -124,6 +162,15 @@ public partial class SettingsViewModel : ObservableObject
         _aiApiBaseUrl = s.AiApiBaseUrl;
         _aiApiKey = s.AiApiKey;
         _aiModel = s.AiModel;
+        _bangumiAccessToken = s.BangumiAccessToken;
+        _bangumiRefreshToken = s.BangumiRefreshToken;
+        _bangumiClientId = s.BangumiClientId;
+        _bangumiClientSecret = s.BangumiClientSecret;
+        _bangumiOAuthCallbackPort = Math.Clamp(s.BangumiOAuthCallbackPort, 1024, 65535);
+        _bangumiUsername = s.BangumiUsername;
+        _bangumiSyncEnabled = s.BangumiSyncEnabled;
+        _bangumiSyncIntervalMinutes = Math.Clamp(s.BangumiSyncIntervalMinutes, 5, 1440);
+        _bangumiPushOnMetadataSave = s.BangumiPushOnMetadataSave;
     }
 
     partial void OnSelectedAiProviderChanged(AiProvider value)
@@ -137,6 +184,16 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnAiTestStatusTextChanged(string value)
     {
         OnPropertyChanged(nameof(HasAiTestStatus));
+    }
+
+    partial void OnBangumiTestStatusTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(HasBangumiTestStatus));
+    }
+
+    partial void OnBangumiOAuthCallbackPortChanged(int value)
+    {
+        OnPropertyChanged(nameof(BangumiOAuthRedirectUri));
     }
 
     [RelayCommand]
@@ -225,6 +282,15 @@ public partial class SettingsViewModel : ObservableObject
         s.AiApiBaseUrl = AiApiBaseUrl.Trim();
         s.AiApiKey = AiApiKey.Trim();
         s.AiModel = AiModel.Trim();
+        s.BangumiAccessToken = BangumiAccessToken.Trim();
+        s.BangumiRefreshToken = BangumiRefreshToken.Trim();
+        s.BangumiClientId = BangumiClientId.Trim();
+        s.BangumiClientSecret = BangumiClientSecret.Trim();
+        s.BangumiOAuthCallbackPort = Math.Clamp(BangumiOAuthCallbackPort, 1024, 65535);
+        s.BangumiUsername = BangumiUsername.Trim();
+        s.BangumiSyncEnabled = BangumiSyncEnabled;
+        s.BangumiSyncIntervalMinutes = Math.Clamp(BangumiSyncIntervalMinutes, 5, 1440);
+        s.BangumiPushOnMetadataSave = BangumiPushOnMetadataSave;
 
         _settingsService.Save();
         _themeService.ApplyTheme(SelectedTheme);
@@ -246,8 +312,274 @@ public partial class SettingsViewModel : ObservableObject
                 || s.AiProvider != SelectedAiProvider
                 || s.AiApiBaseUrl != AiApiBaseUrl
                 || s.AiApiKey != AiApiKey
-                || s.AiModel != AiModel;
+                || s.AiModel != AiModel
+                || s.BangumiAccessToken != BangumiAccessToken
+                || s.BangumiRefreshToken != BangumiRefreshToken
+                || s.BangumiClientId != BangumiClientId
+                || s.BangumiClientSecret != BangumiClientSecret
+                || s.BangumiOAuthCallbackPort != BangumiOAuthCallbackPort
+                || s.BangumiUsername != BangumiUsername
+                || s.BangumiSyncEnabled != BangumiSyncEnabled
+                || s.BangumiSyncIntervalMinutes != BangumiSyncIntervalMinutes
+                || s.BangumiPushOnMetadataSave != BangumiPushOnMetadataSave;
         }
+    }
+
+    [RelayCommand]
+    private async Task LoginBangumiOAuthAsync()
+    {
+        if (IsTestingBangumi)
+            return;
+
+        BangumiTestStatusText = string.Empty;
+        IsTestingBangumi = true;
+        BangumiTestStatusText = TranslationService.Instance["Settings_BangumiOAuthWaiting"];
+
+        try
+        {
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var oauthService = new BangumiOAuthService(httpClient);
+            var token = await oauthService.SignInWithBrowserAsync(
+                BangumiClientId,
+                BangumiClientSecret,
+                BangumiOAuthCallbackPort);
+            ApplyBangumiToken(token);
+
+            var bangumiService = new BangumiService(httpClient);
+            var account = await bangumiService.GetCurrentAccountAsync(BangumiAccessToken);
+            if (account != null)
+                BangumiUsername = account.DisplayName;
+
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiOAuthSuccess"],
+                string.IsNullOrWhiteSpace(BangumiUsername) ? TranslationService.Instance["Settings_BangumiOAuthUnknownUser"] : BangumiUsername);
+        }
+        catch (System.Exception ex)
+        {
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiOAuthFailed"],
+                ex.Message);
+        }
+        finally
+        {
+            IsTestingBangumi = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task RefreshBangumiOAuthAsync()
+    {
+        if (IsTestingBangumi)
+            return;
+
+        BangumiTestStatusText = string.Empty;
+        IsTestingBangumi = true;
+        BangumiTestStatusText = TranslationService.Instance["Settings_BangumiOAuthRefreshing"];
+
+        try
+        {
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var oauthService = new BangumiOAuthService(httpClient);
+            var token = await oauthService.RefreshAsync(BangumiClientId, BangumiClientSecret, BangumiRefreshToken);
+            ApplyBangumiToken(token);
+            BangumiTestStatusText = TranslationService.Instance["Settings_BangumiOAuthRefreshSuccess"];
+        }
+        catch (System.Exception ex)
+        {
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiOAuthFailed"],
+                ex.Message);
+        }
+        finally
+        {
+            IsTestingBangumi = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task TestBangumiAsync()
+    {
+        if (IsTestingBangumi)
+            return;
+
+        BangumiTestStatusText = string.Empty;
+        if (string.IsNullOrWhiteSpace(BangumiAccessToken))
+        {
+            BangumiTestStatusText = TranslationService.Instance["Settings_BangumiTestMissingToken"];
+            return;
+        }
+
+        IsTestingBangumi = true;
+        BangumiTestStatusText = TranslationService.Instance["Settings_BangumiTestRunning"];
+
+        try
+        {
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var service = new BangumiService(httpClient);
+            var account = await service.GetCurrentAccountAsync(BangumiAccessToken);
+            if (account == null)
+            {
+                BangumiTestStatusText = TranslationService.Instance["Settings_BangumiTestFailed"];
+                return;
+            }
+
+            BangumiUsername = account.DisplayName;
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiTestSuccess"],
+                account.DisplayName);
+        }
+        catch (System.Exception ex)
+        {
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiTestFailedWithReason"],
+                ex.Message);
+        }
+        finally
+        {
+            IsTestingBangumi = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ManualRequestBangumiApiAsync()
+    {
+        if (IsTestingBangumi)
+            return;
+
+        BangumiTestStatusText = string.Empty;
+        if (string.IsNullOrWhiteSpace(BangumiAccessToken))
+        {
+            BangumiTestStatusText = TranslationService.Instance["Settings_BangumiTestMissingToken"];
+            return;
+        }
+
+        IsTestingBangumi = true;
+        BangumiTestStatusText = TranslationService.Instance["Settings_BangumiManualRunning"];
+
+        try
+        {
+            Save();
+
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var games = await _dbService.GetAllGamesAsync();
+            var syncService = new BangumiSyncService(httpClient, _dbService, _settingsService);
+            var syncResult = await syncService.PullCollectionsDetailedAsync(games);
+
+            BangumiAccessToken = _settingsService.Settings.BangumiAccessToken;
+            BangumiRefreshToken = _settingsService.Settings.BangumiRefreshToken;
+
+            var bangumiService = new BangumiService(httpClient);
+            var account = await bangumiService.GetCurrentAccountAsync(BangumiAccessToken);
+            if (account != null)
+                BangumiUsername = account.DisplayName;
+
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiManualSuccess"],
+                syncResult.CandidateCount,
+                syncResult.FetchedCount,
+                syncResult.FoundCount,
+                syncResult.ChangedCount);
+        }
+        catch (System.Exception ex)
+        {
+            BangumiTestStatusText = string.Format(
+                TranslationService.Instance["Settings_BangumiManualFailed"],
+                ex.Message);
+        }
+        finally
+        {
+            IsTestingBangumi = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task TestBangumiPushAsync()
+    {
+        if (IsTestingBangumi)
+            return;
+
+        BangumiTestStatusText = string.Empty;
+        if (string.IsNullOrWhiteSpace(BangumiAccessToken))
+        {
+            BangumiTestStatusText = "请先设置 Bangumi Token";
+            return;
+        }
+
+        IsTestingBangumi = true;
+        BangumiTestStatusText = "正在测试推送...";
+
+        try
+        {
+            Save();
+
+            using var httpClient = MetadataHttpClientFactory.Create(new AppSettings
+            {
+                ProxyAddress = ProxyAddress
+            });
+
+            var games = await _dbService.GetAllGamesAsync();
+            var gameWithBangumiId = games.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.BangumiId));
+            
+            if (gameWithBangumiId == null)
+            {
+                BangumiTestStatusText = "没有找到包含 Bangumi ID 的游戏，请先在元数据中设置 Bangumi ID";
+                return;
+            }
+
+            var bangumiService = new BangumiService(httpClient);
+            var (success, requestInfo, responseInfo) = await bangumiService.UpdateCollectionAsyncWithDebug(
+                gameWithBangumiId.BangumiId,
+                BangumiAccessToken,
+                gameWithBangumiId.Status,
+                gameWithBangumiId.BangumiRating,
+                gameWithBangumiId.BangumiComment);
+
+            var debugInfo = $"游戏: {gameWithBangumiId.Title}\n";
+            debugInfo += $"Bangumi ID: {gameWithBangumiId.BangumiId}\n";
+            debugInfo += $"状态: {gameWithBangumiId.Status}, 评分: {gameWithBangumiId.BangumiRating}, 评论: {gameWithBangumiId.BangumiComment}\n\n";
+            debugInfo += $"请求: {requestInfo}\n\n";
+            debugInfo += $"响应: {responseInfo}\n\n";
+            debugInfo += $"结果: {(success ? "成功" : "失败")}";
+
+            BangumiTestStatusText = success ? $"推送成功！\n\n{debugInfo}" : $"推送失败！\n\n{debugInfo}";
+        }
+        catch (System.Exception ex)
+        {
+            BangumiTestStatusText = $"推送异常: {ex.Message}\n\n{ex.StackTrace}";
+        }
+        finally
+        {
+            IsTestingBangumi = false;
+        }
+    }
+
+    private void ApplyBangumiToken(BangumiOAuthToken token)
+    {
+        BangumiAccessToken = token.AccessToken;
+        _settingsService.Settings.BangumiAccessToken = token.AccessToken;
+        if (!string.IsNullOrWhiteSpace(token.RefreshToken))
+        {
+            BangumiRefreshToken = token.RefreshToken;
+            _settingsService.Settings.BangumiRefreshToken = token.RefreshToken;
+        }
+        _settingsService.Settings.BangumiAccessTokenExpiresAt = token.ExpiresAt;
+        _settingsService.Save();
     }
 
     private AiProvider ResolveAiProvider(Uri baseUri)

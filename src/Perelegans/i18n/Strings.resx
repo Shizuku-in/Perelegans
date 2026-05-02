@@ -47,6 +47,40 @@
   <data name="Settings_Network" xml:space="preserve"><value>Network Proxy</value></data>
   <data name="Settings_Proxy" xml:space="preserve"><value>Proxy URL:</value></data>
   <data name="Settings_Ai" xml:space="preserve"><value>AI Recommendations</value></data>
+  <data name="Settings_Bangumi" xml:space="preserve"><value>Bangumi Account</value></data>
+  <data name="Settings_BangumiClientId" xml:space="preserve"><value>Client ID</value></data>
+  <data name="Settings_BangumiClientSecret" xml:space="preserve"><value>Client Secret</value></data>
+  <data name="Settings_BangumiRedirectUri" xml:space="preserve"><value>Redirect URI</value></data>
+  <data name="Settings_BangumiOAuthHint" xml:space="preserve"><value>For the simplest login, create one Bangumi OAuth app, set its redirect URI to the value below, paste the client ID and secret once, then use OAuth Login afterwards.</value></data>
+  <data name="Settings_BangumiToken" xml:space="preserve"><value>Access Token</value></data>
+  <data name="Settings_BangumiTokenWatermark" xml:space="preserve"><value>Paste Bangumi access token</value></data>
+  <data name="Settings_BangumiUser" xml:space="preserve"><value>Account</value></data>
+  <data name="Settings_BangumiSync" xml:space="preserve"><value>Pull Sync</value></data>
+  <data name="Settings_BangumiSyncMinutes" xml:space="preserve"><value>minutes</value></data>
+  <data name="Settings_BangumiPush" xml:space="preserve"><value>Push on save</value></data>
+  <data name="Settings_BangumiTestButton" xml:space="preserve"><value>Test Login</value></data>
+  <data name="Settings_BangumiOAuthButton" xml:space="preserve"><value>OAuth Login</value></data>
+  <data name="Settings_BangumiRefreshButton" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Settings_BangumiTestMissingToken" xml:space="preserve"><value>Enter a Bangumi access token first.</value></data>
+  <data name="Settings_BangumiTestRunning" xml:space="preserve"><value>Checking Bangumi account...</value></data>
+  <data name="Settings_BangumiTestSuccess" xml:space="preserve"><value>Connected as {0}.</value></data>
+  <data name="Settings_BangumiTestFailed" xml:space="preserve"><value>Bangumi login check failed.</value></data>
+  <data name="Settings_BangumiTestFailedWithReason" xml:space="preserve"><value>Bangumi login check failed: {0}</value></data>
+  <data name="Settings_BangumiOAuthWaiting" xml:space="preserve"><value>Opening browser for Bangumi authorization...</value></data>
+  <data name="Settings_BangumiOAuthSuccess" xml:space="preserve"><value>OAuth login succeeded. Connected as {0}.</value></data>
+  <data name="Settings_BangumiOAuthFailed" xml:space="preserve"><value>OAuth login failed: {0}</value></data>
+  <data name="Settings_BangumiOAuthRefreshing" xml:space="preserve"><value>Refreshing Bangumi token...</value></data>
+  <data name="Settings_BangumiOAuthRefreshSuccess" xml:space="preserve"><value>Bangumi token refreshed.</value></data>
+  <data name="Settings_BangumiOAuthUnknownUser" xml:space="preserve"><value>Bangumi</value></data>
+  <data name="Settings_BangumiOAuthMissingClientId" xml:space="preserve"><value>Enter Bangumi OAuth client ID first.</value></data>
+  <data name="Settings_BangumiOAuthMissingClientSecret" xml:space="preserve"><value>Enter Bangumi OAuth client secret first.</value></data>
+  <data name="Settings_BangumiOAuthStateMismatch" xml:space="preserve"><value>OAuth state verification failed.</value></data>
+  <data name="Settings_BangumiOAuthMissingCode" xml:space="preserve"><value>Bangumi did not return an authorization code.</value></data>
+  <data name="Settings_BangumiOAuthMissingRefreshToken" xml:space="preserve"><value>No Bangumi refresh token is available.</value></data>
+  <data name="Settings_BangumiOAuthMissingAccessToken" xml:space="preserve"><value>Bangumi did not return an access token.</value></data>
+  <data name="Settings_BangumiManualRunning" xml:space="preserve"><value>Requesting Bangumi API and syncing collection data...</value></data>
+  <data name="Settings_BangumiManualSuccess" xml:space="preserve"><value>Bangumi API request complete. Local Bangumi IDs: {0}; API collections: {1}; matched collections: {2}; updated local records: {3}.</value></data>
+  <data name="Settings_BangumiManualFailed" xml:space="preserve"><value>Bangumi API request failed: {0}</value></data>
   <data name="Settings_AiBaseUrl" xml:space="preserve"><value>API Base URL:</value></data>
   <data name="Settings_AiApiKey" xml:space="preserve"><value>API Key:</value></data>
   <data name="Settings_AiModel" xml:space="preserve"><value>Model:</value></data>
@@ -69,6 +103,8 @@
   <data name="Meta_FieldBrand" xml:space="preserve"><value>Brand:</value></data>
   <data name="Meta_FieldDate" xml:space="preserve"><value>Release Date:</value></data>
   <data name="Meta_FieldStatus" xml:space="preserve"><value>Progress:</value></data>
+  <data name="Meta_FieldBangumiRating" xml:space="preserve"><value>BGM Rating:</value></data>
+  <data name="Meta_FieldBangumiComment" xml:space="preserve"><value>BGM Comment:</value></data>
   <data name="Meta_FieldWebsite" xml:space="preserve"><value>Website:</value></data>
   <data name="Meta_FieldCover" xml:space="preserve"><value>Cover:</value></data>
   <data name="Meta_FieldTags" xml:space="preserve"><value>Tags:</value></data>

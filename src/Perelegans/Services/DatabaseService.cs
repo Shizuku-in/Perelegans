@@ -26,6 +26,7 @@ public class DatabaseService
         await EnsureGamesTagsColumnAsync();
         await EnsureGamesCoverImageUrlColumnAsync();
         await EnsureGamesCoverImagePathColumnAsync();
+        await EnsureGamesBangumiSyncColumnsAsync();
         await EnsureRecommendationFeedbackTableAsync();
     }
 
@@ -326,5 +327,41 @@ public class DatabaseService
             ON "RecommendationFeedback" ("VndbId");
             """;
         await indexCommand.ExecuteNonQueryAsync();
+    }
+
+    private async Task EnsureGamesBangumiSyncColumnsAsync()
+    {
+        await using var connection = new SqliteConnection(BuildConnectionString(GetDatabasePath()));
+        await connection.OpenAsync();
+
+        var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA table_info(\"Games\");";
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                existingColumns.Add(reader.GetString(1));
+            }
+        }
+
+        var columns = new (string Name, string Sql)[]
+        {
+            ("BangumiComment", "TEXT NULL"),
+            ("BangumiRating", "INTEGER NULL"),
+            ("BangumiCollectionType", "INTEGER NULL"),
+            ("BangumiCollectionUpdatedAt", "TEXT NULL"),
+            ("BangumiLastSyncedAt", "TEXT NULL")
+        };
+
+        foreach (var (name, sql) in columns)
+        {
+            if (existingColumns.Contains(name))
+                continue;
+
+            await using var alterCommand = connection.CreateCommand();
+            alterCommand.CommandText = $"ALTER TABLE \"Games\" ADD COLUMN \"{name}\" {sql};";
+            await alterCommand.ExecuteNonQueryAsync();
+        }
     }
 }
