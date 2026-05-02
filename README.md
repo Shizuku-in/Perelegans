@@ -1,3 +1,5 @@
+## 说明文档：https://gitblog.cya.moe/Perelegans/
+
 # Perelegans
 
 > 用于追踪视觉小说的游玩时间的 Windows 桌面应用。
