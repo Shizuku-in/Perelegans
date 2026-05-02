@@ -32,7 +32,7 @@ public class VndbService
             var requestBody = new
             {
                 filters = new object[] { "search", "=", query },
-                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url",
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url, length_minutes, length_votes, length",
                 results = 10
             };
 
@@ -70,7 +70,7 @@ public class VndbService
             var requestBody = new
             {
                 filters = new object[] { "id", "=", normalizedId },
-                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url",
+                fields = "id, title, alttitle, titles.title, titles.lang, titles.main, released, developers.name, tags.name, image.url, length_minutes, length_votes, length",
                 results = 1
             };
 
@@ -175,6 +175,27 @@ public class VndbService
             image.TryGetProperty("url", out var imageUrl))
         {
             result.ImageUrl = imageUrl.GetString();
+        }
+
+        if (item.TryGetProperty("length_minutes", out var lengthMinutes) &&
+            lengthMinutes.ValueKind == JsonValueKind.Number &&
+            lengthMinutes.TryGetInt32(out var parsedLengthMinutes))
+        {
+            result.LengthMinutes = parsedLengthMinutes;
+        }
+
+        if (item.TryGetProperty("length_votes", out var lengthVotes) &&
+            lengthVotes.ValueKind == JsonValueKind.Number &&
+            lengthVotes.TryGetInt32(out var parsedLengthVotes))
+        {
+            result.LengthVotes = parsedLengthVotes;
+        }
+
+        if (item.TryGetProperty("length", out var length) &&
+            length.ValueKind == JsonValueKind.Number &&
+            length.TryGetInt32(out var parsedLength))
+        {
+            result.LengthCategory = parsedLength;
         }
 
         return result;

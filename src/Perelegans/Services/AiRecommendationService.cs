@@ -317,7 +317,7 @@ public class AiRecommendationService
             var provider = ResolveProvider(baseUri);
             var payload = new { title, brand };
             var prompt =
-                "Generate search queries for VNDB/Bangumi visual novel metadata lookup. Include likely Japanese title, romanization, English title, and common shortened title if inferable. " +
+                "Generate search queries for VNDB/Bangumi visual novel metadata lookup. Include likely Japanese title, romanization, English title, common Simplified Chinese title, and common shortened title if inferable. " +
                 "Return JSON only: {\"queries\":[\"...\"]}. Keep 3-8 unique queries, no explanations. " +
                 $"Data: {JsonSerializer.Serialize(payload)}";
             var json = await SendJsonPromptAsync(provider, baseUri, prompt, "You generate metadata search aliases. Return JSON only.", 360, AiRequestTimeout);

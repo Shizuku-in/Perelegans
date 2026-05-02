@@ -20,5 +20,8 @@ public class MetadataResult
     public double? Rating { get; set; }
     public int? Rank { get; set; }
     public int? VoteCount { get; set; }
+    public int? LengthMinutes { get; set; }
+    public int? LengthVotes { get; set; }
+    public int? LengthCategory { get; set; }
     public List<string> Tags { get; set; } = [];
 }

@@ -148,6 +148,96 @@ public class BangumiService
         }
     }
 
+    public async Task<BangumiSubjectCommentFetchResult> GetSubjectCommentsAsync(
+        string bangumiId,
+        int limit = 30,
+        string? accessToken = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = new BangumiSubjectCommentFetchResult
+        {
+            HadAuth = !string.IsNullOrWhiteSpace(accessToken)
+        };
+        if (!int.TryParse(bangumiId?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var subjectId))
+            return result;
+
+        try
+        {
+            var clampedLimit = Math.Clamp(limit, 1, 100);
+            var urls = new List<string>
+            {
+                $"{ApiBase}/v0/subjects/{subjectId}/collects?limit={clampedLimit}&offset=0",
+                $"https://next.bgm.tv/p1/subjects/{subjectId}/collects?limit={clampedLimit}&offset=0",
+                $"https://next.bgm.tv/p1/subjects/{subjectId}/comments?limit={clampedLimit}&offset=0",
+                $"{ApiBase}/subject/{subjectId}/comments?limit={clampedLimit}&offset=0"
+            };
+
+            var errors = new List<string>();
+            foreach (var url in urls)
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                request.Headers.Add("User-Agent", "Perelegans/0.2 (https://github.com/Shizuku-in/Perelegans)");
+                request.Headers.Add("Accept", "application/json");
+                if (!string.IsNullOrWhiteSpace(accessToken))
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Trim());
+
+                using var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                    var error = $"{url} -> {(int)response.StatusCode} {response.ReasonPhrase} {body}";
+                    System.Diagnostics.Debug.WriteLine($"Bangumi subject collects error: {error}");
+                    errors.Add(error);
+                    continue;
+                }
+
+                var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+                using var doc = JsonDocument.Parse(responseJson);
+                var items = EnumerateCommentItems(doc.RootElement);
+                var tempComments = new List<BangumiSubjectComment>();
+                var tempTotal = 0;
+                var tempWithText = 0;
+                var tempWithRating = 0;
+
+                foreach (var item in items)
+                {
+                    tempTotal++;
+                    var comment = ParseSubjectComment(item);
+                    if (!string.IsNullOrWhiteSpace(comment.Text))
+                        tempWithText++;
+                    if (comment.Rating.HasValue)
+                        tempWithRating++;
+                    if (!string.IsNullOrWhiteSpace(comment.Text) || comment.Rating.HasValue)
+                        tempComments.Add(comment);
+                }
+
+                if (tempWithText == 0)
+                {
+                    errors.Add($"{url} -> 200 but no comment text");
+                    continue;
+                }
+
+                result.TotalItems = tempTotal;
+                result.WithTextCount = tempWithText;
+                result.WithRatingCount = tempWithRating;
+                result.Comments.Clear();
+                result.Comments.AddRange(tempComments);
+                result.SourceUrl = url;
+                result.Error = errors.Count == 0 ? null : string.Join(" | ", errors);
+                return result;
+            }
+
+            if (errors.Count > 0)
+                result.Error = string.Join(" | ", errors);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bangumi subject collects error: {ex.Message}");
+        }
+
+        return result;
+    }
+
     public async Task<BangumiAccount?> GetCurrentAccountAsync(string accessToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
@@ -302,7 +392,7 @@ public class BangumiService
         var requestInfo = $"PATCH {url}\nPayload: {payloadJson}\nToken: {accessToken.Substring(0, Math.Min(20, accessToken.Length))}...";
 
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(TimeSpan.FromSeconds(15));
+        cts.CancelAfter(TimeSpan.FromSeconds(30));
 
         using var request = BuildAuthenticatedRequest(HttpMethod.Patch, url, accessToken);
         var content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
@@ -315,38 +405,92 @@ public class BangumiService
             var responseContent = await response.Content.ReadAsStringAsync(cts.Token);
             var responseInfo = $"Status: {(int)response.StatusCode} {response.ReasonPhrase}\nBody: {responseContent}";
 
-            // Fallback: If subject is not collected, create it via old API
+            // Fallback: If subject is not collected, try to create it
             if ((int)response.StatusCode == 404 && responseContent.Contains("subject not collected", StringComparison.OrdinalIgnoreCase))
             {
-                requestInfo += "\n[Fallback] Subject not collected, retrying with old API to create collection...";
+                requestInfo += "\n[Fallback] Subject not collected, trying to create collection...";
+
+                // Fallback 1: Try PUT on v0 API (Upsert)
+                var putUrl = $"{ApiBase}/v0/users/-/collections/{subjectId}";
+                using var putRequest = BuildAuthenticatedRequest(HttpMethod.Put, putUrl, accessToken);
+                putRequest.Content = new StringContent(payloadJson, Encoding.UTF8, "application/json");
+
+                try
+                {
+                    using var putResponse = await _httpClient.SendAsync(putRequest, cts.Token);
+                    var putResponseContent = await putResponse.Content.ReadAsStringAsync(cts.Token);
+                    if (putResponse.IsSuccessStatusCode)
+                    {
+                        return (true, requestInfo + "\n[Fallback] PUT v0 API success", $"Status: {(int)putResponse.StatusCode} Body: {putResponseContent}");
+                    }
+                    requestInfo += $"\n[Fallback] PUT v0 API failed: {(int)putResponse.StatusCode}";
+                }
+                catch (Exception ex)
+                {
+                    requestInfo += $"\n[Fallback] PUT v0 API exception: {ex.Message}";
+                }
+
+                // Fallback 2: Try POST on old API
+                // Old API often prefers access_token in query parameter over Bearer header
+                var oldApiUrl = $"{ApiBase}/collection/{subjectId}/add?type={collectionType}&access_token={Uri.EscapeDataString(accessToken)}";
                 
-                // Old Bangumi API: POST /collection/{subject_id}/add?type={type}
-                var oldApiUrl = $"{ApiBase}/collection/{subjectId}/add?type={collectionType}";
-                
-                // Add rate and comment as form data if present
                 var formContent = new List<KeyValuePair<string, string>>();
                 if (rating is >= 1 and <= 10)
                     formContent.Add(new KeyValuePair<string, string>("rate", rating.Value.ToString()));
                 if (!string.IsNullOrWhiteSpace(comment))
                     formContent.Add(new KeyValuePair<string, string>("comment", comment.Trim()));
 
-                using var postRequest = BuildAuthenticatedRequest(HttpMethod.Post, oldApiUrl, accessToken);
+                using var fallbackCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                fallbackCts.CancelAfter(TimeSpan.FromSeconds(45));
+
+                // Build request manually to avoid Bearer header which old API might not like
+                var postRequest = new HttpRequestMessage(HttpMethod.Post, oldApiUrl);
+                postRequest.Headers.Add("User-Agent", "Perelegans/0.2 (https://github.com/Shizuku-in/Perelegans)");
+                postRequest.Headers.Add("Accept", "application/json");
                 if (formContent.Count > 0)
                 {
                     postRequest.Content = new FormUrlEncodedContent(formContent);
                 }
 
-                using var postResponse = await _httpClient.SendAsync(postRequest, cts.Token);
-                var postResponseContent = await postResponse.Content.ReadAsStringAsync(cts.Token);
-                responseInfo = $"[POST Old API] Status: {(int)postResponse.StatusCode} {postResponse.ReasonPhrase}\nBody: {postResponseContent}";
-                return (postResponse.IsSuccessStatusCode, requestInfo, responseInfo);
+                Exception? lastException = null;
+                for (int attempt = 1; attempt <= 2; attempt++)
+                {
+                    try
+                    {
+                        using var postResponse = await _httpClient.SendAsync(postRequest, fallbackCts.Token);
+                        var postResponseContent = await postResponse.Content.ReadAsStringAsync(fallbackCts.Token);
+                        responseInfo = $"[POST Old API] (Attempt {attempt}/2) Status: {(int)postResponse.StatusCode} {postResponse.ReasonPhrase}\nBody: {postResponseContent}";
+                        if (postResponse.IsSuccessStatusCode)
+                            return (true, requestInfo, responseInfo);
+                        
+                        // If 401/403, token might be invalid, no point retrying
+                        if ((int)postResponse.StatusCode == 401 || (int)postResponse.StatusCode == 403)
+                        {
+                            responseInfo += "\n[Error] Authentication failed. Please check your Bangumi Token.";
+                            return (false, requestInfo, responseInfo);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        lastException = new TimeoutException($"旧版 API 请求超时 (Attempt {attempt}/2)");
+                        if (attempt < 2) await Task.Delay(1000, fallbackCts.Token);
+                    }
+                    catch (Exception ex)
+                    {
+                        lastException = ex;
+                        if (attempt < 2) await Task.Delay(1000, fallbackCts.Token);
+                    }
+                }
+
+                responseInfo = $"[POST Old API] Failed after 2 attempts. Last error: {lastException?.Message}";
+                return (false, requestInfo, responseInfo);
             }
 
             return (response.IsSuccessStatusCode, requestInfo, responseInfo);
         }
         catch (OperationCanceledException)
         {
-            return (false, requestInfo, "请求超时 (15秒)");
+            return (false, requestInfo, "请求超时 (30 秒)，请检查网络连接或稍后重试");
         }
         catch (Exception ex)
         {
@@ -425,6 +569,54 @@ public class BangumiService
             Rating = TryReadInt32(root, "rate") ?? TryReadInt32(root, "rating"),
             Comment = TryReadString(root, "comment"),
             UpdatedAt = TryReadDateTime(root, "updated_at") ?? TryReadDateTime(root, "updatedAt")
+        };
+    }
+
+    private static IEnumerable<JsonElement> EnumerateCommentItems(JsonElement root)
+    {
+        if (root.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in root.EnumerateArray())
+                yield return item;
+            yield break;
+        }
+
+        if (root.ValueKind != JsonValueKind.Object)
+            yield break;
+
+        foreach (var propertyName in new[] { "data", "comments", "collects", "items", "results", "list" })
+        {
+            if (!root.TryGetProperty(propertyName, out var array) || array.ValueKind != JsonValueKind.Array)
+                continue;
+
+            foreach (var item in array.EnumerateArray())
+                yield return item;
+            yield break;
+        }
+    }
+
+    private static BangumiSubjectComment ParseSubjectComment(JsonElement item)
+    {
+        var text = TryReadString(item, "comment") ??
+                   TryReadString(item, "content") ??
+                   TryReadString(item, "text") ??
+                   TryReadString(item, "summary") ??
+                   string.Empty;
+        var user = TryReadNestedString(item, "user", "nickname") ??
+                   TryReadNestedString(item, "user", "username") ??
+                   TryReadString(item, "username") ??
+                   TryReadString(item, "nickname") ??
+                   string.Empty;
+
+        return new BangumiSubjectComment
+        {
+            Text = text.Trim(),
+            Username = user.Trim(),
+            Rating = TryReadInt32(item, "rate") ?? TryReadInt32(item, "rating") ?? TryReadInt32(item, "vote"),
+            UpdatedAt = TryReadDateTime(item, "updated_at") ??
+                        TryReadDateTime(item, "updatedAt") ??
+                        TryReadDateTime(item, "created_at") ??
+                        TryReadDateTime(item, "createdAt")
         };
     }
 
@@ -595,6 +787,14 @@ public class BangumiService
             : null;
     }
 
+    private static string? TryReadNestedString(JsonElement root, string propertyName, string nestedPropertyName)
+    {
+        return root.TryGetProperty(propertyName, out var element) &&
+               element.ValueKind == JsonValueKind.Object
+            ? TryReadString(element, nestedPropertyName)
+            : null;
+    }
+
     private static int? TryReadCollectionTypeString(JsonElement root, string propertyName)
     {
         var value = TryReadString(root, propertyName);
@@ -720,4 +920,23 @@ public class BangumiService
 
         values.Add(trimmed);
     }
+}
+
+public sealed class BangumiSubjectComment
+{
+    public string Text { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public int? Rating { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+
+public sealed class BangumiSubjectCommentFetchResult
+{
+    public List<BangumiSubjectComment> Comments { get; } = new();
+    public int TotalItems { get; set; }
+    public int WithTextCount { get; set; }
+    public int WithRatingCount { get; set; }
+    public bool HadAuth { get; set; }
+    public string? Error { get; set; }
+    public string? SourceUrl { get; set; }
 }

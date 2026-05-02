@@ -13,10 +13,17 @@ public class AiLibraryAssistantService
     private const int AiMatchedContextLimit = 24;
     private const int AiFallbackContextLimit = 12;
     private readonly AiRecommendationService _aiService;
+    private readonly VndbService _vndbService;
+    private readonly BangumiService _bangumiService;
+    private readonly SettingsService _settingsService;
+    private readonly VndbRecommendationCacheService _cacheService = new();
 
     public AiLibraryAssistantService(HttpClient httpClient, SettingsService settingsService)
     {
         _aiService = new AiRecommendationService(httpClient, settingsService);
+        _vndbService = new VndbService(httpClient);
+        _bangumiService = new BangumiService(httpClient);
+        _settingsService = settingsService;
     }
 
     public bool IsConfigured => _aiService.IsConfigured;
@@ -34,6 +41,16 @@ public class AiLibraryAssistantService
         if (TryResolveGameOpinionQuestion(normalizedQuestion, games, recentMessages, out var opinionGame))
         {
             return await AnswerGameOpinionQuestionAsync(question, opinionGame, games, recentMessages, cancellationToken);
+        }
+
+        if (ContainsAny(normalizedQuestion, "评论摘要", "评价摘要", "community review", "review summary"))
+        {
+            return await AnswerReviewSummaryAsync(question, games, recentMessages, cancellationToken);
+        }
+
+        if (ContainsAny(normalizedQuestion, "游玩时间预测", "通关时间", "playtime prediction", "time estimate"))
+        {
+            return await AnswerPlaytimePredictionAsync(question, games, cancellationToken);
         }
 
         if (TryAnswerLocally(question, games, recentMessages, out var localResponse))
@@ -488,10 +505,42 @@ public class AiLibraryAssistantService
 
     private static Game? FindMentionedGame(string normalized, IReadOnlyCollection<Game> games)
     {
+        var normalizedQuestion = NormalizeTitleForLookup(normalized);
         return games
-            .Where(game => !string.IsNullOrWhiteSpace(game.Title) && normalized.Contains(game.Title.ToLowerInvariant(), StringComparison.Ordinal))
-            .OrderByDescending(game => game.Title.Length)
+            .Select(game => new
+            {
+                Game = game,
+                Score = ScoreMentionedGameMatch(normalized, normalizedQuestion, game)
+            })
+            .Where(item => item.Score > 0)
+            .OrderByDescending(item => item.Score)
+            .ThenByDescending(item => item.Game.Title.Length)
+            .Select(item => item.Game)
             .FirstOrDefault();
+    }
+
+    private static int ScoreMentionedGameMatch(string normalizedQuestion, string compactQuestion, Game game)
+    {
+        if (string.IsNullOrWhiteSpace(game.Title))
+            return 0;
+
+        var title = game.Title.Trim().ToLowerInvariant();
+        if (normalizedQuestion.Contains(title, StringComparison.Ordinal))
+            return 100 + title.Length;
+
+        var compactTitle = NormalizeTitleForLookup(game.Title);
+        if (compactTitle.Length < 3 || compactQuestion.Length < 3)
+            return 0;
+
+        if (compactQuestion.Contains(compactTitle, StringComparison.Ordinal))
+            return 80 + compactTitle.Length;
+
+        if (compactTitle.Contains(compactQuestion, StringComparison.Ordinal))
+            return compactQuestion.Length >= Math.Min(6, compactTitle.Length)
+                ? 40 + compactQuestion.Length
+                : 0;
+
+        return 0;
     }
 
     private static string BuildGameDetails(Game game)
@@ -579,5 +628,529 @@ public class AiLibraryAssistantService
             missingBangumi = games.Count(game => string.IsNullOrWhiteSpace(game.BangumiId)),
             missingCover = games.Count(game => string.IsNullOrWhiteSpace(game.CoverDisplaySource))
         };
+    }
+
+    private async Task<AiAssistantResponse> AnswerPlaytimePredictionAsync(
+        string question,
+        IReadOnlyCollection<Game> games,
+        CancellationToken cancellationToken)
+    {
+        var targetGame = await ResolveTargetGameAsync(question, games, cancellationToken);
+        if (targetGame == null)
+        {
+            return BuildResponse(
+                "请指定要预测游玩时间的游戏名称，例如：游玩时间预测 anemoi。",
+                games,
+                "target title",
+                "playtime prediction - missing target",
+                usedGames: []);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var onlineMetadata = await ResolveVndbPlaytimeMetadataAsync(targetGame);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (onlineMetadata == null)
+        {
+            return BuildResponse(
+                $"{targetGame.Title} 暂时没有查到 VNDB 在线游玩时长数据。请先补全 VNDB ID，或确认标题能在 VNDB 搜到。",
+                [targetGame],
+                "target title and VNDB online lookup",
+                "playtime prediction - online missing",
+                usedGames: [targetGame]);
+        }
+
+        var localPlaytime = targetGame.Playtime > TimeSpan.Zero
+            ? PlaytimeTextFormatter.Format(targetGame.Playtime)
+            : "暂无记录";
+        var sourceTitle = string.IsNullOrWhiteSpace(onlineMetadata.Title) ? targetGame.Title : onlineMetadata.Title;
+        var sourceLink = string.IsNullOrWhiteSpace(onlineMetadata.WebUrl) ? string.Empty : $"（{onlineMetadata.WebUrl}）";
+
+        string answer;
+        if (onlineMetadata.LengthMinutes is > 0)
+        {
+            var estimatedHours = onlineMetadata.LengthMinutes.Value / 60d;
+            var voteText = onlineMetadata.LengthVotes is > 0
+                ? $"，样本 {onlineMetadata.LengthVotes.Value} 票"
+                : string.Empty;
+            answer = $"**{targetGame.Title}** 当前本地记录游玩时间：**{localPlaytime}**。\n\n" +
+                     $"VNDB 在线参考：**{FormatHours(estimatedHours)}**{voteText}。来源条目：{sourceTitle}{sourceLink}。";
+        }
+        else if (onlineMetadata.LengthCategory is > 0)
+        {
+            answer = $"**{targetGame.Title}** 当前本地记录游玩时间：**{localPlaytime}**。\n\n" +
+                     $"VNDB 在线参考：{FormatVndbLengthCategory(onlineMetadata.LengthCategory.Value)}。来源条目：{sourceTitle}{sourceLink}。";
+        }
+        else
+        {
+            answer = $"**{targetGame.Title}** 当前本地记录游玩时间：**{localPlaytime}**。\n\n" +
+                     $"已匹配到 VNDB 条目 {sourceTitle}{sourceLink}，但该条目没有公开的游玩时长投票或长度分类。";
+        }
+
+        return BuildResponse(
+            answer,
+            [targetGame],
+            "target title, local playtime and VNDB length_minutes/length_votes/length fields",
+            "playtime prediction - VNDB online",
+            usedGames: [targetGame]);
+    }
+
+    private async Task<MetadataResult?> ResolveVndbPlaytimeMetadataAsync(Game game)
+    {
+        if (!string.IsNullOrWhiteSpace(game.VndbId))
+        {
+            var byId = await _vndbService.GetByIdAsync(game.VndbId);
+            if (byId != null)
+                return byId;
+        }
+
+        var results = await _vndbService.SearchAsync(game.Title);
+        if (results.Count == 0)
+            return null;
+
+        return results
+            .Select(result => new
+            {
+                Metadata = result,
+                Score = ScoreMetadataTitleMatch(game, result)
+            })
+            .Where(item => item.Score > 0)
+            .OrderByDescending(item => item.Score)
+            .FirstOrDefault()
+            ?.Metadata;
+    }
+
+    private async Task<Game?> ResolveTargetGameAsync(
+        string question,
+        IReadOnlyCollection<Game> games,
+        CancellationToken cancellationToken)
+    {
+        var normalized = question.Trim().ToLowerInvariant();
+        var directMatch = FindMentionedGame(normalized, games);
+        if (directMatch != null)
+            return directMatch;
+
+        var cache = await _cacheService.LoadAsync();
+        var cachedMatch = FindMentionedGameByAliasCache(normalized, games, cache);
+        if (cachedMatch != null)
+            return cachedMatch;
+
+        var query = ExtractTargetLookupQuery(question);
+        if (string.IsNullOrWhiteSpace(query))
+            return null;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        if (_aiService.IsConfigured)
+        {
+            var generatedAliases = await _aiService.GenerateSearchQueriesAsync(query);
+            foreach (var alias in generatedAliases.Prepend(query))
+            {
+                var aliasMatch = FindMentionedGame(alias.Trim().ToLowerInvariant(), games) ??
+                                 FindMentionedGameByAliasCache(alias.Trim().ToLowerInvariant(), games, cache);
+                if (aliasMatch == null)
+                    continue;
+
+                await AddGameSearchAliasesAsync(aliasMatch, generatedAliases.Prepend(query));
+                return aliasMatch;
+            }
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        var bangumiResults = await _bangumiService.SearchAsync(query, includeDetails: true);
+        var onlineMatch = MatchBangumiMetadataToGame(bangumiResults, games);
+        if (onlineMatch != null)
+        {
+            var aliases = bangumiResults
+                .Where(result => IsMetadataForGame(result, onlineMatch))
+                .SelectMany(result => new[] { query, result.Title, result.OriginalTitle, result.ChineseTitle })
+                .Where(alias => !string.IsNullOrWhiteSpace(alias));
+            await AddGameSearchAliasesAsync(onlineMatch, aliases);
+        }
+
+        return onlineMatch;
+    }
+
+    private static Game? FindMentionedGameByAliasCache(
+        string normalized,
+        IReadOnlyCollection<Game> games,
+        VndbRecommendationCacheDocument cache)
+    {
+        var compactQuestion = NormalizeTitleForLookup(normalized);
+        return games
+            .Select(game => new
+            {
+                Game = game,
+                Score = EnumerateCachedAliases(game, cache)
+                    .Select(alias => ScoreAliasMatch(normalized, compactQuestion, alias))
+                    .DefaultIfEmpty(0)
+                    .Max()
+            })
+            .Where(item => item.Score > 0)
+            .OrderByDescending(item => item.Score)
+            .ThenByDescending(item => item.Game.Title.Length)
+            .Select(item => item.Game)
+            .FirstOrDefault();
+    }
+
+    private static IEnumerable<string> EnumerateCachedAliases(Game game, VndbRecommendationCacheDocument cache)
+    {
+        var keys = new[]
+        {
+            RecommendationService.BuildTagWeightKey(game.Title),
+            RecommendationService.BuildTagWeightKey(game.Title.Trim())
+        };
+
+        foreach (var key in keys.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!cache.SearchAliases.TryGetValue(key, out var cachedAlias))
+                continue;
+
+            if (!string.IsNullOrWhiteSpace(cachedAlias.Title))
+                yield return cachedAlias.Title;
+
+            foreach (var query in cachedAlias.Queries)
+            {
+                if (!string.IsNullOrWhiteSpace(query))
+                    yield return query;
+            }
+        }
+    }
+
+    private async Task AddGameSearchAliasesAsync(Game game, IEnumerable<string> aliases)
+    {
+        var normalizedAliases = aliases
+            .Append(game.Title)
+            .Where(alias => !string.IsNullOrWhiteSpace(alias))
+            .Select(alias => alias.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(16)
+            .ToList();
+        if (normalizedAliases.Count == 0)
+            return;
+
+        var cache = await _cacheService.LoadAsync();
+        var key = RecommendationService.BuildTagWeightKey(game.Title);
+        var merged = cache.SearchAliases.TryGetValue(key, out var existing)
+            ? existing.Queries.Concat(normalizedAliases).Distinct(StringComparer.OrdinalIgnoreCase).Take(24).ToList()
+            : normalizedAliases;
+
+        cache.SearchAliases[key] = new CachedSearchAlias
+        {
+            Title = game.Title,
+            Queries = merged,
+            CachedAtUtc = DateTimeOffset.UtcNow
+        };
+        await _cacheService.SaveAsync(cache);
+    }
+
+    private static int ScoreAliasMatch(string normalizedQuestion, string compactQuestion, string alias)
+    {
+        if (string.IsNullOrWhiteSpace(alias))
+            return 0;
+
+        var normalizedAlias = alias.Trim().ToLowerInvariant();
+        if (normalizedAlias.Length >= 2 && normalizedQuestion.Contains(normalizedAlias, StringComparison.Ordinal))
+            return 90 + normalizedAlias.Length;
+
+        var compactAlias = NormalizeTitleForLookup(alias);
+        if (compactAlias.Length < 2 || compactQuestion.Length < 2)
+            return 0;
+
+        if (compactQuestion.Contains(compactAlias, StringComparison.Ordinal))
+            return 75 + compactAlias.Length;
+
+        if (compactAlias.Contains(compactQuestion, StringComparison.Ordinal) &&
+            compactQuestion.Length >= Math.Min(4, compactAlias.Length))
+        {
+            return 35 + compactQuestion.Length;
+        }
+
+        return 0;
+    }
+
+    private static string ExtractTargetLookupQuery(string question)
+    {
+        var trimmed = question.Trim();
+        string[] commands =
+        [
+            "游玩时间预测",
+            "通关时间",
+            "评论摘要",
+            "评价摘要",
+            "playtime prediction",
+            "time estimate",
+            "community review",
+            "review summary"
+        ];
+
+        foreach (var command in commands)
+        {
+            if (!trimmed.StartsWith(command, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            return trimmed[command.Length..].Trim(' ', '\t', ':', '：', '-', '—');
+        }
+
+        return trimmed;
+    }
+
+    private static Game? MatchBangumiMetadataToGame(IReadOnlyList<MetadataResult> results, IReadOnlyCollection<Game> games)
+    {
+        return results
+            .SelectMany(result => games.Select(game => new
+            {
+                Game = game,
+                Metadata = result,
+                Score = ScoreBangumiMetadataGameMatch(result, game)
+            }))
+            .Where(item => item.Score > 0)
+            .OrderByDescending(item => item.Score)
+            .Select(item => item.Game)
+            .FirstOrDefault();
+    }
+
+    private static bool IsMetadataForGame(MetadataResult metadata, Game game)
+    {
+        return ScoreBangumiMetadataGameMatch(metadata, game) > 0;
+    }
+
+    private static int ScoreBangumiMetadataGameMatch(MetadataResult metadata, Game game)
+    {
+        var score = 0;
+        if (!string.IsNullOrWhiteSpace(game.BangumiId) &&
+            string.Equals(game.BangumiId.Trim(), metadata.SourceId.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            score += 100;
+        }
+
+        var gameTitle = NormalizeTitleForLookup(game.Title);
+        foreach (var title in new[] { metadata.Title, metadata.OriginalTitle, metadata.ChineseTitle })
+        {
+            var metadataTitle = NormalizeTitleForLookup(title);
+            if (string.IsNullOrWhiteSpace(metadataTitle) || string.IsNullOrWhiteSpace(gameTitle))
+                continue;
+
+            if (string.Equals(gameTitle, metadataTitle, StringComparison.OrdinalIgnoreCase))
+                score = Math.Max(score, 80);
+            else if (metadataTitle.Contains(gameTitle, StringComparison.OrdinalIgnoreCase) ||
+                     gameTitle.Contains(metadataTitle, StringComparison.OrdinalIgnoreCase))
+                score = Math.Max(score, 45);
+        }
+
+        if (!string.IsNullOrWhiteSpace(game.Brand) &&
+            !string.IsNullOrWhiteSpace(metadata.Brand) &&
+            metadata.Brand.Contains(game.Brand, StringComparison.OrdinalIgnoreCase))
+        {
+            score += 5;
+        }
+
+        return score;
+    }
+
+    private static int ScoreMetadataTitleMatch(Game game, MetadataResult result)
+    {
+        var gameTitle = NormalizeTitleForLookup(game.Title);
+        var candidates = new[]
+        {
+            result.Title,
+            result.OriginalTitle,
+            result.ChineseTitle
+        };
+
+        var bestScore = 0;
+        foreach (var candidate in candidates)
+        {
+            var normalizedCandidate = NormalizeTitleForLookup(candidate);
+            if (string.IsNullOrWhiteSpace(normalizedCandidate))
+                continue;
+
+            if (string.Equals(gameTitle, normalizedCandidate, StringComparison.OrdinalIgnoreCase))
+                bestScore = Math.Max(bestScore, 4);
+            else if (normalizedCandidate.Contains(gameTitle, StringComparison.OrdinalIgnoreCase) ||
+                     gameTitle.Contains(normalizedCandidate, StringComparison.OrdinalIgnoreCase))
+                bestScore = Math.Max(bestScore, 2);
+        }
+
+        if (!string.IsNullOrWhiteSpace(game.Brand) &&
+            !string.IsNullOrWhiteSpace(result.Brand) &&
+            result.Brand.Contains(game.Brand, StringComparison.OrdinalIgnoreCase))
+        {
+            bestScore += 1;
+        }
+
+        return bestScore;
+    }
+
+    private static string NormalizeTitleForLookup(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return string.Empty;
+
+        return string.Concat(title.Where(char.IsLetterOrDigit)).ToLowerInvariant();
+    }
+
+    private static string FormatVndbLengthCategory(int category)
+    {
+        return category switch
+        {
+            1 => "很短（VNDB 长度分类 1/5，通常少于 2 小时）",
+            2 => "较短（VNDB 长度分类 2/5，通常 2-10 小时）",
+            3 => "中等（VNDB 长度分类 3/5，通常 10-30 小时）",
+            4 => "较长（VNDB 长度分类 4/5，通常 30-50 小时）",
+            5 => "很长（VNDB 长度分类 5/5，通常超过 50 小时）",
+            _ => $"未知长度分类（{category}/5）"
+        };
+    }
+
+    private static string BuildReviewCommentPromptData(
+        IReadOnlyList<(Game Game, List<BangumiSubjectComment> Comments, BangumiSubjectCommentFetchResult Fetch)> commentBundles)
+    {
+        return string.Join(
+            "\n\n",
+            commentBundles.Select(bundle =>
+                $"游戏：{bundle.Game.Title} (Bangumi ID: {bundle.Game.BangumiId})\n" +
+                $"评论样本数：{bundle.Comments.Count}\n" +
+                string.Join("\n", bundle.Comments.Take(24).Select((comment, index) =>
+                {
+                    var rating = comment.Rating.HasValue ? $"评分 {comment.Rating}/10，" : string.Empty;
+                    var user = string.IsNullOrWhiteSpace(comment.Username) ? string.Empty : $"{comment.Username}：";
+                    return $"{index + 1}. {rating}{user}{TrimCommentForPrompt(comment.Text)}";
+                }))));
+    }
+
+    private static string BuildReviewCommentFallback(
+        IReadOnlyList<(Game Game, List<BangumiSubjectComment> Comments, BangumiSubjectCommentFetchResult Fetch)> commentBundles)
+    {
+        return string.Join(
+            "\n\n",
+            commentBundles.Select(bundle =>
+            {
+                var ratingComments = bundle.Comments.Where(comment => comment.Rating.HasValue).ToList();
+                var average = ratingComments.Count == 0
+                    ? string.Empty
+                    : $"平均评分样本：{ratingComments.Average(comment => comment.Rating!.Value):F1}/10。\n";
+                var samples = bundle.Comments.Count == 0
+                    ? "没有可展示的评论文本。"
+                    : string.Join("\n", bundle.Comments.Take(5).Select(comment => $"- {TrimCommentForPrompt(comment.Text)}"));
+                return $"**{bundle.Game.Title}**\n{average}已拉取 {bundle.Comments.Count} 条 Bangumi 评论。AI 未配置或未返回摘要，以下是原始评论样本：\n{samples}";
+            }));
+    }
+
+    private static string TrimCommentForPrompt(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        var normalized = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return normalized.Length <= 220 ? normalized : $"{normalized[..220]}...";
+    }
+
+    private async Task<AiAssistantResponse> AnswerReviewSummaryAsync(
+        string question,
+        IReadOnlyCollection<Game> games,
+        IReadOnlyList<AiAssistantMessage> recentMessages,
+        CancellationToken cancellationToken)
+    {
+        var requestedGame = await ResolveTargetGameAsync(question, games, cancellationToken);
+        var gamesWithBangumiId = requestedGame == null
+            ? games
+                .Where(game => !string.IsNullOrWhiteSpace(game.BangumiId))
+                .OrderByDescending(game => game.AccessedDate)
+                .Take(5)
+                .ToList()
+            : string.IsNullOrWhiteSpace(requestedGame.BangumiId)
+                ? []
+                : [requestedGame];
+
+        if (gamesWithBangumiId.Count == 0)
+        {
+            if (requestedGame != null)
+            {
+                return BuildResponse(
+                    $"{requestedGame.Title} 还没有 Bangumi ID，无法生成评论摘要。请先为这个游戏补全 Bangumi ID。",
+                    [requestedGame],
+                    "target title and Bangumi ID field",
+                    "review summary - target missing Bangumi ID",
+                    usedGames: [requestedGame]);
+            }
+
+            return BuildResponse(
+                "当前库内没有包含 Bangumi ID 的游戏，无法生成评论摘要。请先为游戏添加 Bangumi ID。",
+                games,
+                "Bangumi ID field",
+                "review summary - no games",
+                usedGames: []);
+        }
+
+        var commentBundles = new List<(Game Game, List<BangumiSubjectComment> Comments, BangumiSubjectCommentFetchResult Fetch)>();
+        var accessToken = _settingsService.Settings.BangumiAccessToken;
+        foreach (var game in gamesWithBangumiId)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var fetchResult = await _bangumiService.GetSubjectCommentsAsync(
+                game.BangumiId!,
+                40,
+                string.IsNullOrWhiteSpace(accessToken) ? null : accessToken,
+                cancellationToken);
+            var usableComments = fetchResult.Comments
+                .Where(comment => !string.IsNullOrWhiteSpace(comment.Text))
+                .Take(30)
+                .ToList();
+            commentBundles.Add((game, usableComments, fetchResult));
+        }
+
+        var collectsDebug = string.Join(
+            "; ",
+            commentBundles.Select(bundle =>
+                $"{bundle.Game.Title}: total {bundle.Fetch.TotalItems}, text {bundle.Fetch.WithTextCount}, rate {bundle.Fetch.WithRatingCount}, auth {(bundle.Fetch.HadAuth ? "yes" : "no")}{(string.IsNullOrWhiteSpace(bundle.Fetch.SourceUrl) ? string.Empty : $", url {bundle.Fetch.SourceUrl}")}{(string.IsNullOrWhiteSpace(bundle.Fetch.Error) ? string.Empty : $", err {bundle.Fetch.Error}")}"));
+
+        if (commentBundles.All(bundle => bundle.Comments.Count == 0))
+        {
+            var emptyResponse = BuildResponse(
+                $"{string.Join("、", gamesWithBangumiId.Select(game => game.Title))} 暂时没有拉取到 Bangumi 用户评论文本，无法生成基于真实评论的萌点和雷点摘要。",
+                gamesWithBangumiId,
+                "Bangumi subject collects",
+                "review summary - no comments",
+                usedGames: gamesWithBangumiId);
+            emptyResponse.DebugSummary = string.IsNullOrWhiteSpace(emptyResponse.DebugSummary)
+                ? $"collects: {collectsDebug}"
+                : $"{emptyResponse.DebugSummary}; collects: {collectsDebug}";
+            return emptyResponse;
+        }
+
+        if (!_aiService.IsConfigured)
+        {
+            var noAiResponse = BuildGameListResponse(
+                gamesWithBangumiId,
+                BuildReviewCommentFallback(commentBundles),
+                "Bangumi subject collects",
+                "review summary - comments fetched, AI not configured");
+            noAiResponse.DebugSummary = string.IsNullOrWhiteSpace(noAiResponse.DebugSummary)
+                ? $"collects: {collectsDebug}"
+                : $"{noAiResponse.DebugSummary}; collects: {collectsDebug}";
+            return noAiResponse;
+        }
+
+        var summaryPrompt =
+            "请只根据下面提供的 Bangumi 用户评论文本，总结每个游戏的社区评价。不要使用常识补全，不要编造剧情或评价。\n" +
+            "每个游戏输出：**[游戏名]**、萌点、雷点、参考样本数。没有足够评论时直接说样本不足。\n\n" +
+            BuildReviewCommentPromptData(commentBundles);
+
+        var summaryAnswer = await _aiService.AnswerLibraryQuestionAsync(
+            summaryPrompt,
+            gamesWithBangumiId,
+            BuildLibraryStats(games),
+            recentMessages,
+            cancellationToken);
+
+        var response = BuildResponse(
+            string.IsNullOrWhiteSpace(summaryAnswer) ? BuildReviewCommentFallback(commentBundles) : summaryAnswer,
+            gamesWithBangumiId,
+            "Bangumi subject collects comments and ratings",
+            "review summary",
+            usedGames: gamesWithBangumiId);
+        response.UsedAi = !string.IsNullOrWhiteSpace(summaryAnswer);
+        response.DebugSummary = $"Intent: review summary; local tool: Bangumi comments; AI: {(response.UsedAi ? "called" : "empty")}; games: {gamesWithBangumiId.Count}; collects: {collectsDebug}";
+        return response;
     }
 }

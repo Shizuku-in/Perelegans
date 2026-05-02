@@ -33,7 +33,9 @@ public partial class AiAssistantViewModel : ObservableObject
         "缺 Bangumi ID",
         "最近玩了什么",
         "厂商分布",
-        "标签统计"
+        "标签统计",
+        "评论摘要",
+        "游玩时间预测"
     ]);
 
     [ObservableProperty]
@@ -81,7 +83,35 @@ public partial class AiAssistantViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(question) || IsBusy)
             return;
 
-        await SendQuestionAsync(question.Trim());
+        var trimmedQuestion = question.Trim();
+
+        // Intercept specific features that require a target game
+        if (trimmedQuestion == "评论摘要" || trimmedQuestion == "游玩时间预测")
+        {
+            await HandleGameSpecificFeatureAsync(trimmedQuestion);
+            return;
+        }
+
+        await SendQuestionAsync(trimmedQuestion);
+    }
+
+    private async Task HandleGameSpecificFeatureAsync(string featureName)
+    {
+        // Create a simple selection dialog using the main window's dispatcher
+        // Since we don't have a dedicated GamePickerWindow yet, we'll use a simple approach
+        // For now, let's just send a prompt asking the user to specify a game
+        // In a real implementation, you'd show a modal dialog with a list of games
+        
+        var prompt = featureName == "评论摘要" 
+            ? "请指定要查看评论摘要的游戏名称，例如：'评论摘要 命运石之门'" 
+            : "请指定要预测游玩时间的游戏名称，例如：'游玩时间预测 命运石之门'";
+        
+        // Add a system message to guide the user
+        Messages.Add(new AiAssistantMessage 
+        { 
+            Role = "assistant", 
+            Content = prompt 
+        });
     }
 
     [RelayCommand(CanExecute = nameof(CanCancel))]
