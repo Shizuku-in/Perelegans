@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Perelegans · 项目说明文档</title>
+<style>
+    /* ===== 主题变量（贴合应用本身：米白 / 暗灰 + 粉色 Accent） ===== */
+    :root {
+        --bg-window: #FDFCF8;
+        --bg-panel: #F5F3EE;
+        --bg-metric: #EFECE5;
+        --bg-alt: #F8F6F1;
+        --bg-highlight: #FFF0F0;
+        --accent: #FFC0CB;
+        --accent-strong: #E37F7F;
+        --accent-deep: #5D1135;
+        --accent-soft: #FCE4EC;
+        --fg: #1E1E1E;
+        --fg-subtle: #757575;
+        --border: #E0DDD5;
+        --border-strong: #D8D1C6;
+        --shadow: 0 1px 2px rgba(45,45,48,0.06), 0 4px 14px rgba(45,45,48,0.06);
+        --shadow-card: 0 2px 8px rgba(45,45,48,0.08);
+        --radius: 8px;
+        --radius-sm: 4px;
+    }
+
+    [data-theme="dark"] {
+        --bg-window: #252526;
+        --bg-panel: #2D2D30;
+        --bg-metric: #303033;
+        --bg-alt: #2A2A2E;
+        --bg-highlight: #3A2E31;
+        --accent: #FFC0CB;
+        --accent-strong: #E37F7F;
+        --accent-deep: #FFE6ED;
+        --accent-soft: #3E3E42;
+        --fg: #DCDCDC;
+        --fg-subtle: #9E9E9E;
+        --border: #3F3F46;
+        --border-strong: #3A3A3C;
+        --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 14px rgba(0,0,0,0.35);
+        --shadow-card: 0 2px 8px rgba(0,0,0,0.45);
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-window);
+        color: var(--fg);
+        font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC",
+                     "Hiragino Sans GB", -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 14px;
+        line-height: 1.65;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+
+    /* ===== 顶部 TitleBar，模拟 MahApps.Metro 风格 ===== */
+    .titlebar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--border);
+        backdrop-filter: blur(10px);
+    }
+    .titlebar .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: 0.5px;
+    }
+    .titlebar .brand .logo {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+        box-shadow: 0 0 0 3px rgba(255, 192, 203, 0.2);
+    }
+    .titlebar .nav {
+        margin-left: 28px;
+        display: flex;
+        gap: 4px;
+        flex: 1;
+    }
+    .titlebar .nav a {
+        padding: 6px 12px;
+        font-size: 13px;
+        color: var(--fg-subtle);
+        text-decoration: none;
+        border-radius: var(--radius-sm);
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+    .titlebar .nav a:hover {
+        background: var(--accent-soft);
+        color: var(--fg);
+    }
+    .titlebar .actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .icon-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sm);
+        background: transparent;
+        color: var(--fg);
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+        font-size: 14px;
+    }
+    .icon-btn:hover {
+        background: var(--accent-soft);
+        border-color: var(--border);
+    }
+
+    /* ===== 主容器 ===== */
+    main {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 32px 24px 80px;
+    }
+
+    /* ===== Hero 区域 ===== */
+    .hero {
+        position: relative;
+        padding: 36px 36px 32px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+    .hero::before {
+        content: "";
+        position: absolute;
+        right: -80px;
+        top: -80px;
+        width: 280px;
+        height: 280px;
+        background: radial-gradient(circle, var(--accent) 0%, transparent 65%);
+        opacity: 0.45;
+        pointer-events: none;
+    }
+    .hero h1 {
+        margin: 0 0 6px;
+        font-size: 38px;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    .hero .tagline {
+        font-size: 15px;
+        color: var(--fg-subtle);
+        margin: 0 0 18px;
+    }
+    .badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 22px;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-size: 12px;
+        background: var(--bg-metric);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--fg);
+    }
+    .badge.accent {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+    }
+    .cta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 500;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: var(--bg-window);
+        color: var(--fg);
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .btn:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+    }
+    .btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-deep);
+    }
+    .btn.primary:hover {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+        color: #fff;
+    }
+
+    /* ===== 区块 ===== */
+    section {
+        margin-top: 36px;
+    }
+    section h2 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+    section h2 .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--accent);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    section h3 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0 0 6px;
+    }
+    p { margin: 0 0 10px; }
+
+    /* ===== 截图卡片 ===== */
+    .screenshot {
+        margin-top: 18px;
+        padding: 8px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-card);
+    }
+    .screenshot img {
+        display: block;
+        width: 100%;
+        border-radius: var(--radius-sm);
+    }
+    .screenshot .caption {
+        text-align: center;
+        font-size: 12px;
+        color: var(--fg-subtle);
+        padding: 8px 0 4px;
+    }
+
+    /* ===== 功能特性网格 ===== */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+    }
+    .feature-card {
+        padding: 18px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    .feature-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent);
+        box-shadow: var(--shadow-card);
+    }
+    .feature-card .head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .feature-card .icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent-soft);
+        border-radius: var(--radius-sm);
+        font-size: 16px;
+    }
+    .feature-card ul {
+        margin: 0;
+        padding-left: 18px;
+        color: var(--fg-subtle);
+        font-size: 13px;
+    }
+    .feature-card ul li {
+        margin-bottom: 4px;
+    }
+    .feature-card ul li::marker { color: var(--accent-strong); }
+
+    /* ===== 数据源徽标 ===== */
+    .source-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .source-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        font-size: 13px;
+        background: var(--bg-window);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--fg);
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .source-pill:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+    }
+
+    /* ===== 代码块 ===== */
+    pre, code {
+        font-family: "JetBrains Mono", "Cascadia Code", "Consolas", "Courier New", monospace;
+    }
+    pre {
+        background: var(--bg-metric);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        font-size: 13px;
+        line-height: 1.55;
+        overflow-x: auto;
+        margin: 10px 0 0;
+        position: relative;
+    }
+    code {
+        background: var(--bg-metric);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 12.5px;
+    }
+    pre code {
+        background: transparent;
+        padding: 0;
+    }
+    .code-comment { color: var(--fg-subtle); }
+    .code-cmd { color: var(--accent-strong); }
+
+    /* ===== 步骤列表 ===== */
+    .steps {
+        list-style: none;
+        counter-reset: step;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+    }
+    .steps li {
+        counter-increment: step;
+        position: relative;
+        padding: 16px 16px 16px 56px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+    }
+    .steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--accent);
+        color: var(--accent-deep);
+        font-weight: 600;
+        border-radius: 50%;
+        font-size: 13px;
+    }
+    .steps li strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+    .steps li span {
+        color: var(--fg-subtle);
+        font-size: 13px;
+    }
+
+    /* ===== 表格 ===== */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        font-size: 13px;
+    }
+    th {
+        background: var(--bg-metric);
+        text-align: left;
+        font-weight: 600;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+    }
+    td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+    }
+    tr:nth-child(even) td { background: var(--bg-alt); }
+    tr:last-child td { border-bottom: none; }
+
+    /* ===== 项目结构 ===== */
+    .tree {
+        background: var(--bg-metric);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+        font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+        font-size: 12.5px;
+        line-height: 1.85;
+        white-space: pre;
+        overflow-x: auto;
+        color: var(--fg);
+    }
+    .tree .dim { color: var(--fg-subtle); }
+    .tree .accent { color: var(--accent-strong); }
+
+    /* ===== API 接入区块 ===== */
+    .api-method-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+        margin-top: 14px;
+    }
+    .api-card {
+        position: relative;
+        padding: 20px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-card);
+    }
+    .api-card.primary {
+        border-color: var(--accent);
+        background: linear-gradient(180deg, var(--accent-soft) 0%, var(--bg-panel) 40%);
+    }
+    .api-card .method-label {
+        position: absolute;
+        top: -10px;
+        left: 16px;
+        padding: 2px 10px;
+        background: var(--accent);
+        color: var(--accent-deep);
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 999px;
+        letter-spacing: 0.5px;
+    }
+    .api-card .method-label.alt {
+        background: var(--bg-metric);
+        color: var(--fg);
+        border: 1px solid var(--border);
+    }
+    .api-card h4 {
+        margin: 6px 0 4px;
+        font-size: 16px;
+    }
+    .api-card .scene {
+        font-size: 12px;
+        color: var(--fg-subtle);
+        margin-bottom: 14px;
+    }
+    .api-steps {
+        margin: 0;
+        padding-left: 20px;
+        font-size: 13px;
+        line-height: 1.75;
+    }
+    .api-steps li { margin-bottom: 4px; }
+    .api-steps li::marker { color: var(--accent-strong); font-weight: 600; }
+
+    .callout {
+        display: flex;
+        gap: 10px;
+        padding: 12px 14px;
+        background: var(--bg-highlight);
+        border: 1px solid var(--border-strong);
+        border-left: 3px solid var(--accent-strong);
+        border-radius: var(--radius-sm);
+        margin-top: 12px;
+        font-size: 13px;
+    }
+    .callout .ico { font-size: 16px; flex-shrink: 0; }
+    .callout.info {
+        background: var(--accent-soft);
+        border-left-color: var(--accent-strong);
+    }
+
+    .kv {
+        display: grid;
+        grid-template-columns: 140px 1fr;
+        gap: 6px 14px;
+        margin-top: 10px;
+        font-size: 13px;
+    }
+    .kv dt {
+        color: var(--fg-subtle);
+        font-weight: 500;
+    }
+    .kv dd {
+        margin: 0;
+        font-family: "JetBrains Mono", Consolas, monospace;
+        font-size: 12.5px;
+    }
+
+    .compare-table td:first-child {
+        font-weight: 500;
+    }
+    .compare-table .yes { color: #6BCB77; font-weight: 600; }
+    .compare-table .no  { color: var(--accent-strong); font-weight: 600; }
+
+    /* ===== StatusBar 风格底部 ===== */
+    footer {
+        margin-top: 60px;
+        padding: 12px 24px;
+        background: var(--bg-metric);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 12px;
+        color: var(--fg-subtle);
+    }
+    footer .status-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6BCB77;
+        margin-right: 6px;
+        box-shadow: 0 0 0 2px rgba(107, 203, 119, 0.2);
+    }
+
+    a { color: var(--accent-strong); }
+    a:hover { color: var(--accent-deep); }
+
+    @media (max-width: 720px) {
+        .titlebar .nav { display: none; }
+        .hero h1 { font-size: 28px; }
+        .hero { padding: 24px 20px; }
+        main { padding: 20px 14px 60px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- 顶部标题栏，模拟 MahApps.Metro Window 标题栏 -->
+<div class="titlebar">
+    <div class="brand">
+        <span class="logo"></span>
+        <span>Perelegans</span>
+    </div>
+    <nav class="nav">
+        <a href="#features">功能</a>
+        <a href="#install">安装</a>
+        <a href="#quickstart">快速上手</a>
+        <a href="#api">API 接入</a>
+        <a href="#stack">技术栈</a>
+        <a href="#structure">结构</a>
+        <a href="#license">许可证</a>
+    </nav>
+    <div class="actions">
+        <button class="icon-btn" id="themeToggle" title="切换主题">🌓</button>
+        <a class="icon-btn" href="https://github.com/Shizuku-in/Perelegans" target="_blank" title="GitHub">★</a>
+    </div>
+</div>
+
+<main>
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="badges">
+            <span class="badge accent">Windows 桌面应用</span>
+            <span class="badge">.NET 8 / WPF</span>
+            <span class="badge">MIT License</span>
+            <span class="badge">中 · EN · 日</span>
+            <span class="badge accent">✨ 新增 AI 助手 &amp; Bangumi OAuth</span>
+        </div>
+        <h1>Perelegans</h1>
+        <p class="tagline">用于追踪视觉小说的游玩时间的 Windows 桌面应用。</p>
+        <div class="cta">
+            <a class="btn primary" href="https://github.com/Shizuku-in/Perelegans/releases" target="_blank">
+                ↓ 下载 Release
+            </a>
+            <a class="btn" href="https://github.com/Shizuku-in/Perelegans" target="_blank">
+                查看源码
+            </a>
+            <a class="btn" href="#quickstart">快速上手 →</a>
+        </div>
+        <div class="screenshot">
+            <img src="images/image_01.png" alt="Perelegans 主界面演示" onerror="this.parentElement.style.display='none'" />
+            <div class="caption">主界面 · 游戏库 / 游玩时长 / 自动追踪</div>
+        </div>
+    </div>
+
+    <!-- 功能特性 -->
+    <section id="features">
+        <h2><span class="dot"></span>功能特性</h2>
+        <div class="feature-grid">
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🎮</div>
+                    <h3>游玩时间追踪</h3>
+                </div>
+                <ul>
+                    <li>基于进程监控自动记录游玩时长，无需手动操作</li>
+                    <li>可自定义监控轮询间隔</li>
+                    <li>实时检测游戏运行状态并显示指示器</li>
+                    <li>完整的游玩会话历史记录</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">📚</div>
+                    <h3>游戏库管理</h3>
+                </div>
+                <ul>
+                    <li>从运行中的进程快速添加游戏</li>
+                    <li>状态标记：在玩 / 已弃 / 已通关 / 计划中</li>
+                    <li>数据库备份与还原</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🔍</div>
+                    <h3>元数据抓取</h3>
+                </div>
+                <p style="color:var(--fg-subtle); font-size:13px; margin:0 0 8px;">
+                    集成三大数据源，一键补全标题、品牌、发售日期、标签、官网等。
+                </p>
+                <div class="source-row">
+                    <a class="source-pill" href="https://vndb.org/" target="_blank">VNDB</a>
+                    <a class="source-pill" href="https://bangumi.tv/" target="_blank">Bangumi</a>
+                    <a class="source-pill" href="https://erogamescape.dyndns.org" target="_blank">ErogameSpace</a>
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🖼️</div>
+                    <h3>封面管理</h3>
+                </div>
+                <ul>
+                    <li>从元数据源搜索并选择高质量封面图</li>
+                    <li>支持本地缓存封面，离线可用</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🤖</div>
+                    <h3>AI 游戏推荐</h3>
+                </div>
+                <ul>
+                    <li>基于游戏库与玩家口味画像，结合 VNDB 数据智能推荐</li>
+                    <li>接入 OpenAI 兼容 API，生成个性化推荐理由</li>
+                    <li>可自定义 API 地址、密钥与模型</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">💬</div>
+                    <h3>AI 自然语言助手 <span class="badge accent" style="font-size:10px; padding:1px 6px; margin-left:4px;">NEW</span></h3>
+                </div>
+                <ul>
+                    <li>对话式查询：「上个月玩了哪些游戏」「推荐类似 XX 的作品」</li>
+                    <li>基于游戏库与游玩数据上下文生成答复</li>
+                    <li>支持多轮对话与上下文记忆</li>
+                    <li>复用 AI 推荐的 OpenAI 兼容 API 配置</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">📊</div>
+                    <h3>游玩统计</h3>
+                </div>
+                <ul>
+                    <li>可视化游玩时间分布</li>
+                    <li>游玩时段趋势分析</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🎨</div>
+                    <h3>个性化</h3>
+                </div>
+                <ul>
+                    <li>亮色 / 暗色 / 跟随系统三种主题</li>
+                    <li>MahApps.Metro 现代化 UI 风格</li>
+                    <li>三种语言：简体中文 · English · 日本語</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <div class="head">
+                    <div class="icon">🔧</div>
+                    <h3>实用功能</h3>
+                </div>
+                <ul>
+                    <li>系统托盘最小化，后台静默监控</li>
+                    <li>开机自启动</li>
+                    <li>HTTP 代理设置</li>
+                    <li>单实例运行保护</li>
+                </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- 安装 -->
+    <section id="install">
+        <h2><span class="dot"></span>安装</h2>
+
+        <h3 style="margin-top:14px;">从 Release 下载（推荐）</h3>
+        <p style="color:var(--fg-subtle);">
+            前往 <a href="https://github.com/Shizuku-in/Perelegans/releases" target="_blank">Releases</a>
+            页面下载最新版本的压缩包。
+        </p>
+
+        <h3 style="margin-top:18px;">从源码构建</h3>
+        <p style="color:var(--fg-subtle); margin-bottom:6px;">
+            前置要求：<a href="https://dotnet.microsoft.com/download/dotnet/8.0" target="_blank">.NET 8 SDK</a>
+        </p>
+<pre><code><span class="code-comment"># 克隆仓库</span>
+<span class="code-cmd">git</span> clone https://github.com/Shizuku-in/Perelegans.git
+<span class="code-cmd">cd</span> Perelegans
+
+<span class="code-comment"># 构建</span>
+<span class="code-cmd">dotnet</span> build src/Perelegans/Perelegans.csproj
+
+<span class="code-comment"># 运行</span>
+<span class="code-cmd">dotnet</span> run --project src/Perelegans/Perelegans.csproj</code></pre>
+    </section>
+
+    <!-- 快速上手 -->
+    <section id="quickstart">
+        <h2><span class="dot"></span>快速上手</h2>
+        <ol class="steps">
+            <li>
+                <strong>启动应用</strong>
+                <span>运行 <code>Perelegans.exe</code></span>
+            </li>
+            <li>
+                <strong>添加游戏</strong>
+                <span>启动游戏后，在应用中点击「从进程添加」选择对应的进程。</span>
+            </li>
+            <li>
+                <strong>补全信息</strong>
+                <span>右键游戏卡片 → 「获取元数据」自动从 VNDB / Bangumi / 批评空间抓取。</span>
+            </li>
+            <li>
+                <strong>自动追踪</strong>
+                <span>保持应用在后台运行，自动监控进程并累计游玩时间。</span>
+            </li>
+            <li>
+                <strong>查看统计</strong>
+                <span>主界面查看总时长，或打开统计面板查看详细数据。</span>
+            </li>
+        </ol>
+    </section>
+
+    <!-- 技术栈 -->
+    <section id="api">
+        <h2><span class="dot"></span>API 接入配置</h2>
+        <p style="color:var(--fg-subtle);">
+            Perelegans 的元数据抓取与 AI 功能均依赖外部 API。下面着重介绍 <strong>Bangumi 授权</strong> 与 <strong>OpenAI 兼容 API</strong> 的配置方式。
+        </p>
+
+        <h3 style="margin-top:22px;">📘 Bangumi API 授权</h3>
+        <p style="color:var(--fg-subtle); font-size:13px;">
+            Bangumi 部分接口（收藏同步、个人数据读写等）需要授权。Perelegans 支持 <b>两种方式</b>，任选其一即可。
+        </p>
+
+        <div class="api-method-grid">
+
+            <!-- 方式一：直接生成 Token -->
+            <div class="api-card primary">
+                <span class="method-label">方式一 · 推荐</span>
+                <h4>🔑 直接生成 Access Token</h4>
+                <div class="scene">适合个人单机使用 · 几分钟即可完成</div>
+                <ol class="api-steps">
+                    <li>登录
+                        <a href="https://bangumi.tv/" target="_blank">Bangumi</a> 账号
+                    </li>
+                    <li>打开
+                        <a href="https://next.bgm.tv/demo/access-token" target="_blank">next.bgm.tv/demo/access-token</a>
+                    </li>
+                    <li>点击「<b>创建个人令牌</b>」，填写名称（如 <code>Perelegans</code>）与有效期</li>
+                    <li>复制生成的 <b>Access Token</b></li>
+                    <li>在 Perelegans：<code>设置</code> → <code>元数据源</code> → <code>Bangumi</code> → 粘贴 Token → 保存</li>
+                </ol>
+                <div class="callout">
+                    <span class="ico">⚠️</span>
+                    <span>Token 请妥善保管，勿提交到公开仓库。过期后需重新生成。</span>
+                </div>
+            </div>
+
+            <!-- 方式二：OAuth -->
+            <div class="api-card">
+                <span class="method-label alt">方式二 · 高级</span>
+                <h4>🔐 创建 OAuth 应用</h4>
+                <div class="scene">支持自动刷新 Token · 适合长期使用或多账号场景</div>
+                <ol class="api-steps">
+                    <li>登录后访问
+                        <a href="https://bgm.tv/dev/app" target="_blank">bgm.tv/dev/app</a>
+                    </li>
+                    <li>点击「<b>创建新应用</b>」并填写：
+                        <dl class="kv">
+                            <dt>应用名称</dt><dd>Perelegans</dd>
+                            <dt>应用描述</dt><dd>用途说明（可选）</dd>
+                            <dt>主页 URL</dt><dd>例如 GitHub 仓库地址</dd>
+                            <dt>回调地址</dt><dd>http://localhost:32157/callback</dd>
+                        </dl>
+                    </li>
+                    <li>创建后获得 <b>App ID</b> 与 <b>App Secret</b></li>
+                    <li>在 Perelegans：<code>设置</code> → <code>Bangumi</code> → 选择「<b>OAuth 登录</b>」</li>
+                    <li>填入 App ID / App Secret → 点击「授权」</li>
+                    <li>浏览器跳转 Bangumi 授权页 → 同意 → 完成登录</li>
+                </ol>
+                <div class="callout info">
+                    <span class="ico">✨</span>
+                    <span>Perelegans 将自动管理 Access Token 与 Refresh Token 的刷新，无需手动续期。</span>
+                </div>
+            </div>
+
+        </div>
+
+        <h3 style="margin-top:24px;">📊 两种方式对比</h3>
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th style="width:140px;">特性</th>
+                    <th>个人 Token</th>
+                    <th>OAuth 应用</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>配置难度</td><td>⭐ 简单</td><td>⭐⭐ 中等</td></tr>
+                <tr><td>自动刷新</td><td class="no">❌ 需手动重新生成</td><td class="yes">✅ 自动刷新</td></tr>
+                <tr><td>有效期</td><td>自定义（通常 ≤ 1 年）</td><td>长期（自动续期）</td></tr>
+                <tr><td>适用场景</td><td>个人单机使用</td><td>长期 / 多账号</td></tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin-top:28px;">🤖 OpenAI 兼容 API（AI 推荐 / AI 助手）</h3>
+        <p style="color:var(--fg-subtle); font-size:13px;">
+            AI 游戏推荐与 AI 自然语言助手共享同一套配置，支持 OpenAI、DeepSeek、OpenRouter、本地 Ollama 等所有兼容服务。
+        </p>
+        <div class="api-card" style="margin-top:14px;">
+            <ol class="api-steps">
+                <li>在 Perelegans：<code>设置</code> → <code>AI</code> 面板</li>
+                <li>填写以下三项：
+                    <dl class="kv">
+                        <dt>API Base URL</dt><dd>https://api.openai.com/v1</dd>
+                        <dt>API Key</dt><dd>sk-xxxxxxxxxxxxxxxx</dd>
+                        <dt>模型名称</dt><dd>gpt-4o-mini / deepseek-chat / qwen2.5:7b</dd>
+                    </dl>
+                </li>
+                <li>点击「<b>测试连接</b>」验证</li>
+                <li>保存后即可在「推荐」与「AI 助手」面板使用</li>
+            </ol>
+            <div class="callout info">
+                <span class="ico">💡</span>
+                <span>如需走代理，请在 <code>设置</code> → <code>网络</code> 中配置 HTTP 代理。</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术栈 -->
+    <section id="stack">
+        <h2><span class="dot"></span>技术栈</h2>
+        <table>
+            <thead>
+                <tr><th style="width:140px;">类别</th><th>技术</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>框架</td><td>.NET 8 / WPF</td></tr>
+                <tr><td>UI 库</td><td><a href="https://mahapps.com/" target="_blank">MahApps.Metro</a></td></tr>
+                <tr><td>MVVM</td><td><a href="https://learn.microsoft.com/dotnet/communitytoolkit/mvvm/" target="_blank">CommunityToolkit.Mvvm</a></td></tr>
+                <tr><td>数据库</td><td><a href="https://learn.microsoft.com/ef/core/" target="_blank">EF Core</a> + SQLite</td></tr>
+                <tr><td>图表</td><td><a href="https://livecharts.dev/" target="_blank">LiveCharts2</a></td></tr>
+                <tr><td>网页解析</td><td><a href="https://html-agility-pack.net/" target="_blank">HtmlAgilityPack</a></td></tr>
+                <tr><td>CI/CD</td><td>GitHub Actions</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 项目结构 -->
+    <section id="structure">
+        <h2><span class="dot"></span>项目结构</h2>
+<div class="tree">src/Perelegans/
+├── <span class="accent">App.xaml(.cs)</span>          <span class="dim"># 应用入口，服务初始化，单实例 &amp; 托盘管理</span>
+├── <span class="accent">Models/</span>                <span class="dim"># 数据模型（Game, PlaySession, AppSettings 等）</span>
+├── <span class="accent">Data/</span>                  <span class="dim"># EF Core DbContext</span>
+├── <span class="accent">Services/</span>              <span class="dim"># 业务逻辑层</span>
+│   ├── DatabaseService           <span class="dim"># 数据库 CRUD</span>
+│   ├── ProcessMonitorService     <span class="dim"># 进程监控 &amp; 游玩时间记录</span>
+│   ├── VndbService               <span class="dim"># VNDB API 客户端</span>
+│   ├── BangumiService            <span class="dim"># Bangumi API 客户端</span>
+│   ├── ErogameSpaceService       <span class="dim"># ErogameSpace 爬虫</span>
+│   ├── RecommendationService     <span class="dim"># 游戏推荐引擎</span>
+│   ├── AiRecommendationService   <span class="dim"># AI 推荐理由生成</span>
+│   ├── AiAssistantService        <span class="dim"># AI 自然语言助手</span>
+│   ├── BangumiOAuthService       <span class="dim"># Bangumi OAuth 授权流程</span>
+│   ├── CoverArtService           <span class="dim"># 封面图获取 &amp; 缓存</span>
+│   ├── ThemeService              <span class="dim"># 主题切换</span>
+│   ├── TranslationService        <span class="dim"># 多语言翻译</span>
+│   ├── SettingsService           <span class="dim"># 设置读写</span>
+│   └── StartupRegistrationService <span class="dim"># 开机自启注册</span>
+├── <span class="accent">ViewModels/</span>            <span class="dim"># MVVM ViewModel 层</span>
+├── <span class="accent">Views/</span>                 <span class="dim"># XAML 界面</span>
+├── <span class="accent">Controls/</span>              <span class="dim"># 自定义控件（MasonryPanel 瀑布流布局）</span>
+├── <span class="accent">Converters/</span>            <span class="dim"># 值转换器</span>
+├── <span class="accent">Themes/</span>                <span class="dim"># 自定义主题资源字典</span>
+└── <span class="accent">i18n/</span>                  <span class="dim"># 国际化资源文件（.resx）</span></div>
+    </section>
+
+    <!-- 许可证 -->
+    <section id="license">
+        <h2><span class="dot"></span>许可证</h2>
+        <p>
+            本项目基于 <a href="LICENSE" target="_blank">MIT 许可证</a> 开源。
+            欢迎 Issue / PR / Star ★。
+        </p>
+    </section>
+
+</main>
+
+<!-- 状态栏（StatusBar 风格） -->
+<footer>
+    <div>
+        <span class="status-dot"></span>
+        <span>Ready · 文档由 README 自动生成</span>
+    </div>
+    <div>
+        Perelegans · MIT Licensed
+    </div>
+</footer>
+
+<script>
+    // 主题切换：默认跟随系统
+    (function () {
+        const root = document.documentElement;
+        const btn = document.getElementById('themeToggle');
+        const KEY = 'perelegans-doc-theme';
+
+        function apply(theme) {
+            if (theme === 'dark') root.setAttribute('data-theme', 'dark');
+            else root.removeAttribute('data-theme');
+        }
+
+        const saved = localStorage.getItem(KEY);
+        if (saved) {
+            apply(saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            apply('dark');
+        }
+
+        btn.addEventListener('click', () => {
+            const isDark = root.getAttribute('data-theme') === 'dark';
+            const next = isDark ? 'light' : 'dark';
+            apply(next);
+            localStorage.setItem(KEY, next);
+        });
+    })();
+</script>
+
+</body>
+</html>
