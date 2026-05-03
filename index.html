@@ -271,6 +271,47 @@
         padding: 8px 0 4px;
     }
 
+    /* ===== 演示视频卡片 ===== */
+    .video-card {
+        margin-top: 18px;
+        padding: 12px;
+        background: var(--bg-panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-card);
+    }
+    .video-frame {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        background: var(--bg-metric);
+        border: 1px solid var(--border);
+    }
+    .video-frame iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+    .video-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: var(--fg-subtle);
+    }
+    .video-meta .link {
+        color: var(--accent-strong);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .video-meta .link:hover { color: var(--accent-deep); }
+
     /* ===== 功能特性网格 ===== */
     .feature-grid {
         display: grid;
@@ -590,6 +631,7 @@
     </div>
     <nav class="nav">
         <a href="#features">功能</a>
+        <a href="#demo">演示</a>
         <a href="#install">安装</a>
         <a href="#quickstart">快速上手</a>
         <a href="#api">API 接入</a>
@@ -630,6 +672,27 @@
             <div class="caption">主界面 · 游戏库 / 游玩时长 / 自动追踪</div>
         </div>
     </div>
+
+    <!-- 演示视频 -->
+    <section id="demo">
+        <h2><span class="dot"></span>演示视频</h2>
+        <p style="color:var(--fg-subtle);">
+            快速浏览 Perelegans 的核心体验：游戏库管理、游玩时长追踪与 AI 助手。
+        </p>
+        <div class="video-card">
+            <div class="video-frame">
+                <iframe
+                    src="https://player.bilibili.com/player.html?bvid=BV1t49fB7ERs&autoplay=0"
+                    title="Perelegans 演示视频"
+                    allowfullscreen
+                ></iframe>
+            </div>
+            <div class="video-meta">
+                <span>平台：Bilibili · 时长以视频页为准</span>
+                <a class="link" href="https://www.bilibili.com/video/BV1t49fB7ERs/?vd_source=ff6f43ccb54424d7a64021088ed10bff" target="_blank">前往观看 →</a>
+            </div>
+        </div>
+    </section>
 
     <!-- 功能特性 -->
     <section id="features">

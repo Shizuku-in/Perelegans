@@ -6,6 +6,8 @@
 
 ![演示](./images/image_01.png)
 
+演示视频：https://www.bilibili.com/video/BV1t49fB7ERs/?vd_source=ff6f43ccb54424d7a64021088ed10bff
+
 ## ✨ 功能特性
 
 ### 🎮 游玩时间追踪
