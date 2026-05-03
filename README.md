@@ -6,7 +6,7 @@
 
 ![演示](./images/image_01.png)
 
-演示视频：https://www.bilibili.com/video/BV1t49fB7ERs/?vd_source=ff6f43ccb54424d7a64021088ed10bff
+演示视频：[https://www.bilibili.com/video/BV1t49fB7ERs/?vd_source=ff6f43ccb54424d7a64021088ed10bff](https://www.bilibili.com/video/BV1t49fB7ERs/?spm_id_from=333.1387.homepage.video_card.click&vd_source=ff6f43ccb54424d7a64021088ed10bff)
 
 ## ✨ 功能特性
 
